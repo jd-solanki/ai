@@ -48,17 +48,9 @@ When in doubt, load too few rather than too many — you can read a reference la
 
 Verify that both files contain the specified content.
 
-## 2. Upsert Project Agent Instructions
+## 2. Upsert `AGENTS.md`
 
-**Pick the file to edit:**
-
-- If `CLAUDE.md` exists, edit it.
-- Else if `AGENTS.md` exists, edit it.
-- If neither exists, ask the user which one to create — don't pick for them.
-
-Never create `AGENTS.md` when `CLAUDE.md` already exists (or vice versa) — always edit the one that's already there.
-
-If following template block already exists in the chosen file, update its contents in-place rather than appending a duplicate. Don't overwrite user edits to the surrounding sections.
+If following template block already exists in file, update its contents in-place rather than appending a duplicate. Don't overwrite user edits to the surrounding sections.
 
 The block:
 
@@ -98,6 +90,16 @@ Examples:
 Before adding duplicated information, check whether a canonical source already exists. If it does, use that source.
 
 Apply DRY to duplicated **knowledge**, not merely similar-looking code. Do not introduce abstractions solely to eliminate harmless code repetition when doing so would reduce clarity or increase coupling.
+
+## Comments
+
+A comment explains why, never what. A comment explaining what the code does means the code needs to
+be clearer: rename or extract until it reads plainly, then drop the comment.
+
+- Keep every why the code cannot show — a reason, a constraint, a fence — in the fewest words that
+  carry it.
+- Name the term `/project-context` defines; the term replaces the explanation. A concept two comments
+  must explain lacks a term: add it to the glossary, then name it in both.
 ```
 
 ## 3. Third-Party Skills
