@@ -81,11 +81,11 @@ When a value, rule, configuration, or behavior is defined elsewhere, reference, 
 
 Examples:
 
-* **Node.js version:** Do not hard-code the version in documentation, scripts, or CI if the repository already defines it in `.node-version`, `.nvmrc`, or another canonical runtime configuration. Reference or read from that source instead.
-* **pnpm version:** Do not repeat the pnpm version across documentation or tooling when it is already defined in `package.json`, such as through the `packageManager` field. Reference or derive it from there.
-* Import a shared constant instead of redefining the same value in multiple modules.
-* Read configuration from its canonical source instead of maintaining parallel copies.
-* **Repository content quoted in prose:** When an issue, PR description, or doc refers to something that lives in the repository — a list in `README.md`, a set of supported options, a config schema — point the reader at that location instead of pasting the content. The pasted copy goes stale the moment the source changes, and readers then trust the wrong one. Write "see the supported providers list in `README.md`" instead of reproducing the list.
+- **Node.js version:** Do not hard-code the version in documentation, scripts, or CI if the repository already defines it in `.node-version`, `.nvmrc`, or another canonical runtime configuration. Reference or read from that source instead.
+- **pnpm version:** Do not repeat the pnpm version across documentation or tooling when it is already defined in `package.json`, such as through the `packageManager` field. Reference or derive it from there.
+- Import a shared constant instead of redefining the same value in multiple modules.
+- Read configuration from its canonical source instead of maintaining parallel copies.
+- **Repository content quoted in prose:** When an issue, PR description, or doc refers to something that lives in the repository — a list in `README.md`, a set of supported options, a config schema — point the reader at that location instead of pasting the content. The pasted copy goes stale the moment the source changes, and readers then trust the wrong one. Write "see the supported providers list in `README.md`" instead of reproducing the list.
 
 Before adding duplicated information, check whether a canonical source already exists. If it does, use that source.
 
