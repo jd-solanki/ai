@@ -48,6 +48,9 @@ out.
 
 ### Spec template
 
+The title is a Conventional Commit subject, because it becomes the pull request title,
+and a standalone spec's commit subject.
+
 ```markdown
 ## Problem
 
@@ -137,7 +140,9 @@ billing, a browser-only console, a call the user kept for themselves.
 ### 4. Draft
 
 Write the spec, then its sub-issues in series order, to one markdown file in the OS temp
-directory. Print it as a `file://` URL on its own line. Then do the cold read: read the
+directory. Each issue opens with its title as a `# ` heading; filing moves that line to
+`--title` and the rest to `--body-file`. Print the file as a `file://` URL on its own
+line. Then do the cold read: read the
 draft as the implementing agent, holding nothing but the repository and the draft.
 
 **Done when:** a cold read raises no question the draft leaves unanswered or unassigned.
