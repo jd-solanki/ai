@@ -19,5 +19,4 @@ Every rule about this repo lives in `/project-context`. Invoke it.
 ## How to contribute
 
 - Work lands straight on `main`. One commit per skill.
-- Commits: use `/git-commit`.
 - Write a skill with `/writing-for-agents`.

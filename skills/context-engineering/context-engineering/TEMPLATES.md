@@ -42,7 +42,6 @@ Every rule about the code lives in `/project-context`. Invoke it.
 
 ## How to contribute
 
-- Branch from `[branch]`.
 - Commands: see the `scripts` block in `package.json`.
 - Commits: [convention, or the skill that owns it].
 - Pull requests: [what a PR needs before review].

@@ -12,6 +12,7 @@
   - writing-for-agents
   - grill-with-docs
   - implement
+  - retro
 - [nostics](https://github.com/vercel-labs/nostics)
 - [better-auth](https://better-auth.com/docs/ai-resources/skills)
   - [better-auth MCP](https://better-auth.com/docs/ai-resources/mcp)
