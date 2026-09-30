@@ -53,7 +53,5 @@ Skills taken from elsewhere and changed. They are maintained here now, so they l
   The glossary moved from a root `CONTEXT.md` into `/project-context`, and the multi-context `CONTEXT-MAP.md` branch was dropped: a term used inside one domain now lives in that domain file's **Words**.
 - **[`skills/in-progress/grilling`](./skills/in-progress/grilling/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
   The frontier is filtered by **altitude**: the goal always clears it, a technical question only when it is a one-way door, and every two-way door is the agent's to settle and list under **Assumed**. `/codebase-design` and `/domain-modeling` supply the vocabulary for the two levels, and the session closes on an ADR offer.
-- **[`skills/in-progress/grill-with-docs`](./skills/in-progress/grill-with-docs/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
-  It ends by suggesting `/create-spec`, which hands the settled work to an agent.
 
 Used unchanged, so not forked: see [`THIRD-PARTY.md`](./skills/scaffolding/setup-jd-solanki-skills/THIRD-PARTY.md).
