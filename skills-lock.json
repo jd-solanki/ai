@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "skills": {
+    "add-diagnostic": {
+      "source": "vercel-labs/nostics",
+      "sourceType": "github",
+      "skillPath": "skills/add-diagnostic/SKILL.md",
+      "computedHash": "c7b8e4657722027d0ec9099406e05941d33103cc76b4915859e3cd60f94617a0"
+    },
+    "backport-skill": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/backport-skill/SKILL.md",
+      "computedHash": "c90609c01468d98b7bd748f4cbb2661b2950f150afd83f26b5d86a7721e19c38"
+    },
+    "clean-code": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/coding/clean-code/SKILL.md",
+      "computedHash": "cb73aff0fb2bcc9cde3d7c01c27a7ec835d8137d7e50829558883bf9c97d9133"
+    },
+    "code-organisation": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/coding/code-organisation/SKILL.md",
+      "computedHash": "711da02302a5ed92c15116c044d3ed8d28c89665f6898bb0bc52fb239aa8ea5e"
+    },
+    "code-review": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/code-review/SKILL.md",
+      "computedHash": "391e85aba3303f0d3980a6d1110fa91f3372b4bb4b1631764b409d8ee10ecef3"
+    },
+    "codebase-design": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/codebase-design/SKILL.md",
+      "computedHash": "b2888e4f4e8c0af3bfd557575a64b905c44e6248c3101d72077816882b3a92b9"
+    },
+    "coding": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/coding/coding/SKILL.md",
+      "computedHash": "3616d82a5afdc0382b9a233f40e83eb5c06eaf8e105ca14533a8303e91805d9a"
+    },
+    "context-engineering": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/context-engineering/context-engineering/SKILL.md",
+      "computedHash": "16b553a1488c456742e9601f9477ec0eff223d1c524cbf0370c6d1a3306286ea"
+    },
+    "context7-cli": {
+      "source": "upstash/context7",
+      "sourceType": "github",
+      "skillPath": "skills/context7-cli/SKILL.md",
+      "computedHash": "f22d21491528a0aaaf21a2a7c546428ffd208852473d6afbaf5e2d4845388639"
+    },
+    "create-pr": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/create-pr/SKILL.md",
+      "computedHash": "f3216228cdeee5de2a23d87c374a60b6941491543218e84fc241211172085f33"
+    },
+    "create-spec": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/in-progress/create-spec/SKILL.md",
+      "computedHash": "7c7da8d8aa0dde250a7f94f1e685494243eef23fa6880b697d01beb71779118e"
+    },
+    "create-ticket": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/in-progress/create-ticket/SKILL.md",
+      "computedHash": "ca711abaef8e1b33406449d13c906cf45502ce25669f876f5022ad36cc60dc66"
+    },
+    "domain-modeling": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/domain-modeling/SKILL.md",
+      "computedHash": "7274ab949456b1706bb91500cd03b8f9ec684e5caef2bf17c357dddcf1840afd"
+    },
+    "find-docs": {
+      "source": "upstash/context7",
+      "sourceType": "github",
+      "skillPath": "skills/find-docs/SKILL.md",
+      "computedHash": "93ec2d2786d7e83973252383875c4f345a2ee7cbbd08a1ab38e5201b214640ee"
+    },
+    "grill-with-docs": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
+      "computedHash": "35e62aa423aaeab6a414bcac273f56dfb17802ef2334b41b6a3b00f28196c8cf"
+    },
+    "grilling": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/in-progress/grilling/SKILL.md",
+      "computedHash": "35fa5e397b2749cbad3cc1ab25f91732dc5e5dbf6c7210845a2706a3647be05e"
+    },
+    "humanizer": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/third-party/humanizer/SKILL.md",
+      "computedHash": "c1a25cc0fe7e706a52f48165b288934fe835e9ecf42f60fd874680c615e3cb2e"
+    },
+    "implement": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/implement/SKILL.md",
+      "computedHash": "2139cfedf24791adbc839aaab6019cff158af1e28bfead020ec6e0ce01b3e74d"
+    },
+    "node-cli": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/scaffolding/node-cli/SKILL.md",
+      "computedHash": "0d027ec28813897e1c4bcfb4a6d37ac578e8008a43bfe429086ea7e04a79718b"
+    },
+    "nostics": {
+      "source": "vercel-labs/nostics",
+      "sourceType": "github",
+      "skillPath": "skills/nostics/SKILL.md",
+      "computedHash": "33e3c1974fb3428cd1a4fcbe47a4659820458b6e8320a8520b333c67cfb5e52e"
+    },
+    "ponytail": {
+      "source": "DietrichGebert/ponytail",
+      "sourceType": "github",
+      "skillPath": "skills/ponytail/SKILL.md",
+      "computedHash": "210fa0831f649ce9f8a305f7b7c8cf2a0dd09ac4dd53067109941b96e7811d4e"
+    },
+    "ponytail-audit": {
+      "source": "DietrichGebert/ponytail",
+      "sourceType": "github",
+      "skillPath": "skills/ponytail-audit/SKILL.md",
+      "computedHash": "8b8d72e6ff70b65b6c9518d470fcf29dc696eea93d28f3efa10fdcc60cbd696d"
+    },
+    "ponytail-review": {
+      "source": "DietrichGebert/ponytail",
+      "sourceType": "github",
+      "skillPath": "skills/ponytail-review/SKILL.md",
+      "computedHash": "4646594fcd75455533f7ff1425f4f1c5ba0fa65f88241bf262b1c4fc275f049a"
+    },
+    "research": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/research/SKILL.md",
+      "computedHash": "c8c1cba327a6f824b554cd978079a3dadd7406d73174f8fb9bfef58824691970"
+    },
+    "retro": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/retro/SKILL.md",
+      "computedHash": "b8d55851a2909e26c2dbb2e8563719c87b3b700559f604e4df344f8c27e21047"
+    },
+    "review-pr": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/in-progress/review-pr/SKILL.md",
+      "computedHash": "05bd733c703d0b16e1cfa95c1e5910477c780e909f4e3ab93fbf20ac3add8b63"
+    },
+    "setup-jd-solanki-skills": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/scaffolding/setup-jd-solanki-skills/SKILL.md",
+      "computedHash": "21ad03e0fa40e00bf82db67db9e26d0823a95456e7a2b2d3783873b79864e470"
+    },
+    "setup-project-context": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/context-engineering/setup-project-context/SKILL.md",
+      "computedHash": "84c2c42638d73af0dfb2e2b0b643bd9465bf48e8937e87bdaf5fec1f5e64fc0d"
+    },
+    "writing-for-agents": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/writing-for-agents/SKILL.md",
+      "computedHash": "95da47fc97af998e85b7d7e6d57b3ac76727c1e290cfe9ea09005aacb826959f"
+    },
+    "writing-for-humans": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/in-progress/writing-for-humans/SKILL.md",
+      "computedHash": "a29ca552654e8637b4af38b0840ae7ffc4c67a99a188100324c1c2e9edbec4a6"
+    }
+  }
+}
