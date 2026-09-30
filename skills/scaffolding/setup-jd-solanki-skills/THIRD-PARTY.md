@@ -10,7 +10,6 @@
   - codebase-design — `/grilling` points at it
   - research
   - writing-for-agents
-  - grill-with-docs
   - implement
 - [nostics](https://github.com/vercel-labs/nostics)
 - [better-auth](https://better-auth.com/docs/ai-resources/skills)
