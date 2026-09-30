@@ -13,8 +13,8 @@ reached. The software factory picks it up once a teammate applies `agent:impleme
 
 ## Words
 
-- **Spec**: the issue an agent implements, delivered as one pull request. Standalone,
-  or the parent of sub-issues.
+- **Spec**: the issue an agent implements, labelled `issue:spec` and delivered as one
+  pull request. Standalone, or the parent of sub-issues.
 - **Sub-issue**: a native GitHub child of the spec, one step in its ordered series:
   `issue:AFK` when an agent does it, `issue:HITL` when a human does.
 - **Spec branch**: `spec/<n>`, where `<n>` is the spec's issue number. It carries the
@@ -154,8 +154,12 @@ again and file what it says now.
 
 ### 6. File
 
+The labels must already exist: `issue:spec`, plus `issue:AFK` and `issue:HITL` when
+there are sub-issues (`gh label list --search issue:`). When one is missing, stop and
+tell the user; creating labels is their call.
+
 ```bash
-gh issue create --title "<title>" --body-file <spec.md>
+gh issue create --label issue:spec --title "<title>" --body-file <spec.md>
 ```
 
 The printed URL ends in the spec's number, `<n>`. When there are records:
@@ -173,9 +177,6 @@ Sub-issues follow in series order; GitHub keeps them in the order they are added
 ```bash
 gh issue create --parent <n> --label issue:AFK --title "<subject>" --body-file <sub.md>
 ```
-
-The `issue:AFK` and `issue:HITL` labels must already exist. When they are missing, stop
-and tell the user; creating labels is their call.
 
 **Done when:** the spec, every sub-issue in order, and the spec branch when there are
 records, are on GitHub.
