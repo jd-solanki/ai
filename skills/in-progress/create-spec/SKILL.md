@@ -17,7 +17,9 @@ reached. The software factory picks it up once a teammate applies `agent:impleme
   pull request. Standalone, or the parent of sub-issues. Always **independent**: it
   builds on the default branch as it stands and waits on no other spec.
 - **Sub-issue**: a native GitHub child of the spec, one step in its ordered series:
-  `issue:AFK` when an agent does it, `issue:HITL` when a human does.
+  `issue:AFK` when an agent does it, `issue:HITL` when a human does. **Blocked by**
+  each sibling it waits on, as a native GitHub dependency; siblings with none between
+  them run in parallel.
 - **Spec branch**: `spec/<n>`, where `<n>` is the spec's issue number. It carries the
   conversation's project-context records, and later the code.
 - **Owner step**: a human step that blocks merge or production, never an AFK issue.
@@ -137,7 +139,8 @@ can; a step is HITL only for what needs a human's hands or judgement: credential
 billing, a browser-only console, a call the user kept for themselves.
 
 **Done when:** every spec is independent, and is standalone or has every sub-issue's
-title, exactly one of `issue:AFK` or `issue:HITL`, and final place in the series.
+title, exactly one of `issue:AFK` or `issue:HITL`, final place in the series, and the
+siblings that block it.
 
 ### 4. Draft
 
@@ -174,14 +177,16 @@ git push -u origin spec/<n>
 git switch -
 ```
 
-Sub-issues follow in series order; GitHub keeps them in the order they are added:
+Sub-issues follow in series order; GitHub keeps them in the order they are added. Each
+names the siblings that block it, and one that waits on nothing drops the flag:
 
 ```bash
-gh issue create --parent <n> --label issue:AFK --title "<subject>" --body-file <sub.md>
+gh issue create --parent <n> --label issue:AFK --blocked-by <numbers> \
+  --title "<subject>" --body-file <sub.md>
 ```
 
-**Done when:** the spec, every sub-issue in order, and the spec branch when there are
-records, are on GitHub.
+**Done when:** the spec, every sub-issue in order with its blockers, and the spec branch
+when there are records, are on GitHub.
 
 ### 7. Hand off
 
