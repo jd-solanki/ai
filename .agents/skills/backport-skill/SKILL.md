@@ -70,4 +70,4 @@ Push is a separate ask.
 ### 5. Hand back the next step
 
 The project still runs the old copy. Tell the user to run
-`/update-project-skills <name>` once the source repo is pushed.
+`/manage-project-skills update <name>` once the source repo is pushed.
