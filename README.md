@@ -98,23 +98,6 @@ gh api -X POST "repos/$REPO/hooks/$HOOK_ID/pings"
 gh api "repos/$REPO/hooks/$HOOK_ID/deliveries" --jq '.[0] | "\(.event) \(.status_code)"'
 ```
 
-### Many repos in one org
-
-One org webhook replaces step 6 for every repo in the org. Steps 1 to 5 still happen once per repo.
-Org webhooks need one more `gh` scope:
-
-```bash
-ORG=your-org
-gh auth refresh -h github.com -s admin:org_hook
-gh api "orgs/$ORG/hooks" -f name=web \
-  -f "config[url]=$FUNNEL_URL" -f 'config[content_type]=json' \
-  -f "config[secret]=$GITHUB_WEBHOOK_SECRET" \
-  -f 'events[]=issues' -f 'events[]=pull_request' --jq .id
-```
-
-Don't also give a repo in that org its own webhook, or every label starts two sessions.
-Personal accounts have no account-wide webhook, so each of their repos gets its own.
-
 ## Use it
 
 Apply a label on GitHub. Then, on the factory machine:
@@ -128,26 +111,6 @@ claude rm <id>       # delete it, and its worktree when that is safe
 Sessions start in your default Claude Code permission mode. A session waiting on an approval stays stuck until you attach to it.
 
 To add a trigger, add a line to `TRIGGERS` in `server.ts`, create its label in each repo, and restart the server.
-
-## Troubleshooting
-
-The server answers every delivery with what it did, so the webhook's delivery log doubles as the factory's log:
-
-```bash
-gh api "repos/$REPO/hooks" --jq '.[] | "\(.id) \(.config.url)"'
-gh api "repos/$REPO/hooks/$HOOK_ID/deliveries" --jq '.[:10][] | "\(.delivered_at) \(.event)/\(.action) \(.status_code) \(.id)"'
-gh api "repos/$REPO/hooks/$HOOK_ID/deliveries/<delivery id>" --jq .response.payload
-```
-
-| Status | Meaning |
-| --- | --- |
-| 202 | A session started. The body is `claude`'s output: `backgrounded · <id> · <name>`. |
-| 204 | No trigger matched. This is normal for pings and every other issue or PR event. |
-| 401 | Signature mismatch: the webhook's secret differs from `.env`. |
-| 404 | No clone at `$REPOS_DIR/<owner>/<repo>`. |
-| 415 | The webhook's content type isn't `application/json`. |
-| 500 | `claude` failed. The body holds its error, such as `Workspace not trusted`. |
-| Timeout | The server is down, Funnel is off, or Funnel is still coming up. |
 
 ## Known gaps
 
