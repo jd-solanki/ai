@@ -8,7 +8,7 @@ Node server on the owner's machine, driving Claude Code.
 
 ## Status
 
-What runs today: `TRIGGERS` in [`server.ts`](./server.ts). A trigger label starts one
+What runs today: `TRIGGERS` in [`src/session.ts`](./src/session.ts). A trigger label starts one
 background session, and a Stop hook opens the draft pull request.
 
 The code is the proven prototype. `/project-context` holds decisions it does not implement

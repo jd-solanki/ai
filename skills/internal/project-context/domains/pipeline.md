@@ -97,10 +97,10 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
 
 - **A review cannot approve the pull request natively.** Every run acts as the factory
   owner's GitHub login, and GitHub refuses an author's approval of their own pull request,
-  so a review with no findings is the approval. `server.ts:TRIGGERS`
+  so a review with no findings is the approval. `src/session.ts:TRIGGERS`
 
 ## Where it lives
 
-`server.ts` (`TRIGGERS`: the skill each trigger label starts), `.agents/skills/`
+`src/session.ts` (`TRIGGERS`: the skill each trigger label starts), `.agents/skills/`
 (`create-spec`, `grill-with-docs`, `implement`, `review-pr`, `create-pr`), `README.md`
 (Add a project: the labels a served repo needs).

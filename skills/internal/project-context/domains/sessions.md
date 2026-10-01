@@ -30,17 +30,20 @@ _Avoid_: sandbox
   - A session that only edits code spends its context on the code.
 - The boundary gives way to the skills: they already run git and `gh`, so the factory
   starts from them.
+- The `claude` command is built and run in one module: settling how a session is launched
+  changes that module alone.
 - Review runs at higher effort than implementation: review depth decides how many rounds
   a pull request takes, and implementation time is the factory's bottleneck.
 
 ## Fences
 
 - **A Stop hook is not a done edge.** Stop fires after every turn, so a turn that ends on
-  a question looks like a finished session. `server.ts:runOnStop`
+  a question looks like a finished session. `src/session.ts:runOnStop`
 - **A worktree holds only committed files.** A skill a session needs must be committed and
-  pushed in the served repo, or the session starts without it. `server.ts:claudeArgs`
+  pushed in the served repo, or the session starts without it. `src/session.ts:claudeArgs`
 
 ## Where it lives
 
-`server.ts` (`TRIGGERS`: each agent's skill and effort; `claudeArgs`: how a session is
-launched), `README.md` (Conventions for every project: what a served repo must hold).
+`src/session.ts` (`TRIGGERS`: each agent's skill and effort; `claudeArgs` and
+`startSession`: how a session is launched), `README.md` (Conventions for every project:
+what a served repo must hold).

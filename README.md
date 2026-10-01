@@ -4,12 +4,12 @@ Put a label on a GitHub issue or pull request. A Claude Code background session 
 
 ```mermaid
 flowchart LR
-  L["Label applied on GitHub"] -->|webhook| F["Tailscale Funnel"] --> S["server.ts"]
+  L["Label applied on GitHub"] -->|webhook| F["Tailscale Funnel"] --> S["src/server.ts"]
   S -->|"claude --bg"| B["Background session<br/>in its own worktree"]
   B -.->|"Stop hook, when the trigger has a next skill"| P["claude -p /create-pr"] --> PR["Draft PR"]
 ```
 
-`TRIGGERS` in `server.ts` lists each label, the skill it starts, the effort it runs at, and the skill that runs once that session stops.
+`TRIGGERS` in `src/session.ts` lists each label, the skill it starts, the effort it runs at, and the skill that runs once that session stops.
 
 Each session is named `<label> <repo>#<number>`, for example `agent:implement cl-factory#1`.
 It works in its own git worktree, `.claude/worktrees/<skill>-<number>`, so two sessions never share a checkout.
@@ -46,7 +46,7 @@ npm start
 Then, in a second terminal:
 
 ```bash
-tailscale funnel --bg 3456   # the PORT in server.ts
+tailscale funnel --bg 3456   # the PORT in src/server.ts
 tailscale funnel status      # prints the public URL
 ```
 
@@ -124,7 +124,7 @@ claude rm <id>       # delete it, and its worktree when that is safe
 
 Sessions start in your default Claude Code permission mode. A session waiting on an approval stays stuck until you attach to it.
 
-To add a trigger, add a line to `TRIGGERS` in `server.ts`, create its label in each repo, and restart the server.
+To add a trigger, add a line to `TRIGGERS` in `src/session.ts`, create its label in each repo, and restart the server.
 
 ## More
 

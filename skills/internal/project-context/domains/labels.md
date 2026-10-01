@@ -34,9 +34,10 @@ _Avoid_: lock, assignment
 
 - **A trigger label left on a work item cannot be applied again.** GitHub sends `labeled`
   only when a label is added, so the claim removes the trigger: that is what lets a human
-  re-apply it to resume or retry. `server.ts:claudeArgs`
+  re-apply it to resume or retry. `src/session.ts:claudeArgs`
 
 ## Where it lives
 
-`server.ts` (`TRIGGERS`, `claudeArgs`), `README.md` (Add a project: the labels a served
+`src/session.ts` (`TRIGGERS`, `claudeArgs`), `src/webhook.ts` (`handleWebhook`: what a
+GitHub event must pass to start a run), `README.md` (Add a project: the labels a served
 repo needs).

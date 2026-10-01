@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
-import { createHmac } from 'node:crypto'
 import { test } from 'node:test'
-import { claudeArgs, isSigned } from './server.ts'
+import { claudeArgs } from '../src/session.ts'
 
 const repository = { name: 'app', full_name: 'acme/app' }
 function subject(...labels: string[]) {
@@ -22,12 +21,4 @@ test('claudeArgs starts a skill only for a matching label event', () => {
   assert.equal(review?.[review.indexOf('--effort') + 1], 'high')
   assert.equal(review?.at(-1), '/review-pr https://github.com/acme/app/issues/12')
   assert.equal(claudeArgs('ping', { repository }), undefined)
-})
-
-test('isSigned accepts only the secret\'s signature', () => {
-  const body = Buffer.from('{}')
-  const signature = `sha256=${createHmac('sha256', 'secret').update(body).digest('hex')}`
-  assert.ok(isSigned(body, signature, 'secret'))
-  assert.ok(!isSigned(body, signature, 'other'))
-  assert.ok(!isSigned(body, undefined, 'secret'))
 })
