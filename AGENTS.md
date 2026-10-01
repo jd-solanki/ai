@@ -43,3 +43,11 @@ be clearer: rename or extract until it reads plainly, then drop the comment.
   carry it.
 - Name the term `/project-context` defines; the term replaces the explanation. A concept two comments
   must explain lacks a term: add it to the glossary, then name it in both.
+
+## Project context
+
+Before the first code action in a session: Read `CONTRIBUTING.md`, then invoke
+`/project-context`.
+
+`/project-context` holds this repository's words, rules, reasons and fences. Its table
+says which references your task needs. Emit the triage line, then Read those.

@@ -9,7 +9,7 @@ flowchart LR
   B -.->|"Stop hook, when the trigger has a next skill"| P["claude -p /create-pr"] --> PR["Draft PR"]
 ```
 
-`TRIGGERS` in `server.ts` lists each label, the skill it starts, and the skill that runs once that session stops.
+`TRIGGERS` in `server.ts` lists each label, the skill it starts, the effort it runs at, and the skill that runs once that session stops.
 
 Each session is named `<label> <repo>#<number>`, for example `agent:implement cl-factory#1`.
 It works in its own git worktree, `.claude/worktrees/<skill>-<number>`, so two sessions never share a checkout.
@@ -18,7 +18,7 @@ Applying the label again reuses that worktree.
 ## Requirements
 
 - Node, in the range `engines` in `package.json` sets. The server runs TypeScript directly, with no build step.
-- Claude Code with `claude --bg`.
+- Claude Code with `claude --bg`, on an account that can run Opus.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.
 - Tailscale, logged in. The first `tailscale funnel` run prints a link to allow Funnel on your tailnet.
 
@@ -28,10 +28,10 @@ The server finds everything by convention. Each repo it serves needs:
 
 1. A clone at `$REPOS_DIR/<owner>/<repo>`, matching GitHub's `owner/repo`. With `REPOS_DIR=~/Projects/github`, `acme/app` lives at `~/Projects/github/acme/app`. Sessions run there, not in the folder the server runs from.
 2. Claude Code trust. `claude --bg` refuses a folder you haven't trusted.
-3. Every label `TRIGGERS` names.
-4. The skills the triggers start, and the skills those call, committed and pushed. A worktree only holds committed files. `skills-lock.json` in this repo lists where each skill comes from.
+3. Every label in step 3 of [Add a project](#add-a-project).
+4. The pipeline's skills (`create-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, committed and pushed. A worktree only holds committed files. `skills-lock.json` in this repo lists where each skill comes from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
-6. A webhook to this server, using the JSON content type, the `issues` and `pull_request` events, and the secret from `.env`. One org webhook covers every repo in that org.
+6. A webhook to this server, using the JSON content type, the `issues` and `pull_request` events, and the secret from `.env`.
 
 ## Start the factory
 
@@ -71,8 +71,15 @@ gh repo clone "$REPO" "$REPOS_DIR/$REPO"
 
 # 3. Labels
 gh label create issue:spec -R "$REPO" --force -d "Spec an agent implements unattended"
+gh label create issue:AFK -R "$REPO" --force -d "Sub-issue an agent does unattended"
+gh label create issue:HITL -R "$REPO" --force -d "Sub-issue a human does"
+gh label create issue:HITL-done -R "$REPO" --force -d "The human finished this HITL issue"
 gh label create agent:implement -R "$REPO" --force -d "Factory: implement this spec and open a draft PR"
-gh label create pr:review -R "$REPO" --force -d "Factory: review this PR"
+gh label create agent:implementing -R "$REPO" --force -d "Factory: an Implementer run holds this spec"
+gh label create agent:review -R "$REPO" --force -d "Factory: review this PR"
+gh label create agent:reviewing -R "$REPO" --force -d "Factory: a review run holds this PR"
+gh label create agent:fix -R "$REPO" --force -d "Factory: fix this PR's review findings"
+gh label create agent:fixing -R "$REPO" --force -d "Factory: a Fixer run holds this PR"
 
 # 6. Webhook; prints its id
 gh api "repos/$REPO/hooks" \
@@ -100,7 +107,14 @@ gh api "repos/$REPO/hooks/$HOOK_ID/deliveries" --jq '.[0] | "\(.event) \(.status
 
 ## Use it
 
-Apply a label on GitHub. Then, on the factory machine:
+Apply a trigger label on GitHub:
+
+- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session implements it and opens a draft PR.
+- `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score out of 5.
+
+The server does not apply the `…ing` labels or act on `agent:fix` yet. Status in [`CONTRIBUTING.md`](./CONTRIBUTING.md) lists what is unbuilt.
+
+Then, on the factory machine:
 
 ```bash
 claude agents        # sessions and their state
@@ -112,9 +126,7 @@ Sessions start in your default Claude Code permission mode. A session waiting on
 
 To add a trigger, add a line to `TRIGGERS` in `server.ts`, create its label in each repo, and restart the server.
 
-## Known gaps
+## More
 
-- The next skill runs from a Stop hook, and Stop fires after every turn. A turn that ends on a question, or a follow-up message after you attach, runs `/create-pr` again. `/create-pr` only opens drafts and refuses uncommitted work.
-- The PR comes from the worktree's branch, `worktree-implement-<n>`, not `spec/<n>`. Records `/create-spec` pushed to `spec/<n>` stay out of the PR unless `/implement` switches to that branch first.
-- `/review-pr` reads its argument as a round limit, and it expects the PR's branch checked out. The session starts on a fresh worktree, so the skill has to check out the PR itself.
-- The server is not a system service. Start it again after a reboot.
+- Contributing, project status and known gaps: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- Commands: the `scripts` block in [`package.json`](./package.json)
