@@ -7,8 +7,8 @@ import { join } from 'node:path'
 const PORT = 3456
 
 const TRIGGERS = [
-  { event: 'issues', label: 'agent:implement', requires: 'issue:spec', skill: 'implement', then: 'create-pr' },
-  { event: 'pull_request', label: 'pr:review', skill: 'review-pr' },
+  { event: 'issues', label: 'agent:implement', requires: 'issue:spec', skill: 'implement', effort: 'medium', then: 'create-pr' },
+  { event: 'pull_request', label: 'agent:review', skill: 'review-pr', effort: 'high' },
 ]
 
 // ponytail: Stop fires after every turn, so a turn ending on a question, or a human follow-up, reruns `then`.
@@ -47,6 +47,10 @@ export function claudeArgs(event: string, payload: WebhookPayload): string[] | u
     // Concurrent sessions in one checkout clobber each other; a re-trigger reuses its worktree.
     '--worktree',
     `${trigger.skill}-${subject.number}`,
+    '--model',
+    'opus',
+    '--effort',
+    trigger.effort,
     // The hook's stdin carries its JSON event, which `claude -p` would append to the prompt.
     ...(trigger.then ? ['--settings', runOnStop(`claude -p '/${trigger.then} ${url}' </dev/null`)] : []),
     `/${trigger.skill} ${url}`,
