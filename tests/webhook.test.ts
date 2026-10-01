@@ -44,8 +44,14 @@ function factory(ok = true) {
 test('handleWebhook refuses a body the secret did not sign', async () => {
   const body = reviewRequest('acme/app')
   const served = factory()
-  assert.equal((await handleWebhook(signed(body, 'other'), body, served)).status, 401)
+  const refused = { status: 401, body: 'pull_request labeled agent:review acme/app#12: Signature mismatch' }
+  assert.deepEqual(await handleWebhook(signed(body, 'other'), body, served), refused)
   assert.equal((await handleWebhook({ ...signed(body), 'x-hub-signature-256': undefined }, body, served)).status, 401)
+  const forged = reviewRequest('acme/app\u001B[2J')
+  assert.deepEqual(await handleWebhook(signed(forged, 'other'), forged, served), { status: 401, body: 'pull_request labeled agent:review acme/app??2J#12: Signature mismatch' })
+  const form = Buffer.from(new URLSearchParams({ payload: body.toString() }).toString())
+  assert.deepEqual(await handleWebhook(signed(form, 'other'), form, served), refused)
+  assert.deepEqual(await handleWebhook({}, Buffer.from(''), served), { status: 401, body: 'unknown repo: Signature mismatch' })
   assert.deepEqual(served.started, [])
 })
 

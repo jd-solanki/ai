@@ -11,12 +11,12 @@ interface Factory {
 }
 
 export async function handleWebhook(headers: IncomingHttpHeaders, body: Buffer, { secret, reposDir, startSession }: Factory): Promise<{ status: number, body?: string }> {
+  const event = String(headers['x-github-event'] ?? '')
   if (!isSigned(body, headers['x-hub-signature-256'] as string | undefined, secret))
-    return { status: 401, body: 'Signature mismatch' }
+    return { status: 401, body: `${claimed(event, body)}: Signature mismatch` }
   if (!headers['content-type']?.startsWith('application/json'))
-    return { status: 415, body: 'Set the webhook content type to application/json' }
+    return { status: 415, body: `${claimed(event, body)}: Set the webhook content type to application/json` }
 
-  const event = String(headers['x-github-event'])
   const payload: WebhookPayload = JSON.parse(body.toString())
   // Replying with every delivery's outcome turns the webhook's Recent Deliveries into the dispatch log.
   const reply = (status: number, outcome: string) => ({ status, body: `${received(event, payload)}: ${outcome}` })
@@ -36,6 +36,17 @@ export async function handleWebhook(headers: IncomingHttpHeaders, body: Buffer, 
 function received(event: string, { action, label, repository, issue, pull_request }: WebhookPayload): string {
   const number = (issue ?? pull_request)?.number
   return [event, action, label?.name, repository && `${repository.full_name}${number ? `#${number}` : ''}`].filter(Boolean).join(' ')
+}
+
+// A refused delivery is unverified text bound for the owner's terminal: control characters must not reach it.
+function claimed(event: string, body: Buffer): string {
+  const text = body.toString()
+  let payload = {} as WebhookPayload
+  try {
+    payload = JSON.parse(new URLSearchParams(text).get('payload') ?? text) ?? payload
+  }
+  catch {}
+  return received(event, payload).replace(/[^\w ./#:-]/g, '?') || 'unknown repo'
 }
 
 function isSigned(body: Buffer, signature: string | undefined, secret: string): boolean {
