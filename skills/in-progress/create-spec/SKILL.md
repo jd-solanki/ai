@@ -14,7 +14,8 @@ reached. The software factory picks it up once a teammate applies `agent:impleme
 ## Words
 
 - **Spec**: the issue an agent implements, labelled `issue:spec` and delivered as one
-  pull request. Standalone, or the parent of sub-issues.
+  pull request. Standalone, or the parent of sub-issues. Always **independent**: it
+  builds on the default branch as it stands and waits on no other spec.
 - **Sub-issue**: a native GitHub child of the spec, one step in its ordered series:
   `issue:AFK` when an agent does it, `issue:HITL` when a human does.
 - **Spec branch**: `spec/<n>`, where `<n>` is the spec's issue number. It carries the
@@ -126,16 +127,17 @@ them. They travel on the spec branch; any other uncommitted change stays behind.
 
 One agent context holds it: a standalone spec. Larger: split it into **tracer bullets**,
 sub-issues in series, each a thin vertical slice that leaves the branch green and is
-verifiable on its own, with any prefactoring first. Work too big for one pull request
-is two specs.
+verifiable on its own, with any prefactoring first. Steps that wait on each other are
+sub-issues of one spec, however many there are. Work becomes two specs only where each
+is independent.
 
 Place each human step. It blocks a later AFK issue: a HITL issue at that point in the
 series. It blocks only merge or production: an Owner step. An agent does everything it
 can; a step is HITL only for what needs a human's hands or judgement: credentials,
 billing, a browser-only console, a call the user kept for themselves.
 
-**Done when:** the spec is standalone, or every sub-issue has its title, exactly one of
-`issue:AFK` or `issue:HITL`, and its final place in the series.
+**Done when:** every spec is independent, and is standalone or has every sub-issue's
+title, exactly one of `issue:AFK` or `issue:HITL`, and final place in the series.
 
 ### 4. Draft
 
