@@ -97,7 +97,7 @@ echo '.claude/worktrees/' >> .gitignore
 git add -A && git commit -m "chore: set up agent factory" && git push
 ```
 
-Check that GitHub reaches the server. A ping answers `204`:
+Check that GitHub reaches the server. A ping answers `200`:
 
 ```bash
 HOOK_ID=<id from step 6>

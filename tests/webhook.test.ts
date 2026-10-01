@@ -44,8 +44,8 @@ function factory(ok = true) {
 test('handleWebhook refuses a body the secret did not sign', async () => {
   const body = reviewRequest('acme/app')
   const served = factory()
-  assert.deepEqual(await handleWebhook(signed(body, 'other'), body, served), { status: 401 })
-  assert.deepEqual(await handleWebhook({ ...signed(body), 'x-hub-signature-256': undefined }, body, served), { status: 401 })
+  assert.equal((await handleWebhook(signed(body, 'other'), body, served)).status, 401)
+  assert.equal((await handleWebhook({ ...signed(body), 'x-hub-signature-256': undefined }, body, served)).status, 401)
   assert.deepEqual(served.started, [])
 })
 
@@ -53,12 +53,12 @@ test('handleWebhook starts a session only for a trigger label on a served repo',
   const body = reviewRequest('acme/app')
   const served = factory()
   assert.equal((await handleWebhook({ ...signed(body), 'content-type': 'application/x-www-form-urlencoded' }, body, served)).status, 415)
-  assert.deepEqual(await handleWebhook({ ...signed(body), 'x-github-event': 'ping' }, body, served), { status: 204 })
+  assert.deepEqual(await handleWebhook({ ...signed(body), 'x-github-event': 'ping' }, body, served), { status: 200, body: 'ping labeled agent:review acme/app#12: Not a trigger label for ping' })
   const unserved = reviewRequest('acme/missing')
   assert.equal((await handleWebhook(signed(unserved), unserved, served)).status, 404)
   assert.deepEqual(served.started, [])
 
-  assert.deepEqual(await handleWebhook(signed(body), body, served), { status: 202, body: 'claude output' })
+  assert.deepEqual(await handleWebhook(signed(body), body, served), { status: 202, body: 'pull_request labeled agent:review acme/app#12: claude output' })
   assert.deepEqual(served.started, [join(reposDir, 'acme/app')])
   assert.equal((await handleWebhook(signed(body), body, factory(false))).status, 500)
 })

@@ -19,16 +19,18 @@ export interface WebhookPayload {
   pull_request?: Subject
 }
 
-export function claudeArgs(event: string, payload: WebhookPayload): string[] | undefined {
-  const trigger = TRIGGERS.find(t => t.event === event && t.label === payload.label?.name)
+export function claudeArgs(event: string, payload: WebhookPayload): { args: string[] } | { skip: string } {
   const subject = payload.issue ?? payload.pull_request
-  if (payload.action !== 'labeled' || !trigger || !subject)
-    return
+  if (payload.action !== 'labeled' || !subject)
+    return { skip: 'Not a label applied to a work item' }
+  const trigger = TRIGGERS.find(t => t.event === event && t.label === payload.label?.name)
+  if (!trigger)
+    return { skip: `Not a trigger label for ${event}` }
   if (trigger.requires && !subject.labels.some(l => l.name === trigger.requires))
-    return
+    return { skip: `Work item lacks ${trigger.requires}` }
 
   const url = subject.html_url
-  return [
+  const args = [
     '--bg',
     '--name',
     `${trigger.label} ${payload.repository.name}#${subject.number}`,
@@ -43,6 +45,7 @@ export function claudeArgs(event: string, payload: WebhookPayload): string[] | u
     ...(trigger.then ? ['--settings', runOnStop(`claude -p '/${trigger.then} ${url}' </dev/null`)] : []),
     `/${trigger.skill} ${url}`,
   ]
+  return { args }
 }
 
 // ponytail: Stop fires after every turn, so a turn ending on a question, or a human follow-up, reruns `then`.

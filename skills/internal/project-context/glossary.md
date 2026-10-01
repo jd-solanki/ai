@@ -33,6 +33,10 @@ _Avoid_: orchestrator, harness
 A repository the factory runs agents on.
 _Avoid_: target repo
 
+**Delivery**:
+One webhook request GitHub sends the factory.
+_Avoid_: event, request
+
 ## Work items
 
 **Work item**:
