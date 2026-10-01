@@ -7,6 +7,12 @@
       "skillPath": "skills/add-diagnostic/SKILL.md",
       "computedHash": "c7b8e4657722027d0ec9099406e05941d33103cc76b4915859e3cd60f94617a0"
     },
+    "audit-project-context": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/context-engineering/audit-project-context/SKILL.md",
+      "computedHash": "7fd1a477140cb48ecaa7270acd0ec68553d0d346100ea0242381c12181ff8d16"
+    },
     "backport-skill": {
       "source": "jd-solanki/skills",
       "sourceType": "github",
