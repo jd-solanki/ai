@@ -5,6 +5,7 @@ description: >
   task list an implementer works. A later round fix-verifies the fixes made for an earlier one. On a
   pull request it posts each task as a review thread and keeps one scored summary comment. Use when
   the user asks to review a PR or a branch, or to verify the fixes for a review.
+disable-model-invocation: true
 ---
 
 A first round runs **probe → find → verify** and ends in a task list. It never edits the code:
