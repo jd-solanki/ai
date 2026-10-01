@@ -14,12 +14,17 @@ reached. The software factory picks it up once a teammate applies `agent:impleme
 ## Words
 
 - **Spec**: the issue an agent implements, labelled `issue:spec` and delivered as one
-  pull request. Standalone, or the parent of sub-issues.
+  pull request. Standalone, or the parent of sub-issues. Always **independent**: it
+  builds on the default branch as it stands and waits on no other spec.
 - **Sub-issue**: a native GitHub child of the spec, one step in its ordered series:
-  `issue:AFK` when an agent does it, `issue:HITL` when a human does.
+  `issue:AFK` when an agent does it, `issue:HITL` when a human does. **Blocked by**
+  each sibling it waits on, as a native GitHub dependency; siblings with none between
+  them run in parallel.
 - **Spec branch**: `spec/<n>`, where `<n>` is the spec's issue number. It carries the
   conversation's project-context records, and later the code.
 - **Owner step**: a human step that blocks merge or production, never an AFK issue.
+- **Origin**: the issue the spec was written for. Optional: a spec written straight
+  from the conversation has none.
 
 ## What a spec carries
 
@@ -51,7 +56,13 @@ out.
 The title is a Conventional Commit subject, because it becomes the pull request title,
 and a standalone spec's commit subject.
 
+A spec with an origin opens on `Resolves #<origin>`, or on `Part of #<origin>` when it
+delivers only some of it. Only `Resolves` earns the closing check under **Verification**,
+so merging closes the origin with the spec. A spec with no origin drops both lines.
+
 ```markdown
+Resolves #<origin>
+
 ## Problem
 
 ## Solution
@@ -75,6 +86,7 @@ and a standalone spec's commit subject.
 **Agent, before the pull request**
 
 - [ ] <check>
+- [ ] The pull request body carries `Closes #<origin>` beside the line that closes this spec.
 
 **Owner, after merge**
 
@@ -126,16 +138,18 @@ them. They travel on the spec branch; any other uncommitted change stays behind.
 
 One agent context holds it: a standalone spec. Larger: split it into **tracer bullets**,
 sub-issues in series, each a thin vertical slice that leaves the branch green and is
-verifiable on its own, with any prefactoring first. Work too big for one pull request
-is two specs.
+verifiable on its own, with any prefactoring first. Steps that wait on each other are
+sub-issues of one spec, however many there are. Work becomes two specs only where each
+is independent.
 
 Place each human step. It blocks a later AFK issue: a HITL issue at that point in the
 series. It blocks only merge or production: an Owner step. An agent does everything it
 can; a step is HITL only for what needs a human's hands or judgement: credentials,
 billing, a browser-only console, a call the user kept for themselves.
 
-**Done when:** the spec is standalone, or every sub-issue has its title, exactly one of
-`issue:AFK` or `issue:HITL`, and its final place in the series.
+**Done when:** every spec is independent, and is standalone or has every sub-issue's
+title, exactly one of `issue:AFK` or `issue:HITL`, final place in the series, and the
+siblings that block it.
 
 ### 4. Draft
 
@@ -162,6 +176,9 @@ tell the user; creating labels is their call.
 gh issue create --label issue:spec --title "<title>" --body-file <spec.md>
 ```
 
+A spec with an origin adds `--blocking <origin>`, so the origin shows as blocked by the
+spec.
+
 The printed URL ends in the spec's number, `<n>`. When there are records:
 
 ```bash
@@ -172,14 +189,16 @@ git push -u origin spec/<n>
 git switch -
 ```
 
-Sub-issues follow in series order; GitHub keeps them in the order they are added:
+Sub-issues follow in series order; GitHub keeps them in the order they are added. Each
+names the siblings that block it, and one that waits on nothing drops the flag:
 
 ```bash
-gh issue create --parent <n> --label issue:AFK --title "<subject>" --body-file <sub.md>
+gh issue create --parent <n> --label issue:AFK --blocked-by <numbers> \
+  --title "<subject>" --body-file <sub.md>
 ```
 
-**Done when:** the spec, every sub-issue in order, and the spec branch when there are
-records, are on GitHub.
+**Done when:** the spec, every sub-issue in order with its blockers, and the spec branch
+when there are records, are on GitHub.
 
 ### 7. Hand off
 
