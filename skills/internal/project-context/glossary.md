@@ -33,9 +33,8 @@ _Avoid_: orchestrator, harness
 A repository the factory runs agents on.
 _Avoid_: target repo
 
-**Delivery**:
-One webhook request GitHub sends the factory.
-_Avoid_: event, request
+**Pipeline**:
+The stages a change travels through from an idea to a merged pull request.
 
 ## Work items
 
@@ -50,6 +49,9 @@ _Avoid_: ticket, epic, PRD
 **Sub-issue**:
 A spec's native GitHub child: one step in the spec's ordered series.
 _Avoid_: slice, child issue, ticket
+
+**Done set**:
+The sub-issues of a spec that count as done.
 
 **AFK issue**:
 A sub-issue an agent does unattended.

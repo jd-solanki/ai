@@ -29,8 +29,9 @@ Known gaps:
 
 Deliberately unbuilt:
 
-- Hosted resources. The factory is local only: it runs on the owner's machine, with no
-  hosted compute or storage such as Cloudflare.
+- Hosted resources. The factory is local only to keep the cost zero, because remote
+  resources cost money: it runs on the owner's machine, with no hosted compute or storage
+  such as Cloudflare.
 - A cap on review rounds. A human decides when review and fix stop alternating, and what
   happens to findings still open.
 

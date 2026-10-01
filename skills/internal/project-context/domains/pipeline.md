@@ -1,16 +1,10 @@
 # Pipeline
 
-How a change travels from an idea to a merged pull request. A human steps in four times:
-grilling, triggering a spec, doing a HITL issue, and merging.
-
 ## Words
 
 **Spec branch**:
 The one branch a spec is delivered on: `spec/<n>`, `<n>` being the spec's number.
 _Avoid_: feature branch, worktree branch
-
-**Done set**:
-The sub-issues of a spec that count as done.
 
 **Owner step**:
 A human step a spec lists for its pull request: it blocks merge or production, never an

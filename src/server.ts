@@ -8,7 +8,7 @@ const PORT = 3456
 const { GITHUB_WEBHOOK_SECRET: secret, REPOS_DIR: reposDir } = process.env
 if (!secret || !reposDir)
   throw new Error('Set GITHUB_WEBHOOK_SECRET and REPOS_DIR')
-// `claude --bg` may spawn the long-lived background service, which hands this env to every later session.
+// Every session inherits this env.
 delete process.env.GITHUB_WEBHOOK_SECRET
 
 createServer(async (req, res) => {
