@@ -11,12 +11,12 @@ const reposDir = mkdtempSync(join(tmpdir(), 'cl-factory-'))
 mkdirSync(join(reposDir, 'acme/app'), { recursive: true })
 after(() => rmSync(reposDir, { recursive: true }))
 
-function reviewRequest(fullName: string) {
+function reviewRequest(fullName: string, ...labels: string[]) {
   return Buffer.from(JSON.stringify({
     action: 'labeled',
     label: { name: 'agent:review' },
     repository: { name: 'app', full_name: fullName },
-    pull_request: { number: 12, html_url: 'https://github.com/acme/app/pull/12', labels: [] },
+    pull_request: { number: 12, html_url: 'https://github.com/acme/app/pull/12', labels: labels.map(name => ({ name })) },
   }))
 }
 
@@ -28,15 +28,21 @@ function signed(body: Buffer, key = secret) {
   }
 }
 
-function factory(ok = true) {
+function factory(ok = true, claimed = true) {
   const started: string[] = []
+  const labelEdits: string[] = []
   return {
     started,
+    labelEdits,
     secret,
     reposDir,
     startSession: async (_args: string[], cwd: string) => {
       started.push(cwd)
       return { ok, output: 'claude output' }
+    },
+    gh: async (args: string[]) => {
+      labelEdits.push(args.slice(3).join(' '))
+      return { ok: claimed, output: 'gh output' }
     },
   }
 }
@@ -53,6 +59,7 @@ test('handleWebhook refuses a body the secret did not sign', async () => {
   assert.deepEqual(await handleWebhook(signed(form, 'other'), form, served), refused)
   assert.deepEqual(await handleWebhook({}, Buffer.from(''), served), { status: 401, body: 'unknown repo: Signature mismatch' })
   assert.deepEqual(served.started, [])
+  assert.deepEqual(served.labelEdits, [])
 })
 
 test('handleWebhook starts a session only for a trigger label on a served repo', async () => {
@@ -63,8 +70,33 @@ test('handleWebhook starts a session only for a trigger label on a served repo',
   const unserved = reviewRequest('acme/missing')
   assert.equal((await handleWebhook(signed(unserved), unserved, served)).status, 404)
   assert.deepEqual(served.started, [])
+  assert.deepEqual(served.labelEdits, [])
 
   assert.deepEqual(await handleWebhook(signed(body), body, served), { status: 202, body: 'pull_request labeled agent:review acme/app#12: claude output' })
   assert.deepEqual(served.started, [join(reposDir, 'acme/app')])
-  assert.equal((await handleWebhook(signed(body), body, factory(false))).status, 500)
+})
+
+test('handleWebhook claims the work item before the session and releases it when the session fails to start', async () => {
+  const body = reviewRequest('acme/app')
+  const claim = '--remove-label agent:review --add-label agent:reviewing'
+
+  const served = factory()
+  await handleWebhook(signed(body), body, served)
+  assert.deepEqual(served.labelEdits, [claim])
+
+  const unstarted = factory(false)
+  assert.equal((await handleWebhook(signed(body), body, unstarted)).status, 500)
+  assert.deepEqual(unstarted.labelEdits, [claim, '--remove-label agent:reviewing'])
+
+  const unclaimed = factory(true, false)
+  assert.deepEqual(await handleWebhook(signed(body), body, unclaimed), { status: 500, body: 'pull_request labeled agent:review acme/app#12: gh output' })
+  assert.deepEqual(unclaimed.started, [])
+})
+
+test('handleWebhook ignores a trigger label on a claimed work item and removes it', async () => {
+  const body = reviewRequest('acme/app', 'agent:review', 'agent:reviewing')
+  const served = factory()
+  assert.deepEqual(await handleWebhook(signed(body), body, served), { status: 200, body: 'pull_request labeled agent:review acme/app#12: Work item already carries agent:reviewing' })
+  assert.deepEqual(served.labelEdits, ['--remove-label agent:review'])
+  assert.deepEqual(served.started, [])
 })

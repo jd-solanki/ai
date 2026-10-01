@@ -19,7 +19,13 @@ export interface WebhookPayload {
   pull_request?: Subject
 }
 
-export function claudeArgs(event: string, payload: WebhookPayload): { args: string[] } | { skip: string } {
+interface Launch {
+  args: string[]
+  claim: string[]
+  release: string[]
+}
+
+export function claudeArgs(event: string, payload: WebhookPayload): Launch | { skip: string, unlabel?: string[] } {
   const subject = payload.issue ?? payload.pull_request
   if (payload.action !== 'labeled' || !subject)
     return { skip: 'Not a label applied to a work item' }
@@ -30,6 +36,15 @@ export function claudeArgs(event: string, payload: WebhookPayload): { args: stri
     return { skip: `Work item lacks ${trigger.requires}` }
 
   const url = subject.html_url
+  const working = `${trigger.label}ing`
+  const edit = [payload.issue ? 'issue' : 'pr', 'edit', url]
+  // A trigger label left on the work item could not be applied again.
+  if (subject.labels.some(l => l.name === working))
+    return { skip: `Work item already carries ${working}`, unlabel: [...edit, '--remove-label', trigger.label] }
+
+  const release = [...edit, '--remove-label', working]
+  // The hook's stdin carries its JSON event, which `claude -p` would append to the prompt.
+  const then = trigger.then ? `claude -p '/${trigger.then} ${url}' </dev/null; ` : ''
   const args = [
     '--bg',
     '--name',
@@ -41,21 +56,25 @@ export function claudeArgs(event: string, payload: WebhookPayload): { args: stri
     'opus',
     '--effort',
     trigger.effort,
-    // The hook's stdin carries its JSON event, which `claude -p` would append to the prompt.
-    ...(trigger.then ? ['--settings', runOnStop(`claude -p '/${trigger.then} ${url}' </dev/null`)] : []),
+    '--settings',
+    runOnStop(`${then}gh ${release.join(' ')}`),
     `/${trigger.skill} ${url}`,
   ]
-  return { args }
+  return { args, claim: [...edit, '--remove-label', trigger.label, '--add-label', working], release }
 }
 
-// ponytail: Stop fires after every turn, so a turn ending on a question, or a human follow-up, reruns `then`.
-// create-pr only opens drafts and refuses a dirty tree; gate it on a done signal if stray drafts appear.
+// ponytail: Stop fires after every turn, so a turn ending on a question, or a human follow-up, reruns `then`
+// and releases the claim while the session is still open.
+// create-pr only opens drafts and refuses a dirty tree; gate both on a done signal if stray drafts appear.
 function runOnStop(command: string): string {
   return JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: 'command', command, timeout: 1800 }] }] } })
 }
 
-export function startSession(args: string[], cwd: string): Promise<{ ok: boolean, output: string }> {
+function run(file: string, args: string[], cwd?: string): Promise<{ ok: boolean, output: string }> {
   return new Promise((resolve) => {
-    execFile('claude', args, { cwd }, (error, stdout, stderr) => resolve({ ok: !error, output: stdout + stderr }))
+    execFile(file, args, { cwd }, (error, stdout, stderr) => resolve({ ok: !error, output: stdout + stderr }))
   })
 }
+
+export const startSession = (args: string[], cwd: string) => run('claude', args, cwd)
+export const gh = (args: string[]) => run('gh', args)

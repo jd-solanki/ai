@@ -18,14 +18,15 @@ yet, and where the two disagree the context is the target:
   HITL stop are unbuilt.
 - The pull request comes from the worktree's branch, `worktree-implement-<n>`, not the
   spec branch, so records `/create-spec` pushed to `spec/<n>` stay out of it.
-- No working labels: the trigger label stays on the work item and nothing shows a claim.
 - No Fixer exists, and nothing hands a review to one.
 
 Known gaps:
 
 - Stop fires after every turn. A turn that ends on a question, or a follow-up message
-  after you attach, runs `/create-pr` again. `/create-pr` only opens drafts and refuses
-  uncommitted work.
+  after you attach, runs `/create-pr` again and takes the working label off while the
+  session is still open. `/create-pr` only opens drafts and refuses uncommitted work.
+- A session that never reaches Stop keeps its working label, and its trigger label is
+  ignored, until a human removes the working label.
 
 Deliberately unbuilt:
 

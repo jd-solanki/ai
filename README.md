@@ -111,7 +111,10 @@ Apply a trigger label on GitHub:
 - `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session implements it and opens a draft PR.
 - `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score out of 5.
 
-The server does not apply the `…ing` labels or act on `agent:fix` yet. Status in [`CONTRIBUTING.md`](./CONTRIBUTING.md) lists what is unbuilt.
+When a run starts, the server swaps the trigger label for its `…ing` label, which comes off when the session stops.
+Apply the trigger label again to retry. Applied while the `…ing` label is still on, it is removed and nothing starts.
+
+The server does not act on `agent:fix` yet. Status in [`CONTRIBUTING.md`](./CONTRIBUTING.md) lists what is unbuilt.
 
 Then, on the factory machine:
 

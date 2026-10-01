@@ -12,6 +12,8 @@ _Avoid_: lock, assignment
   working label means a run holds the claim, and neither means no agent is on it.
 - Claiming swaps the labels: static code removes the trigger label and applies the
   working label. The working label stays exactly as long as the run.
+- A trigger label re-applied while its working label is on is ignored: static code logs it
+  and removes the trigger label.
 - Only static code applies or removes a working label. A human applies a trigger label,
   or a run does when it hands the work item to the next agent.
 - A label records state only where GitHub keeps no record of its own. No label marks a
