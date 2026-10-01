@@ -50,7 +50,7 @@ Say what the edit does in one sentence before you touch upstream. An edit you
 cannot describe is an edit you cannot backport.
 
 **Done when:** you have the diff, and every hunk in it belongs to the user rather
-than to an earlier `skills update`.
+than to an earlier update from upstream.
 
 ### 3. Apply it upstream
 
