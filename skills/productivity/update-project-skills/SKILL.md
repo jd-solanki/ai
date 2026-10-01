@@ -15,13 +15,16 @@ The list of projects is the user's call. Nothing is updated until they pick.
 
 ### 1. Find the projects
 
-Ask for the directory to search when the user has not named one.
+Search `~/Projects`, on Linux and macOS alike, unless the user names another directory.
 
 A project uses the skills CLI when a `skills-lock.json` sits at its root:
 
 ```bash
-find <dir> -name skills-lock.json -not -path '*/node_modules/*' -not -path '*/.git/*'
+find ~/Projects \( -name node_modules -o -name '.*' \) -prune -o -name skills-lock.json -print
 ```
+
+Pruning dot directories keeps the list to one row per project: a git worktree under
+`.claude/worktrees/` is a second checkout of a project already found.
 
 The lock's `skills` keys are the skill names. Names given? Keep the projects whose
 lock holds at least one, and say which projects you dropped and why.
