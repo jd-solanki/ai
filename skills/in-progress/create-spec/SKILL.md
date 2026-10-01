@@ -23,6 +23,8 @@ reached. The software factory picks it up once a teammate applies `agent:impleme
 - **Spec branch**: `spec/<n>`, where `<n>` is the spec's issue number. It carries the
   conversation's project-context records, and later the code.
 - **Owner step**: a human step that blocks merge or production, never an AFK issue.
+- **Origin**: the issue the spec was written for. Optional: a spec written straight
+  from the conversation has none.
 
 ## What a spec carries
 
@@ -54,7 +56,13 @@ out.
 The title is a Conventional Commit subject, because it becomes the pull request title,
 and a standalone spec's commit subject.
 
+A spec with an origin opens on `Resolves #<origin>`, or on `Part of #<origin>` when it
+delivers only some of it. Only `Resolves` earns the closing check under **Verification**,
+so merging closes the origin with the spec. A spec with no origin drops both lines.
+
 ```markdown
+Resolves #<origin>
+
 ## Problem
 
 ## Solution
@@ -78,6 +86,7 @@ and a standalone spec's commit subject.
 **Agent, before the pull request**
 
 - [ ] <check>
+- [ ] The pull request body carries `Closes #<origin>` beside the line that closes this spec.
 
 **Owner, after merge**
 
@@ -166,6 +175,9 @@ tell the user; creating labels is their call.
 ```bash
 gh issue create --label issue:spec --title "<title>" --body-file <spec.md>
 ```
+
+A spec with an origin adds `--blocking <origin>`, so the origin shows as blocked by the
+spec.
 
 The printed URL ends in the spec's number, `<n>`. When there are records:
 
