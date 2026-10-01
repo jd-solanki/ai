@@ -17,7 +17,7 @@
       "source": "jd-solanki/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/backport-skill/SKILL.md",
-      "computedHash": "c90609c01468d98b7bd748f4cbb2661b2950f150afd83f26b5d86a7721e19c38"
+      "computedHash": "c58ff993c3add6a1c042ce6c8de77705f79a50a3df24ba32db950b49673c3acf"
     },
     "clean-code": {
       "source": "jd-solanki/skills",
@@ -161,7 +161,7 @@
       "source": "jd-solanki/skills",
       "sourceType": "github",
       "skillPath": "skills/in-progress/review-pr/SKILL.md",
-      "computedHash": "05bd733c703d0b16e1cfa95c1e5910477c780e909f4e3ab93fbf20ac3add8b63"
+      "computedHash": "76899b2fa6b9cbe75209d2da1fa3f5a15675c286541f4e5064bd6bbf97f40900"
     },
     "setup-jd-solanki-skills": {
       "source": "jd-solanki/skills",
