@@ -64,7 +64,7 @@ REPO=owner/repo
 FUNNEL_URL="https://$(tailscale status --json | jq -r '.Self.DNSName | rtrimstr(".")')/"
 
 # 1. Clone to the convention path
-gh repo clone "$REPO" "$REPOS_DIR/$REPO"
+gh repo clone "$REPO" "${REPOS_DIR:?run from this repo so .env loads}/$REPO"
 
 # 2. Trust it: accept the prompt, then /exit
 (cd "$REPOS_DIR/$REPO" && claude)
@@ -81,11 +81,11 @@ gh label create agent:reviewing -R "$REPO" --force -d "Factory: a review run hol
 gh label create agent:fix -R "$REPO" --force -d "Factory: fix this PR's review findings"
 gh label create agent:fixing -R "$REPO" --force -d "Factory: a Fixer run holds this PR"
 
-# 6. Webhook; prints its id
-gh api "repos/$REPO/hooks" \
+# 6. Webhook
+HOOK_ID=$(gh api "repos/$REPO/hooks" \
   -f "config[url]=$FUNNEL_URL" -f 'config[content_type]=json' \
-  -f "config[secret]=$GITHUB_WEBHOOK_SECRET" \
-  -f 'events[]=issues' -f 'events[]=pull_request' --jq .id
+  -f "config[secret]=${GITHUB_WEBHOOK_SECRET:?run from this repo so .env loads}" \
+  -f 'events[]=issues' -f 'events[]=pull_request' --jq .id)
 ```
 
 Steps 4 and 5 change the project itself, so commit them there:
@@ -97,10 +97,9 @@ echo '.claude/worktrees/' >> .gitignore
 git add -A && git commit -m "chore: set up agent factory" && git push
 ```
 
-Check that GitHub reaches the server. A ping answers `200`:
+Check that GitHub reaches the server, in the shell that ran step 6. A ping answers `200`:
 
 ```bash
-HOOK_ID=<id from step 6>
 gh api -X POST "repos/$REPO/hooks/$HOOK_ID/pings"
 gh api "repos/$REPO/hooks/$HOOK_ID/deliveries" --jq '.[0] | "\(.event) \(.status_code)"'
 ```
