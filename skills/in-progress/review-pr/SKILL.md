@@ -1,13 +1,15 @@
 ---
 name: review-pr
 description: >
-  Review a PR or branch in one round of parallel dimension reviewers, adversarial verification, a
-  fix, and a fix-verify that reads the fixer's own diff. Loops again only if the fix-verify finds
-  something. Use when the user asks to review a PR, review a branch, or review until clean.
+  Review a PR or branch with parallel dimension reviewers and adversarial verification, ending in a
+  task list an implementer works. A later round fix-verifies the fixes made for an earlier one. On a
+  pull request it posts each task as a review thread and keeps one scored summary comment. Use when
+  the user asks to review a PR or a branch, or to verify the fixes for a review.
 ---
 
-One round, five phases: **probe → find → verify → fix → fix-verify**. Loop only when the
-fix-verify finds something.
+A first round runs **probe → find → verify** and ends in a task list. It never edits the code:
+whoever implements works the list. A later round, after fixes land, is **fix-verify** alone.
+Handed the task list of an earlier round, run a later round. Handed none, run a first round.
 
 A reviewer reads before it prescribes, refutes its own findings before it writes them down, and
 proves its site list with a command. Every Fix names a file the reviewer opened.
@@ -20,18 +22,18 @@ proves its site list with a command. Every Fix names a file the reviewer opened.
   them; ten agents covering one dimension each close theirs.
 - **Verify** stands between a plausible finding and the implementer. Roughly a quarter of what a
   competent reviewer reports does not survive contact with the code.
-- **Fix** applies what survived, from a task list it does not get to rewrite. A finding reaches it
-  specified or not at all, because the implementer is the agent with the least review behind it.
+- **Task list** hands what survived to the implementer, specified or not at all, because the
+  implementer is the agent with the least review behind it.
 - **Fix-verify** reads what the fixer wrote. New code and new prose enter the range at the moment
   no reviewer is left to read them, and that is where the next round's findings come from.
 
-## Loop
+## Rounds
 
 1. **Probe once per PR, not per round.** Its artifact is the only place environment facts are
    derived. Later phases read it.
-2. **Pin the range.** `git diff <merge-base>` — no second ref, so earlier phases' uncommitted
-   fixes stay in scope. Pin the spec too (PR body, or the issue it closes); a reviewer with no
-   spec reports style.
+2. **Pin the range.** `git diff <merge-base>` — no second ref, so uncommitted fixes stay in
+   scope. Pin the spec too (PR body, or the issue it closes); a reviewer with no spec reports
+   style.
 3. **Carry paths, not text.** Every agent writes its own ledger to the session scratchpad and
    returns one summary line. Hand the next agent the paths. Ledgers never enter your context, so
    nothing is retyped and nothing is dropped.
@@ -42,17 +44,17 @@ proves its site list with a command. Every Fix names a file the reviewer opened.
 5. **Merge duplicates before you dispatch refuters, not after.** Group by Anchor first: one file
    and line is one finding, whatever two dimensions called it. Two ids on one defect is one
    refuter, and the merged finding keeps the worst severity.
-6. **Hold the severity gate: blocker and major reach the implementer, minor reaches the report.**
+6. **Hold the severity gate: blocker and major reach the task list, minor reaches the report.**
    A minor costs one line to raise and a whole round to apply. Batch minors under `Deferred` and
    let the human raise one by id.
 7. **3b is not yours to skip.** By the time you reach it you have decided every survivor is worth
    carrying, and that decision is exactly what 3b audits. Skipping it to save one agent is the
-   cheapest-looking call in the loop and the most expensive one.
+   cheapest-looking call in the review and the most expensive one.
 8. **Route what went unchecked.** Every line under `Not exercised` becomes a dispatched agent in
    the next phase or a named accepted-risk line in your final report. Nothing else. A surface
    named in a ledger and addressed to nobody is a surface no one checks.
-9. **Dry, or round 3 → report.** Dry means the fix-verify found nothing. The ceiling is a
-   backstop, not dryness — say which ended the loop. `$ARGUMENTS` raises it.
+9. **A round ends in its report.** A first round's is the task list. A fix-verify round's is dry,
+   or new findings that run through phase 3 and land on a new task list.
 
 ## Roles
 
@@ -61,13 +63,30 @@ proves its site list with a command. Every Fix names a file the reviewer opened.
 | Probe | one agent, first, alone | writes the probe artifact and a sandbox; no repo write |
 | Find | one agent per dimension, parallel, fresh | read-only in the repo |
 | Verify | 3a one refuter per finding, parallel; 3b one judge over all survivors, always | read-only; 3a tries to kill each finding, 3b scores and merges the set |
-| Fix | one implementer, medium effort, works a fixed task list | stops on a Fix that does not apply as written; never verifies its own correctness |
-| Fix-verify | one agent | reads the implementer's diff only, not the range |
-| Carry | you | dispatch, join, pass paths, grep every Anchor, merge duplicates, gate minors, route `Not exercised` |
+| Fix-verify | one agent, a later round | reads the fix diff only, not the range |
+| Carry | you | dispatch, join, pass paths, grep every Anchor, merge duplicates, gate minors, route `Not exercised`, write the task list |
 
-Medium effort on the implementer is safe only downstream of 3b and the severity gate. A reasoning
-implementer handed a soft finding reasons its way to a fix nobody specified; a medium one applies
-that finding faster. The task list is what earns the lower effort.
+You never edit the code under review. The implementer is someone else: an agent working the task
+list, or the human.
+
+## On a pull request
+
+A pull request holds the review, so nothing has to survive in a session. A branch with no pull
+request skips this section: its report stays in the session.
+
+- **Check out the head, detached**: `gh pr checkout <n> --detach`. The range is read from the
+  working tree, a review commits nothing, and the branch may be checked out in another worktree.
+- **Each task is a review thread.** Post one review, event `COMMENT`, with one inline comment per
+  task on its Anchor line: the id, the severity, the Problem and the task. The implementer works
+  the threads and resolves each one it fixes. `COMMENT` only: a review informs, and a human decides
+  the merge.
+- **One summary comment, edited in place every round.** It opens with `<!-- review-pr:summary -->`,
+  which is how the next round finds it, and carries the score and the rest of the report. A second
+  summary comment splits the record.
+- **The round is read off the pull request.** No summary comment means a first round. One means a
+  later round, and the threads of the last review are its task list.
+- **A thread's state is the implementer's report.** Resolved claims `done`. Unresolved with a
+  reply claims `blocked`. Unresolved and silent is open.
 
 ## Phase 1 — Probe
 
@@ -126,7 +145,7 @@ Send each one this brief, filling the slots.
 
 <constraints>
   Read-only in the repo: change no file under [path], and run no git commit, push, checkout,
-  reset, merge or stash. Fixes from earlier rounds are uncommitted; a stray write destroys them.
+  reset, merge or stash. The working tree can hold uncommitted work; a stray write destroys it.
   Your single write is your own ledger. Experiment only in your per-role sandbox,
   [scratchpad]/sandbox-[role], built by the probe's recipe. Agents run beside you: a shared
   sandbox is rebuilt underneath you mid-command and your write lands in the repo instead. Check
@@ -143,7 +162,7 @@ Send each one this brief, filling the slots.
   Probe: [scratchpad]/probe.md — read it first. Its facts are derived; do not re-derive them.
   Range: [range]
   Spec: [path]
-  Read CLAUDE.md and CONTRIBUTING.md, then invoke /project-context, emit its triage line, and
+  Read AGENTS.md or CLAUDE.md, and CONTRIBUTING.md, then invoke /project-context, emit its triage line, and
   Read the domain files its table says this range needs.
 </context>
 
@@ -286,108 +305,66 @@ small and you can already see the answer — that round is the one it is for.
 Drop `real: false` and score 0. Carry anything marked `uncertain` through with its uncertainty
 stated — never silently. Where `sites_complete` is false, append `missing_sites` to the finding.
 
-## Phase 4 — Fix
+## Task list
 
-Dispatch at **medium effort**. Before you write the brief, turn the surviving findings into a
-numbered task list: one task per finding, each carrying the file, the exact edit, and how to tell
-it worked. A task you cannot write that concretely is a finding that is not ready — send it back
-to 3a or defer it. The list is the deliverable of your judging, and the implementer's job is to
-work it, not to rebuild it.
+Turn the surviving findings into a numbered task list: one task per finding, each carrying the
+file, the exact edit, and how to tell it worked. A task you cannot write that concretely is a
+finding that is not ready — send it back to 3a or defer it. The list is the deliverable of your
+judging. The implementer works it rather than rebuilding it, and that is what lets them work at
+medium effort: a soft finding handed to a reasoning implementer becomes a fix nobody specified.
 
-```xml
-<role>
-  Implementer. Work the task list below in order. Every task names its file and its edit, so
-  execute rather than re-derive — the findings already survived a refuter and a judge.
-  Invoke ponytail with args ultra: deletion before addition, shortest change that fully fixes.
-  Invoke /coding too, and obey its triage gate — load the references this range needs, not all of
-  them.
-</role>
-
-<constraints>
-  Directory: [path] — stay inside it. Earlier rounds are uncommitted: no git checkout, reset,
-  stash, commit, merge or push. Leave changes in the working tree.
-  `git add -N` every file you create or rename, the moment you do it. `git diff` hides an
-  untracked file, so the range would be missing it.
-</constraints>
-
-<task-list>
-  [one numbered task per finding:
-     N. <id> — <file:line> — <the exact edit> — <how to tell it worked>]
-</task-list>
-
-<task>
-  Read the full findings at [paths] before your first edit; the task list is the summary, the
-  ledger is the evidence. Two tasks on one site are one change: satisfy both, and correctness wins
-  any conflict. Where a finding carries `missing_sites`, fix those too — the reviewer's Fix
-  under-counted.
-
-  **A task that does not apply as written is `blocked`, not a rewrite.** Make no edit, say in one
-  line what the file holds and what you would need, and carry on. The commonest cause is a fence —
-  a comment arguing for the very thing the task changes — and a fence is the author disagreeing
-  with the reviewer, which the human settles. Resolving it yourself puts unreviewed reasoning into
-  the diff at the one point where nobody is left to read it.
-
-  Edit only what the tasks name, plus what those edits make wrong — a comment, a count, or a
-  `file:line` your change shifts. Name each of those in `Beyond the list`.
-
-  Before you finish, re-read your own diff and answer in writing: what did I write that no
-  reviewer has read? New prose and new guards are where the next round comes from.
-  Re-anchor every `file:line` your edits shifted, in /project-context and anywhere else.
-
-  Run the repo's checks (scripts in root package.json) until green, from the repository itself and
-  not a copy of it. Weaken no test or type.
-
-  Last, walk your own task list and mark each task `done` or `blocked` against the file on disk.
-  This is a coverage check, not a correctness one: it asks whether every task was addressed, and a
-  separate agent decides whether the edits are right.
-</task>
-
-<output>
-  Return exactly this:
-
-    ## Task list
-    - <N> <id> — done | blocked — <what changed, which file:line | what stopped me and what I need>
-
-    ## Beyond the list
-    - <every edit I made that no task named, by file, and which task forced it>
-
-    ## New surface
-    - <what I wrote that no reviewer has read, by file>
-
-    ## Pointers re-anchored
-    - <file:line cited> — <still correct | moved to :N>
-
-    ## Checks
-    - <command>: pass | fail — <exit code; error verbatim and short; run from [path]>
-
-    ## Notes
-    <a blocked task, an unpassable check, work not done. Otherwise "None.">
-</output>
+```text
+N. <id> — <file:line> — <the exact edit> — <how to tell it worked>
 ```
 
-## Phase 5 — Fix-verify
+Where a finding carries `missing_sites`, its task names them; the reviewer's Fix under-counted.
+Where two tasks touch one site, say so and name which wins. Ask the implementer to report each task
+`done` or `blocked`, with one line on why: fix-verify reads that report.
 
-The phase that replaces a round. One agent, cheap, reading the fixer's diff and nothing else.
+Score the range `N/5` as it stands when the round ends: how ready it is to merge. Weigh the
+severity and number of the verified findings, the complexity of the change, and how well it fits
+the codebase's patterns. Give the score one line of reason. Every round scores again. The score
+informs; only the task list asks for work.
+
+| Score | Meaning | Action |
+| --- | --- | --- |
+| 5/5 | Production ready | Merge |
+| 4/5 | Minor polish needed | Merge after small fixes |
+| 3/5 | Implementation issues | Address feedback first |
+| 2/5 | Significant bugs | Needs rework |
+| 0-1/5 | Critical problems | Major rethink needed |
+
+Your report is the score, the task list, the `Deferred` minors, the findings that died at the
+Anchor grep, and every accepted risk. The ledgers stay the evidence behind each task.
+
+## Phase 4 — Fix-verify
+
+A later round is this phase alone. One agent, cheap, reading the fix diff and nothing else.
+
+A scratchpad lasts one session, so a later round in a new session holds no probe and no ledgers.
+Run phase 1 again when `probe.md` is gone, and work from the task list when the ledgers are. On a
+pull request the fix diff starts at the last review's `commit_id`.
 
 ```xml
 <role>
   Fix verifier. You wrote none of this and you are not reviewing the pull request.
-  You review ONE diff: what the implementer just changed.
+  You review ONE diff: the changes made for the last task list.
 </role>
 <constraints>Read-only. Your single write is your ledger.</constraints>
 <task>
-  The implementer's report: [path]. The findings it claims to close: [paths].
+  The task list and the findings behind it: [paths]. The fix diff: [range: the commits since the
+  review, plus any uncommitted changes]. The implementer's report, if one exists: [path].
   Probe: [scratchpad]/probe.md.
 
-  1. For each task marked `done`, open the file and confirm it does what the finding asked, at
-     EVERY site in that finding's Sites field. For each marked `blocked`, confirm the file really
-     holds what the implementer says it holds — a blocked task is a claim too, and a wrong one
-     hides a fix that was never applied.
-  2. Read `Beyond the list`. No finding asked for those edits, so nobody has reviewed the reason
-     for them; review them as new code.
-  3. Read the implementer's "New surface" list, then review that new code and new prose as if it
-     arrived in a pull request. Run the commands the new prose tells a reader to run. A runbook
-     step nobody has executed is the most reliable way for a fix to ship broken.
+  1. For each task, open the file and confirm it does what the finding asked, at EVERY site in
+     that finding's Sites field. For a task reported `blocked`, confirm the file really holds what
+     the implementer says it holds — a blocked task is a claim too, and a wrong one hides a fix
+     that was never applied. A task with no report is open until the file shows otherwise.
+  2. Find every edit in the diff that no task asked for. Nobody has reviewed the reason for them;
+     review them as new code.
+  3. Review the diff's new code and new prose as if it arrived in a pull request. Run the commands
+     the new prose tells a reader to run. A runbook step nobody has executed is the most reliable
+     way for a fix to ship broken.
   4. Check the fixes against each other. Two fixes on one file can disagree.
   5. Re-run the repo's check scripts yourself, in the repository rather than a copy.
 </task>
@@ -397,7 +374,11 @@ The phase that replaces a round. One agent, cheap, reading the fixer's diff and 
 </output>
 ```
 
-`dry` ends the loop. Anything else goes back to phase 3 with the new findings.
+`dry` closes the review. Anything else goes through phase 3 and lands on a new task list.
+
+On a pull request, a fix that came back broken gets a reply on its thread saying what is wrong,
+and the thread reopened. A new finding gets a new thread. Then edit the summary comment with the
+new score.
 
 ## Traps
 
@@ -411,9 +392,8 @@ The phase that replaces a round. One agent, cheap, reading the fixer's diff and 
   refuted claim, two that were not actionable, one that predated the range — and the only harmful
   fix of the review. The severity gate is the cheapest filter in the pipeline and it sits in front
   of the most expensive phase.
-- **An implementer that improvises writes the bug nobody reads.** Phase 4 is the last point the
-  diff changes and the first point no reviewer is watching, so a task that does not apply gets
-  `blocked` and handed back.
+- **An implementer that improvises writes the bug nobody reads.** The fix is the last point the
+  diff changes and the first point no reviewer is watching. Fix-verify's step 2 exists for it.
 - **A rendered surface skips itself.** Left as a condition an agent evaluates under load, the
   browser pass is the one that gets dropped. The reference run reached round 3 before anyone loaded
   the page, and that one browser turn found the worst bug in the PR. The probe's step 6 settles it
@@ -428,6 +408,8 @@ The phase that replaces a round. One agent, cheap, reading the fixer's diff and 
   phase 1. A reviewer judging against stale context reports rules the repository no longer keeps.
 - **A ledger inside the repo dirties `git status`,** which the implementer reads. The session
   scratchpad needs no `.gitignore` entry.
+- **REST hides whether a thread is resolved.** `isResolved`, and the thread id that resolving or
+  reopening takes, live on GraphQL's `reviewThreads`.
 - **Dimensions do not converge, and that is the design working.** Independent reviewers overwhelmingly
   flag disjoint sets of locations. Expect each dimension to return findings the others missed. Two
   dimensions agreeing is a strong signal; two disagreeing is normal, and phase 3b settles it.
