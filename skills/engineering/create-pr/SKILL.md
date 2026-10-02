@@ -76,7 +76,7 @@ two things at once, and they will do both worse.
 
 You need a branch that is not the default one, and a clean tree with your work
 committed. On the default branch, or holding uncommitted changes? Say so and
-stop. Committing is `/git-commit`.
+stop.
 
 **Done when:** you know the base branch, the current branch, and that nothing is
 uncommitted.
