@@ -53,7 +53,7 @@ Skills taken from elsewhere and changed. They are maintained here now, so they l
   The glossary moved from a root `CONTEXT.md` into `/project-context`, and the multi-context `CONTEXT-MAP.md` branch was dropped: a term used inside one domain now lives in that domain file's **Words**.
 - **[`skills/engineering/tdd`](./skills/engineering/tdd/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
   Who agrees the seams depends on where the work came from. A spec runs **AFK**: the seams it names are agreed, and where it names none the agent takes the highest seam and names it in the commit message, because the session that writes the tests ends before the pull request exists. Work from the user in conversation still confirms the seams with them. The domain language is read from `/project-context` instead of a root `GLOSSARY.md`.
-- **[`skills/in-progress/grilling`](./skills/in-progress/grilling/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
+- **[`skills/engineering/grilling`](./skills/engineering/grilling/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
   The frontier is filtered by **altitude**: the goal always clears it, a technical question only when it is a one-way door, and every two-way door is the agent's to settle and list under **Assumed**. `/codebase-design` and `/domain-modeling` supply the vocabulary for the two levels, and the session closes on an ADR offer.
 
 Used unchanged, so not forked: see [`THIRD-PARTY.md`](./skills/scaffolding/setup-jd-solanki-skills/THIRD-PARTY.md).
