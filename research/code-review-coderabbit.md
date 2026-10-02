@@ -175,6 +175,29 @@ F1 falling from 0.657 on diffs under 10 lines to 0.043 over 150 `[F: arxiv]`.
   "nearly doubled" and acceptance fell `[F: codex]`. Top effort by default `[F: sonnet5]`.
 - Emoji feedback as a learning signal `[F: emoji]`; user-selected models `[F: online]`.
 
+## What it posts
+
+- **One summary comment, edited in place.** On a PR of eight commits pushed over five days
+  it stayed one comment: created 2026-09-27 12:11Z, last edited 2026-10-01 11:16Z, 24
+  seconds after the last push. With nothing actionable it posted no review object
+  `[F: gh-nuxt]`.
+- **Sections sit between HTML comment markers**, such as `<!-- walkthrough_start -->` and
+  `<!-- recent_review_start -->` `[F: gh-nuxt]`, so one section can be rewritten and the
+  rest left `[I]`.
+- **The round is a commit range.** A folded "Recent review info" reads "Reviewing files
+  that changed from the base of the PR and between `<sha>` and `<sha>`", and the merge-risk
+  line ends "up to `<short sha>`" `[F: gh-nuxt]`.
+- **Emoji mark folded section labels, with counts**: `⚙️ Run configuration`, `📥 Commits`,
+  `📒 Files selected for processing (2)`, `🚥 Pre-merge checks | ✅ 5`,
+  `✨ Finishing Touches`. A risk level carries a coloured dot: `⚪ Minimal`, `🔵 Low`
+  `[F: gh-nuxt]`.
+- **Order.** Status notice, recent review info, walkthrough, priority and severity, merge
+  risk, architecture summary, pre-merge checks table, finishing touches `[F: gh-nuxt]`.
+- **No review duration** anywhere in the comment `[F: gh-nuxt]`.
+
+`review-pr` took the emoji-labelled folded sections with counts and the coloured dot per
+severity.
+
 ## What transfers to review-pr
 
 Ranked by expected minutes saved `[E]`. Each item ends with its quality risk.
@@ -247,4 +270,5 @@ Budget for the 10-file PR `[E]`: brief 1–2 min, finders 4–6, verification 2�
 | sonnet5, gpt56, opus5 | `B/claude-sonnet-5-review`, `B/gpt-5-6-sol-and-terra-benchmark`, `B/opus-5-model-review` | 2026-06-30, 07-09, 07-24 | F |
 | router, security | `B/teaching-nvidia-nemotron-3-5-lightning-to-route-code-reviews`, `B/introducing-coderabbit-security` | 2026-08-11, 08-13 | F |
 | fable51, opus55, sonnet55 | `B/fable-5-1-model-review`, `B/opus-5-5-model-review`, `B/sonnet-5-5-model-review` | 2026-09-01, 09-22, 09-28 | F |
+| gh-nuxt | GitHub API: comments, reviews and commits on `nuxt/nuxt#36421` (`issuecomment-5855704554`) | 2026-10-01 | F |
 | docs | `D/guides/code-review-overview`, `D/configuration/path-instructions`, `D/configuration/auto-review`, `D/reference/configuration`, `D/reference/caching`, `D/knowledge-base/learnings`, `D/tools`, `D/cli`, `D/changelog`, `D/llms.txt` | read 2026-10-02 | F |

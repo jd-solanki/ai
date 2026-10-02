@@ -239,6 +239,31 @@ fix in their name and then we find the original pull request that caused the thi
 - **LLM-as-judge for code quality in research.** "Dint feel right" `[F: hn-judge]`. It is
   still used to score whether a comment was addressed `[F: v4]`.
 
+## What it posts
+
+- **One summary comment, edited in place.** It opens with `<!-- greptile_summary -->`
+  `[F: gh-openmrs]`. On a PR of 22 commits reviewed three times it stayed one comment:
+  created 2026-08-03 04:12Z, last edited 14:30Z, footer `Reviews (3)`, and no review
+  object `[F: gh-dad]`. A user who measured the same concluded that the footer is the
+  freshness signal and the comment's timestamp is not `[F: dad-366]`.
+- **The footer carries the round.** `Reviews (N) · Last reviewed commit: <link>`
+  `[F: docs-anatomy, gh-openmrs]`.
+- **Each finding links to its thread.** The summary lists a finding as one numbered line
+  ending in a link to its inline comment. The inline comment opens with a P0–P2 badge and
+  a bold title. On a first review the inline comments ride a review object, state
+  `COMMENTED` `[F: gh-openmrs]`.
+- **Shape.** An `h2` "Confidence Score: 4/5" beside a re-trigger badge, a bold risk label,
+  `Findings`, a `<details open>` Summary, and a hidden
+  `<!-- greptile_confidence_score:4 -->` `[F: gh-openmrs]`.
+- **No emoji on headings and no review duration** anywhere in the comment
+  `[F: gh-openmrs]`.
+- **Config.** `updateSummaryOnly` updates the summary and posts no inline comments;
+  `shouldUpdateDescription` writes the summary into the PR description `[S: docs-json]`.
+
+`review-pr` took the first three: a marker comment rewritten every round, the footer, and
+one line per task linking to its thread. It adds `Took <minutes>m` to the footer, which
+Greptile does not show.
+
 ## What transfers to review-pr
 
 Baseline: 72 minutes on a 10-file, +534/−158 PR, every agent on the largest model at
@@ -335,6 +360,9 @@ Dates on docs pages are the fetch date.
 | plugin | `https://github.com/greptileai/claude-plugin` (`commands/review.md`) | 2026-10-01 | F |
 | skills | `https://github.com/greptileai/skills`, `https://github.com/greptileai/cli` | 2026-10-01 | F |
 | demo | GitHub API timestamps, `greptileai/demo-{celestia-core,onyx,itk,cline,fuser}` | 2026-09-21..25 | F, mapping I |
+| gh-openmrs, gh-dad | GitHub API: comments and reviews on `openmrs/openmrs-esm-core#1930`, `vfarcic/dot-agent-deck#353` | 2026-10-02, 2026-08-03 | F |
+| dad-366 | `https://github.com/vfarcic/dot-agent-deck/issues/366` | 2026-08-03 | F |
+| docs-json | `D/code-review/greptile-json-reference` | 2026-10-02 | S |
 | claude | `https://claude.com/customers/greptile` | undated on page | F |
 | hn-label, hn-one, hn-grep | `H42483721`, `H43862283`, `H45417130` | 2024-12-22, 2025-05-01, 2025-09-29 | F |
 | hn-judge, hn-indep, hn-nit | `H46305093`, `H46769696`, `H46776408` | 2025-12-17, 2026-01-26, 2026-01-27 | F |
