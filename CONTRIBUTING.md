@@ -6,6 +6,10 @@ cl-factory runs agents on the owner's GitHub repositories: a teammate applies a 
 label, and the matching agent works in a local clone and reports back on GitHub. It is one
 Node server on the owner's machine, driving Claude Code.
 
+The skills its agents run come from [jd-solanki/skills](https://github.com/jd-solanki/skills)
+and are written for this factory, so a change to how a skill is launched or run lands in
+both repositories.
+
 ## Status
 
 What runs today: `TRIGGERS` in [`src/session.ts`](./src/session.ts). A trigger label starts one
