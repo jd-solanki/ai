@@ -115,6 +115,12 @@
       "skillPath": "skills/engineering/implement/SKILL.md",
       "computedHash": "2139cfedf24791adbc839aaab6019cff158af1e28bfead020ec6e0ce01b3e74d"
     },
+    "link-skills": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/link-skills/SKILL.md",
+      "computedHash": "3a3bad4d724ae24aa09f6888257e65d98b42786f982130e5558516cd124ce4b1"
+    },
     "node-cli": {
       "source": "jd-solanki/skills",
       "sourceType": "github",
