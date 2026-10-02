@@ -19,11 +19,12 @@ See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking g
 
 A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
 
-**Test only at pre-agreed seams.** Before writing any test, write down the seams under test. Seams named in the spec or ticket you were given are already agreed: test there. If it names none, confirm the seams with the user; when no user is present, choose the highest seam available and list the seams you chose in the pull request. You can't test everything, so agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
+**Test only at pre-agreed seams.** Before writing any test, write down the seams under test. You can't test everything, so agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case. Who agrees them depends on where the work came from:
 
-To confirm, ask: "What's the public interface, and which seams should we test?"
+- **A spec, or one of its sub-issues**: you run **AFK**. Nobody is there to answer, so every choice the spec leaves open is yours to settle. The seams the spec names are agreed: test there. Where it names none, take the highest seam, the outermost interface where the behavior is observable, and name it in the commit message so the reviewer can object.
+- **The user, in conversation**: confirm the seams with them before the first test. Ask: "What's the public interface, and which seams should we test?"
 
-When the shape of that interface is itself in question (how deep the module is, where the seam belongs, what the interface should expose), call the Skill tool with "codebase-design" for the vocabulary. It is the shared source of the module, interface, depth, seam, adapter, leverage and locality terms, and it is a reference to consult, not a session to run.
+When the shape of that interface is itself in question (how deep the module is, where the seam belongs, what the interface should expose), invoke `/codebase-design` for the vocabulary. It is the shared source of the module, interface, depth, seam, adapter, leverage and locality terms, and it is a reference to consult, not a session to run.
 
 ## Anti-patterns
 
@@ -35,4 +36,4 @@ When the shape of that interface is itself in question (how deep the module is, 
 
 - **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
-- **Refactoring is not part of the loop.** It belongs to the review stage (see the `code-review` skill), not the red → green implementation cycle.
+- **Refactoring is not part of the loop.** It belongs to the review stage (`/code-review`), not the red → green implementation cycle.
