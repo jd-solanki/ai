@@ -47,7 +47,8 @@ split the work.
 _Avoid_: ticket, epic, PRD
 
 **Sub-issue**:
-A spec's native GitHub child: one step in the spec's ordered series.
+A spec's native GitHub child: one piece of the spec's work, blocked by the siblings it
+waits on.
 _Avoid_: slice, child issue, ticket
 
 **Done set**:

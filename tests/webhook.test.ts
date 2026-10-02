@@ -15,6 +15,7 @@ function reviewRequest(fullName: string, ...labels: string[]) {
   return Buffer.from(JSON.stringify({
     action: 'labeled',
     label: { name: 'agent:review' },
+    sender: { login: 'octocat' },
     repository: { name: 'app', full_name: fullName },
     pull_request: { number: 12, html_url: 'https://github.com/acme/app/pull/12', labels: labels.map(name => ({ name })) },
   }))

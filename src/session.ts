@@ -1,8 +1,28 @@
 import { execFile } from 'node:child_process'
 
 const TRIGGERS = [
-  { event: 'issues', label: 'agent:implement', requires: 'issue:spec', skill: 'implement', effort: 'medium', then: 'create-pr' },
-  { event: 'pull_request', label: 'agent:review', skill: 'review-pr', effort: 'high' },
+  {
+    event: 'issues',
+    label: 'agent:implement',
+    requires: 'issue:spec',
+    skill: 'implement-spec',
+    effort: 'medium',
+    handOff: 'Once the draft pull request is open, hand it to the Reviewer: apply the agent:review label to the pull request as your last action.',
+  },
+  {
+    event: 'pull_request',
+    label: 'agent:review',
+    skill: 'review-pr',
+    effort: 'high',
+    handOff: 'Once the round is saved: a dry round is the approval, so rewrite the pull request body in the shape /create-pr gives one, keeping every Closes line, and mark the pull request ready for review. A round that left tasks, in a review that has not ended, goes to the Fixer: apply the agent:fix label to the pull request as your last action.',
+  },
+  {
+    event: 'pull_request',
+    label: 'agent:fix',
+    skill: 'implement',
+    effort: 'medium',
+    handOff: 'The work is the unresolved threads of the pull request\'s last review. Check the pull request out detached: its branch may be checked out in another worktree. Each fix is its own commit, with a Conventional Commit subject naming the fix and no Closes footer. Push to the pull request\'s branch and resolve each thread you fixed, then hand back to the Reviewer: apply the agent:review label to the pull request as your last action.',
+  },
 ]
 
 interface Subject {
@@ -14,6 +34,7 @@ interface Subject {
 export interface WebhookPayload {
   action?: string
   label?: { name: string }
+  sender?: { login: string }
   repository: { name: string, full_name: string }
   issue?: Subject
   pull_request?: Subject
@@ -27,7 +48,7 @@ interface Launch {
 
 export function claudeArgs(event: string, payload: WebhookPayload): Launch | { skip: string, unlabel?: string[] } {
   const subject = payload.issue ?? payload.pull_request
-  if (payload.action !== 'labeled' || !subject)
+  if (payload.action !== 'labeled' || !subject || !payload.sender)
     return { skip: 'Not a label applied to a work item' }
   const trigger = TRIGGERS.find(t => t.event === event && t.label === payload.label?.name)
   if (!trigger)
@@ -43,8 +64,6 @@ export function claudeArgs(event: string, payload: WebhookPayload): Launch | { s
     return { skip: `Work item already carries ${working}`, unlabel: [...edit, '--remove-label', trigger.label] }
 
   const release = [...edit, '--remove-label', working]
-  // The hook's stdin carries its JSON event, which `claude -p` would append to the prompt.
-  const then = trigger.then ? `claude -p '/${trigger.then} ${url}' </dev/null; ` : ''
   const args = [
     '--bg',
     '--name',
@@ -56,18 +75,21 @@ export function claudeArgs(event: string, payload: WebhookPayload): Launch | { s
     'opus',
     '--effort',
     trigger.effort,
+    '--append-system-prompt',
+    `You run unattended for the software factory: nobody answers a question. @${payload.sender.login} applied ${trigger.label}: mention them wherever you stop for a human. ${trigger.handOff}`,
     '--settings',
-    runOnStop(`${then}gh ${release.join(' ')}`),
+    runWhenIdle(`gh ${release.join(' ')}`),
     `/${trigger.skill} ${url}`,
   ]
   return { args, claim: [...edit, '--remove-label', trigger.label, '--add-label', working], release }
 }
 
-// ponytail: Stop fires after every turn, so a turn ending on a question, or a human follow-up, reruns `then`
-// and releases the claim while the session is still open.
-// create-pr only opens drafts and refuses a dirty tree; gate both on a done signal if stray drafts appear.
-function runOnStop(command: string): string {
-  return JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: 'command', command, timeout: 1800 }] }] } })
+// Stop fires after every turn, and a turn that ends while subagents run is not the end of the run.
+// ponytail: a turn that ends on a question with nothing running still releases the claim while the session is open.
+// Sessions are told nobody answers; gate on a done signal if a re-trigger ever doubles a run.
+function runWhenIdle(command: string): string {
+  const idle = `node -e 'process.exit(JSON.parse(require("fs").readFileSync(0)).background_tasks.length ? 1 : 0)'`
+  return JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: 'command', command: `${idle} && ${command}`, timeout: 60 }] }] } })
 }
 
 function run(file: string, args: string[], cwd?: string): Promise<{ ok: boolean, output: string }> {

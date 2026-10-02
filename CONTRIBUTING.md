@@ -13,32 +13,25 @@ both repositories.
 ## Status
 
 What runs today: `TRIGGERS` in [`src/session.ts`](./src/session.ts). A trigger label starts one
-background session, and a Stop hook opens the draft pull request.
+background session, and each session hands off by applying the next agent's trigger label.
 
-The code is the proven prototype. `/project-context` holds decisions it does not implement
-yet, and where the two disagree the context is the target:
-
-- One session implements a whole spec. The walk over sub-issues, the done set and the
-  HITL stop are unbuilt.
-- The pull request comes from the worktree's branch, `worktree-implement-<n>`, not the
-  spec branch, so records `/create-spec` pushed to `spec/<n>` stay out of it.
-- No Fixer exists, and nothing hands a review to one.
+The pipeline in `/project-context` is built but unproven: no spec with sub-issues, no HITL
+stop and no Fixer run has gone end to end on a served repo.
 
 Known gaps:
 
-- Stop fires after every turn. A turn that ends on a question, or a follow-up message
-  after you attach, runs `/create-pr` again and takes the working label off while the
-  session is still open. `/create-pr` only opens drafts and refuses uncommitted work.
+- A turn that ends on a question takes the working label off while the session is still
+  open.
 - A session that never reaches Stop keeps its working label, and its trigger label is
   ignored, until a human removes the working label.
+- A hand-off is the session's own act. A session that skips it leaves the pull request
+  with no `agent:*` label, and a human applies the next one.
 
 Deliberately unbuilt:
 
 - Hosted resources. The factory is local only to keep the cost zero, because remote
   resources cost money: it runs on the owner's machine, with no hosted compute or storage
   such as Cloudflare.
-- A cap on review rounds. A human decides when review and fix stop alternating, and what
-  happens to findings still open.
 
 ## Conventions
 

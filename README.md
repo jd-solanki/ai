@@ -6,10 +6,10 @@ Put a label on a GitHub issue or pull request. A Claude Code background session 
 flowchart LR
   L["Label applied on GitHub"] -->|webhook| F["Tailscale Funnel"] --> S["src/server.ts"]
   S -->|"claude --bg"| B["Background session<br/>in its own worktree"]
-  B -.->|"Stop hook, when the trigger has a next skill"| P["claude -p /create-pr"] --> PR["Draft PR"]
+  B -.->|"hands off: applies the next agent's label"| L
 ```
 
-`TRIGGERS` in `src/session.ts` lists each label, the skill it starts, the effort it runs at, and the skill that runs once that session stops.
+`TRIGGERS` in `src/session.ts` lists each label, the skill it starts, the effort it runs at, and how its session hands off.
 
 Each session is named `<label> <repo>#<number>`, for example `agent:implement cl-factory#1`.
 It works in its own git worktree, `.claude/worktrees/<skill>-<number>`, so two sessions never share a checkout.
@@ -29,7 +29,7 @@ The server finds everything by convention. Each repo it serves needs:
 1. A clone at `$REPOS_DIR/<owner>/<repo>`, matching GitHub's `owner/repo`. With `REPOS_DIR=~/Projects/github`, `acme/app` lives at `~/Projects/github/acme/app`. Sessions run there, not in the folder the server runs from.
 2. Claude Code trust. `claude --bg` refuses a folder you haven't trusted.
 3. Every label in step 3 of [Add a project](#add-a-project).
-4. The pipeline's skills (`create-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, committed and pushed. A worktree only holds committed files. `skills-lock.json` in this repo lists where each skill comes from.
+4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, committed and pushed. A worktree only holds committed files. `skills-lock.json` in this repo lists where each skill comes from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
 6. A webhook to this server, using the JSON content type, the `issues` and `pull_request` events, and the secret from `.env`.
 
@@ -108,13 +108,22 @@ gh api "repos/$REPO/hooks/$HOOK_ID/deliveries" --jq '.[0] | "\(.event) \(.status
 
 Apply a trigger label on GitHub:
 
-- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session implements it and opens a draft PR.
-- `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score out of 5.
+- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session builds the spec's sub-issues, in parallel where none blocks another, opens a draft PR and hands it to the review.
+- `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score.
+- `agent:fix` on a pull request. The session fixes the review's threads and hands the PR back to the review.
 
-When a run starts, the server swaps the trigger label for its `…ing` label, which comes off when the session stops.
-Apply the trigger label again to retry. Applied while the `…ing` label is still on, it is removed and nothing starts.
+You apply the first label. Each session applies the next one:
 
-The server does not act on `agent:fix` yet. Status in [`CONTRIBUTING.md`](./CONTRIBUTING.md) lists what is unbuilt.
+```mermaid
+flowchart LR
+  I["agent:implement<br/>on a spec"] -->|"draft PR"| R["agent:review"]
+  R -->|"findings"| X["agent:fix"] --> R
+  R -->|"no findings"| D["PR ready for review"]
+  R -->|"third review, findings open"| H["A human decides"]
+```
+
+When a run starts, the server swaps the trigger label for its `…ing` label, which comes off when the session stops with no subagent still running.
+Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
 Then, on the factory machine:
 
