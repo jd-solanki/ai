@@ -82,6 +82,10 @@ request skips this section: its report stays in the session.
   later round, and the threads of the last review are its task list.
 - **A thread's state is the implementer's report.** Resolved claims `done`. Unresolved with a
   reply claims `blocked`. Unresolved and silent is open.
+- **The third round is the last.** A third round that leaves tasks ends the review: the tasks go
+  to a human, not to an implementer, and the summary's Action reads `Review ended: a human
+  decides`. Every later round ends the same way. Rounds that do not converge spend budget with
+  nobody watching.
 
 ### The summary comment
 
@@ -113,7 +117,7 @@ Every round rewrites it from this template. `Reviews` counts the rounds, this on
 
 Emoji go on headings and severities only, one meaning each: 🔴 blocker, 🟠 major, 🟡 minor. A
 reader scanning finds a section by its mark. A section with nothing in it is left out, `Tasks`
-excepted. A dry round opens with ✅ in place of 🔍.
+excepted. A dry round opens with ✅ in place of 🔍, and an ended review with 🛑.
 
 ## Step 1 — Probe
 
@@ -266,7 +270,7 @@ The data stays local and outlives the session; the skill is tuned from it.
 ## A later round — Fix-verify
 
 This is the round a pull request sees most: it is run again after every batch of fixes, until
-it comes back dry. It reads the fix diff alone, so it is short and it re-raises nothing an earlier
+it comes back dry or the third round ends the review. It reads the fix diff alone, so it is short and it re-raises nothing an earlier
 round already settled.
 
 A later round's probe is three facts. Write the fix diff to `[scratchpad]/range.diff`, start the

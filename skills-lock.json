@@ -115,6 +115,12 @@
       "skillPath": "skills/engineering/implement/SKILL.md",
       "computedHash": "2139cfedf24791adbc839aaab6019cff158af1e28bfead020ec6e0ce01b3e74d"
     },
+    "implement-spec": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/in-progress/implement-spec/SKILL.md",
+      "computedHash": "f739d9cc42b5aa3e888112022a738b6fd186bf5ab95b067b80e0e4637fdb2011"
+    },
     "link-skills": {
       "source": "jd-solanki/skills",
       "sourceType": "github",
@@ -167,7 +173,7 @@
       "source": "jd-solanki/skills",
       "sourceType": "github",
       "skillPath": "skills/in-progress/review-pr/SKILL.md",
-      "computedHash": "287721e3a640ecca9ff2896c6a4ea65bf550a9a1ef2b0389df3f487d3914e51e"
+      "computedHash": "2525c5fb169c7b5cb2f957a5728bd1a548cb23b8e41dc7dcd156c6e8f1dfb0be"
     },
     "setup-jd-solanki-skills": {
       "source": "jd-solanki/skills",
