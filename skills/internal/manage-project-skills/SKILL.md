@@ -30,7 +30,20 @@ Pruning dot directories keeps the list to one row per project: a git worktree un
 
 The lock's `skills` keys are the skill names. Keep the projects the change alters: for
 an update or a remove, those whose lock holds a named skill; for an add, those the user
-names. Say which projects you dropped and why.
+names.
+
+Of those, keep only the projects checked out on their default branch:
+
+```bash
+git ls-remote --symref origin HEAD   # names the default branch
+git branch --show-current
+```
+
+Any other branch is work in flight, often an agent's checkout for another task, and a
+skills commit made there rides that branch. Leave the project untouched, even one the
+user named.
+
+Say which projects you dropped and why: for a branch, name it.
 
 **Done when:** every lock file the search found is either in the list or named as
 dropped.
