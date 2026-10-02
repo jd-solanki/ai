@@ -17,7 +17,7 @@
       "source": "jd-solanki/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/backport-skill/SKILL.md",
-      "computedHash": "e33e1d6edbe63e89be5b6f90a43dec48db7be8b3c6f761f5d1733101223436ec"
+      "computedHash": "5e9d2671c8cb0b1ca685dcf705562c4c4c651dbb48a7574993ef12626e965839"
     },
     "clean-code": {
       "source": "jd-solanki/skills",
@@ -70,13 +70,13 @@
     "create-spec": {
       "source": "jd-solanki/skills",
       "sourceType": "github",
-      "skillPath": "skills/in-progress/create-spec/SKILL.md",
+      "skillPath": "skills/engineering/create-spec/SKILL.md",
       "computedHash": "26fc21ac22df3cf84305c443e0e24a2ca1266f1823498f2ad08d18b5c11da08c"
     },
     "create-ticket": {
       "source": "jd-solanki/skills",
       "sourceType": "github",
-      "skillPath": "skills/in-progress/create-ticket/SKILL.md",
+      "skillPath": "skills/engineering/create-ticket/SKILL.md",
       "computedHash": "ca711abaef8e1b33406449d13c906cf45502ce25669f876f5022ad36cc60dc66"
     },
     "domain-modeling": {
@@ -100,7 +100,7 @@
     "grilling": {
       "source": "jd-solanki/skills",
       "sourceType": "github",
-      "skillPath": "skills/in-progress/grilling/SKILL.md",
+      "skillPath": "skills/engineering/grilling/SKILL.md",
       "computedHash": "35fa5e397b2749cbad3cc1ab25f91732dc5e5dbf6c7210845a2706a3647be05e"
     },
     "humanizer": {
@@ -174,6 +174,12 @@
       "sourceType": "github",
       "skillPath": "skills/context-engineering/setup-project-context/SKILL.md",
       "computedHash": "84c2c42638d73af0dfb2e2b0b643bd9465bf48e8937e87bdaf5fec1f5e64fc0d"
+    },
+    "tdd": {
+      "source": "jd-solanki/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/tdd/SKILL.md",
+      "computedHash": "9a30eacb38f5c0ea7a6f62fc4fc8768e9d4503f9a8fc787f2b3edccde3131e19"
     },
     "writing-for-agents": {
       "source": "mattpocock/skills",
