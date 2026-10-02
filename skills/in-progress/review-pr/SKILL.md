@@ -72,16 +72,48 @@ request skips this section: its report stays in the session.
 - **Check out the head, detached**: `gh pr checkout <n> --detach`. The range is read from the
   working tree, a review commits nothing, and the branch may be checked out in another worktree.
 - **Each task is a review thread.** Post one review, event `COMMENT`, with one inline comment per
-  task on its Anchor line: the id, the severity, the Problem and the task. The implementer works
-  the threads and resolves each one it fixes. `COMMENT` only: a review informs, and a human decides
-  the merge.
+  task on its Anchor line: the severity mark, the id, the severity, the Problem and the task. The
+  implementer works the threads and resolves each one it fixes. `COMMENT` only: a review informs,
+  and a human decides the merge.
 - **One summary comment, edited in place every round.** It opens with `<!-- review-pr:summary -->`,
-  which is how the next round finds it, and carries the score and the rest of the report. A second
-  summary comment splits the record.
+  which is how the next round finds it, and carries the score and the rest of the report in the
+  shape below. A second summary comment splits the record.
 - **The round is read off the pull request.** No summary comment means a first round. One means a
   later round, and the threads of the last review are its task list.
 - **A thread's state is the implementer's report.** Resolved claims `done`. Unresolved with a
   reply claims `blocked`. Unresolved and silent is open.
+
+### The summary comment
+
+Every round rewrites it from this template. `Reviews` counts the rounds, this one included.
+`Took` is this round's wall-clock in minutes, from `started`, as step 5 names it, to now.
+
+```markdown
+<!-- review-pr:summary -->
+## 🔍 Review: <N>/10 — <the score table's Action>
+
+<the score's one line of reason>
+
+### 📋 Tasks (<count>)
+
+- 🟠 `<id>` · `<file:line>` · <the Problem, in a line> · <link to its thread>
+
+<details><summary>❓ Unproven (<count>)</summary>
+
+- <one line per finding, as above, with what its investigator could not show>
+
+</details>
+<details><summary>💤 Deferred minors (<count>)</summary> … </details>
+<details><summary>🗑️ Killed (<count>)</summary> … </details>
+<details><summary>⚓ Died at the Anchor grep (<count>)</summary> … </details>
+<details><summary>🙈 Unchecked (<count>)</summary> … </details>
+
+<sub>Reviews (<n>) · Last reviewed commit: <short sha> · Took <minutes>m</sub>
+```
+
+Emoji go on headings and severities only, one meaning each: 🔴 blocker, 🟠 major, 🟡 minor. A
+reader scanning finds a section by its mark. A section with nothing in it is left out, `Tasks`
+excepted. A dry round opens with ✅ in place of 🔍.
 
 ## Step 1 — Probe
 
@@ -261,8 +293,8 @@ is `correct`, every check exits 0, and nothing is confirmed, uncertain or deferr
 the review. Anything else lands on a new task list.
 
 On a pull request, a fix that came back broken gets a reply on its thread saying what is wrong,
-and the thread reopened. A new finding gets a new thread. Then edit the summary comment with the
-new score, and save the round as step 5 says.
+and the thread reopened. A new finding gets a new thread. Then rewrite the summary comment, and
+save the round as step 5 says.
 
 ## Traps
 
