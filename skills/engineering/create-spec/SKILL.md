@@ -179,6 +179,13 @@ gh issue create --label issue:spec --title "<title>" --body-file <spec.md>
 A spec with an origin adds `--blocking <origin>`, so the origin shows as blocked by the
 spec.
 
+When the repository has an open milestone, the spec and every sub-issue add
+`--milestone "<title>"`, taking the one due soonest:
+
+```bash
+gh api 'repos/{owner}/{repo}/milestones' --jq '.[0].title'
+```
+
 The printed URL ends in the spec's number, `<n>`. When there are records:
 
 ```bash
