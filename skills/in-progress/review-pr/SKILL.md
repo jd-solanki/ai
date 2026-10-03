@@ -2,7 +2,7 @@
 name: review-pr
 description: >
   Review a PR or branch: parallel dimension reviewers raise candidates, an investigator proves or
-  kills each serious one, and the round ends in a task list an implementer works. A later round
+  kills each defect, and the round ends in a task list an implementer works. A later round
   fix-verifies the fixes made for an earlier one. On a pull request it posts each task as a review
   thread and keeps one scored summary comment. Use when the user asks to review a PR or a branch,
   or to verify the fixes for a review.
@@ -48,16 +48,18 @@ the opt-in that tool asks for, and the script decides how many agents run.
    the file it names: confirmed, uncertain and deferred alike. A miss drops the finding. Say in
    your report which findings died here: a paraphrased quote and an invented one look identical
    from where you sit.
-5. **Hold the severity gate: blocker and major reach the task list, minor reaches the report.**
-   A minor costs one line to raise, an investigator to prove and a whole round to apply. Batch
-   minors under `Deferred`, marked unverified, and let the human raise one by id. A raised minor
-   is proved in the next round before it becomes a task.
+5. **Hold the severity gate: a defect reaches the task list, a nitpick reaches the report.**
+   Blocker, major and minor are defects. An investigator proves each, and a confirmed minor is a
+   task beside the majors, fixed in the same push. A nitpick is polish: nothing breaks if it
+   stays. Batch nitpicks under `Nitpicks`, unverified, and let the human raise one by id. A raised
+   nitpick is proved in the next round before it becomes a task.
 6. **An uncertain finding is not a task.** Carry it under `Unproven` with what its investigator
    could not show — never silently. The human decides.
-7. **Name everything that went unchecked.** Each `accepted_risk`, each `uncovered_files` entry
-   and each `not_reviewed` agent gets a line in your report, the surfaces marked `serious` first:
-   no agent chases them, so the human decides which one earns a dimension of its own. An agent
-   that died reviewed nothing: its dimension is not reviewed, never clean.
+7. **Name what went unchecked, once.** Each `accepted_risk` marked `serious`, each
+   `uncovered_files` entry and each `not_reviewed` agent gets a line in your report; the other
+   risks stay in the saved round. Lines naming one surface fold into one. No agent chases them,
+   so the human decides which one earns a dimension of its own. An agent that died reviewed
+   nothing: its dimension is not reviewed, never clean.
 8. **A round ends in its report, saved.** A first round's is the task list. A fix-verify round's
    is dry, or a new task list. Step 5 saves either.
 
@@ -68,6 +70,8 @@ list, or the human.
 
 A pull request holds the review, so nothing has to survive in a session. A branch with no pull
 request skips this section: its report stays in the session.
+
+Write every thread, reply and summary comment with `/writing-for-humans`: a person reads them.
 
 - **Check out the head, detached**: `gh pr checkout <n> --detach`. The range is read from the
   working tree, a review commits nothing, and the branch may be checked out in another worktree.
@@ -82,6 +86,9 @@ request skips this section: its report stays in the session.
   later round, and the threads of the last review are its task list.
 - **A thread's state is the implementer's report.** Resolved claims `done`. Unresolved with a
   reply claims `blocked`. Unresolved and silent is open.
+- **The closing round files what is left.** A round that closes the review, dry or ended, files
+  every listed nitpick and every Unproven finding as one issue on the pull request's repository,
+  and links it from the summary. A later round edits that issue rather than filing a second.
 - **The third round is the last.** A third round that leaves tasks ends the review: the tasks go
   to a human, not to an implementer, and the summary's Action reads `Review ended: a human
   decides`. Every later round ends the same way. Rounds that do not converge spend budget with
@@ -89,8 +96,12 @@ request skips this section: its report stays in the session.
 
 ### The summary comment
 
-Every round rewrites it from this template. `Reviews` counts the rounds, this one included.
-`Took` is this round's wall-clock in minutes, from `started`, as step 5 names it, to now.
+Every round rewrites it whole from this template and writes nothing beside the template's lines.
+Each item appears once across all rounds: earlier rounds' items keep their place, a later round
+adds only what is new, and an item that changes state moves rather than repeats. A fixed task
+stays under Tasks as `fixed`; a raised nitpick leaves Nitpicks when it becomes a task. A heading is
+its mark, its name and its count. `Reviews` counts the rounds, this one included. `Took` is this
+round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 
 ```markdown
 <!-- review-pr:summary -->
@@ -98,26 +109,27 @@ Every round rewrites it from this template. `Reviews` counts the rounds, this on
 
 <the score's one line of reason>
 
-### 📋 Tasks (<count>)
+### <state mark> Tasks (<fixed>/<all> fixed)
 
-- 🟠 `<id>` · `<file:line>` · <the Problem, in a line> · <link to its thread>
+- 🟠 `<id>` · `<file:line>` · <the Problem, in a line> · <open, fixed or broken> · <link to its thread>
 
 <details><summary>❓ Unproven (<count>)</summary>
 
 - <one line per finding, as above, with what its investigator could not show>
 
 </details>
-<details><summary>💤 Deferred minors (<count>)</summary> … </details>
+<details><summary>⏭️ Nitpicks (<count>)</summary> … </details>
 <details><summary>🗑️ Killed (<count>)</summary> … </details>
 <details><summary>⚓ Died at the Anchor grep (<count>)</summary> … </details>
 <details><summary>🙈 Unchecked (<count>)</summary> … </details>
 
-<sub>Reviews (<n>) · Last reviewed commit: <short sha> · Took <minutes>m</sub>
+<sub>Reviews (<n>) · Last reviewed commit: <short sha> · Took <minutes>m · Left for later: <the filed issue, once filed></sub>
 ```
 
 Emoji go on headings and severities only, one meaning each: 🔴 blocker, 🟠 major, 🟡 minor. A
 reader scanning finds a section by its mark. A section with nothing in it is left out, `Tasks`
-excepted. A dry round opens with ✅ in place of 🔍, and an ended review with 🛑.
+excepted. The Tasks heading's state mark is the review's state: ☑️ while a task is open, ✅ once
+every task is fixed, 🛑 once the review has ended.
 
 ## Step 1 — Probe
 
@@ -202,10 +214,10 @@ The workflow runs in the background and notifies you when it is done. Its result
 
 | Field | Holds | You |
 | --- | --- | --- |
-| `confirmed` | blockers and majors an investigator proved | write a task for each |
-| `uncertain` | blockers and majors neither proved nor killed | report under `Unproven` |
+| `confirmed` | defects an investigator proved | write a task for each |
+| `uncertain` | defects neither proved nor killed | report under `Unproven` |
 | `killed` | candidates refuted, each with its reason | list by id, so a wrong kill can be caught |
-| `deferred` | minors; `verified` only where an investigator happened to confirm one | report under `Deferred` |
+| `deferred` | nitpicks; `verified` only where an investigator happened to confirm one | report under `Nitpicks` |
 | `judged` | a score, merges and conflicts per confirmed finding; present for two or more | apply below |
 | `accepted_risk`, `uncovered_files`, `not_reviewed` | surfaces, range files and agents nothing covered | name each in the report |
 
@@ -213,8 +225,8 @@ The workflow runs in the background and notifies you when it is done. Its result
 
 Where `judged` is present, drop a finding scored 0, fold each `merged_with` into the finding that
 names it, and keep the worst severity of the merged set. The workflow folds nothing itself: two
-candidates on one line can be two defects. Where two deferred minors describe one defect, list it
-once under both ids.
+candidates on one line can be two defects. Where two nitpicks describe one thing, list it once under
+both ids.
 
 Turn the confirmed findings into a numbered task list: one task per finding, each carrying the
 file, the exact edit, and how to tell it worked. A task you cannot write that concretely is a
@@ -232,8 +244,9 @@ two tasks touch one site, say so and name which wins. Ask the implementer to rep
 
 Score the range `N/10` as it stands when the round ends: how ready it is to merge. Weigh the
 severity and number of the confirmed findings, the complexity of the change, and how well it fits
-the codebase's patterns. A confirmed blocker caps the score at 5 and a confirmed major at 7, so
-across rounds the score climbs only as the task list empties. Give the score one line of reason.
+the codebase's patterns. A confirmed blocker caps the score at 5, a major at 7 and a minor at 9, so
+across rounds the score climbs only as the task list empties. Give the score one line of reason:
+what holds it below 10. A 10 has none.
 Every round scores again. The score informs; only the task list asks for work.
 
 | Score | Meaning | Action |
@@ -244,7 +257,7 @@ Every round scores again. The score informs; only the task list asks for work.
 | 4-5/10 | Significant bugs | Needs rework |
 | 0-3/10 | Critical problems | Major rethink needed |
 
-Your report is the score, the task list, `Unproven`, the `Deferred` minors, the killed candidates,
+Your report is the score, the task list, `Unproven`, the `Nitpicks`, the killed candidates,
 the findings that died at the Anchor grep, and every line rule 7 asks for.
 
 ## Step 5 — Save the round
@@ -288,13 +301,14 @@ Call the same script with `repo`, `scratch`, `spec` and:
   "tasks": "<[scratchpad]/tasks.md>",
   "fixRange": "<the commits since the review, plus any uncommitted changes>",
   "report": "<path to the implementer's report, when one exists>",
-  "raised": ["<each deferred minor the human raised, as the earlier result held it>"]
+  "raised": ["<each nitpick the human raised, as the earlier result held it>"]
 }
 ```
 
 The result adds `tasks`, each `correct`, `broken` or `open`. The round is `dry` when every task
-is `correct`, every check exits 0, and nothing is confirmed, uncertain or deferred: `dry` closes
-the review. Anything else lands on a new task list.
+is `correct`, every check exits 0, and nothing is confirmed or uncertain: `dry` closes the
+review. A nitpick never holds it: the closing round files it. Anything else lands on a new task
+list.
 
 On a pull request, a fix that came back broken gets a reply on its thread saying what is wrong,
 and the thread reopened. A new finding gets a new thread. Then rewrite the summary comment, and
@@ -307,10 +321,10 @@ save the round as step 5 says.
   green and broken sit together comfortably — 3 of 15 fixes came back wrong in the reference run,
   2 of them new bugs the review introduced. Ask where the command ran, too: an implementer that
   runs the gate inside its own sandbox copy reports a true `pass` about a tree nobody is shipping.
-- **A minor is free to raise and costs a round to apply.** In the reference run every genuine
-  defect arrived as a blocker or a major, while the minors produced one invented anchor, one
-  refuted claim, two that were not actionable, one that predated the range — and the only harmful
-  fix of the review. The severity gate is the cheapest filter in the pipeline.
+- **An unproved minor is free to raise and costly to apply.** In the reference run the unproved
+  minors produced one invented anchor, one refuted claim, two that were not actionable, one that
+  predated the range — and the only harmful fix of the review. A minor is proved like a major
+  before it becomes a task; a nitpick waits for the human.
 - **An implementer that improvises writes the bug nobody reads.** The fix is the last point the
   diff changes and the first point no reviewer is watching. Fix-verify exists for it.
 - **A rendered surface skips itself.** Left as a condition an agent evaluates under load, the
