@@ -47,7 +47,7 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
   carries it. Every sub-issue lives in the spec's repository and carries exactly one of
   `issue:AFK` or `issue:HITL`.
 - The done set: an AFK issue is done when a commit on the spec branch, and not on the
-  default branch, has a message ending in `Closes #<n>`. A HITL issue is done when it
+  default branch, has a message ending in `Closes <owner>/<repo>#<n>`. A HITL issue is done when it
   carries `issue:HITL-done`. Open or closed state never counts.
 - An undone HITL issue holds back only the sub-issues it blocks. When the frontier holds
   only HITL issues, the Implementer comments on the spec, mentions whoever applied
@@ -62,7 +62,7 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
 - A sub-issue title is a Conventional Commit subject: it becomes the commit subject.
 - A review fix is its own commit, with a Conventional Commit subject naming the fix and
   no `Closes` footer: only an AFK issue's commit marks it done.
-- The pull request body carries `Closes #<n>` for the spec.
+- The pull request body carries `Closes <owner>/<repo>#<n>` for the spec.
 - A review run runs `/review-pr`, which posts each finding as a review thread on the
   pull request.
 - A Fixer run runs `/implement` with instructions appended: work the review's threads,
@@ -79,7 +79,7 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
 - Completion lives in commits and labels, never in open or closed state: only the merge
   may close an issue, and a sub-issue closed earlier reads as done while its code sits in
   an unmerged draft.
-- The done marker is `Closes #<n>`, so the merge that lands an AFK issue's commit also
+- The done marker is `Closes <owner>/<repo>#<n>`, so the merge that lands an AFK issue's commit also
   closes the issue.
 - One pull request per spec: a pull request per sub-issue has the Reviewer judging
   fragments of one change.
