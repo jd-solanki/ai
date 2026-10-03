@@ -32,6 +32,10 @@
   most needs them has already installed the skill into their own repository and comes
   here to browse. `docs/` is the first place they look; `skills/internal/` announces
   itself as not for them.
+- `/create-spec` and `/create-ticket` file into the open milestone because the owner
+  tracks issue progress (to do, in progress, reviewing, done) on GitHub Projects. The
+  skills carry the rule, not this reason, so it costs no tokens
+  per run.
 
 ## Fences
 
