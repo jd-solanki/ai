@@ -22,7 +22,7 @@ const TRIGGERS = [
     label: 'agent:fix',
     skill: 'implement',
     effort: 'medium',
-    handOff: 'The work is the unresolved threads of the pull request\'s last review. Check the pull request out detached: its branch may be checked out in another worktree. Each fix is its own commit, with a Conventional Commit subject naming the fix and no Closes footer. Push to the pull request\'s branch and resolve each thread you fixed, then hand back to the Reviewer: apply the agent:review label to the pull request as your last action.',
+    handOff: 'The work is the unresolved threads of the pull request\'s last review. Check the pull request out detached: its branch may be checked out in another worktree. Before fixing a thread, confirm its problem still holds in the current code: one that no longer does gets a reply saying why and stays unresolved. Each fix is its own commit, with a Conventional Commit subject naming the fix and no Closes footer. Push to the pull request\'s branch and resolve each thread you fixed, then hand back to the Reviewer: apply the agent:review label to the pull request as your last action.',
   },
 ]
 

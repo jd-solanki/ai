@@ -30,8 +30,8 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
      branch with `/code-review`, fixes what that finds, and opens a draft pull request
      with `/create-pr`.
   5. The Implementer hands the draft over with `agent:review` and exits. Review runs and
-     Fixer runs alternate until a review comes back with no findings, which is the
-     approval. The pull request body is then rewritten with `/create-pr`, keeping every
+     Fixer runs alternate until a review comes back dry, which is the approval: `/review-pr`
+     defines dry, and files what the review leaves for later as one issue. The pull request body is then rewritten with `/create-pr`, keeping every
      `Closes` line, and the pull request is marked ready for review.
   6. A human merges, then does the Owner steps.
 - One spec, one spec branch, one pull request. Work too big for one pull request is two
@@ -66,7 +66,7 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
 - A review run runs `/review-pr`, which posts each finding as a review thread on the
   pull request.
 - A Fixer run runs `/implement` with instructions appended: work the review's threads,
-  and resolve each one it fixes.
+  each checked against the current code first, and resolve each one it fixes.
 - Every review run updates one summary comment on the pull request, carrying a score for
   how ready it is to merge. `/review-pr` defines the scale. The score informs; only open
   findings block.
@@ -92,7 +92,8 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
 - The Implementer reviews its branch before the pull request exists, so no pull request
   opens on unreviewed work. The Reviewer's read is a second one, made for the maintainer.
 - Review runs are capped: an alternation that does not converge spends budget with nobody
-  watching.
+  watching. The cap counts reviews, not fixes, so the alternation always ends on a review: a
+  last fix with no review after it leaves the pull request's final code unreviewed.
 - The Fixer resolves the threads it fixes so the pull request's conversation reads
   resolved.
 - The Fixer reuses `/implement` because the skill stays as written: what a fix adds rides
