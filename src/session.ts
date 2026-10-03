@@ -14,6 +14,7 @@ const TRIGGERS = [
     label: 'agent:review',
     skill: 'review-pr',
     effort: 'high',
+    allow: ['Bash(gh pr ready:*)'],
     handOff: 'Once the round is saved: a dry round is the approval, so rewrite the pull request body in the shape /create-pr gives one, keeping every Closes line, and mark the pull request ready for review. A round that left tasks, in a review that has not ended, goes to the Fixer: apply the agent:fix label to the pull request as your last action.',
   },
   {
@@ -78,7 +79,7 @@ export function claudeArgs(event: string, payload: WebhookPayload): Launch | { s
     '--append-system-prompt',
     `You run unattended for the software factory: nobody answers a question. @${payload.sender.login} applied ${trigger.label}: mention them wherever you stop for a human. ${trigger.handOff}`,
     '--settings',
-    runWhenIdle(`gh ${release.join(' ')}`),
+    JSON.stringify({ ...runWhenIdle(`gh ${release.join(' ')}`), permissions: { allow: trigger.allow ?? [] } }),
     `/${trigger.skill} ${url}`,
   ]
   return { args, claim: [...edit, '--remove-label', trigger.label, '--add-label', working], release }
@@ -87,9 +88,9 @@ export function claudeArgs(event: string, payload: WebhookPayload): Launch | { s
 // Stop fires after every turn, and a turn that ends while subagents run is not the end of the run.
 // ponytail: a turn that ends on a question with nothing running still releases the claim while the session is open.
 // Sessions are told nobody answers; gate on a done signal if a re-trigger ever doubles a run.
-function runWhenIdle(command: string): string {
+function runWhenIdle(command: string) {
   const idle = `node -e 'process.exit(JSON.parse(require("fs").readFileSync(0)).background_tasks.length ? 1 : 0)'`
-  return JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: 'command', command: `${idle} && ${command}`, timeout: 60 }] }] } })
+  return { hooks: { Stop: [{ hooks: [{ type: 'command', command: `${idle} && ${command}`, timeout: 60 }] }] } }
 }
 
 function run(file: string, args: string[], cwd?: string): Promise<{ ok: boolean, output: string }> {

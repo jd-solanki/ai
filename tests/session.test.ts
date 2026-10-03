@@ -39,6 +39,10 @@ test('claudeArgs tells each session who to mention and which agent it hands off 
   assert.match(implement, /apply the agent:review label/)
   assert.match(handOff('pull_request', 'agent:review', { pull_request: subject() }), /apply the agent:fix label/)
   assert.match(handOff('pull_request', 'agent:fix', { pull_request: subject() }), /apply the agent:review label/)
+
+  const review = claudeArgs('pull_request', { ...labeled, label: { name: 'agent:review' }, pull_request: subject() })
+  assert.ok('args' in review)
+  assert.deepEqual(JSON.parse(review.args[review.args.indexOf('--settings') + 1] ?? '').permissions.allow, ['Bash(gh pr ready:*)'])
 })
 
 test('claudeArgs swaps the trigger label for the working label and releases it once the session is idle', () => {

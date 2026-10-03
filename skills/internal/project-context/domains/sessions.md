@@ -48,6 +48,10 @@ _Avoid_: sandbox
   `src/session.ts:runWhenIdle`
 - **A worktree holds only committed files.** A skill a session needs must be committed and
   pushed in the served repo, or the session starts without it. `src/session.ts:claudeArgs`
+- **Auto mode refuses a hand-off it never saw requested.** The hand-off arrives in the
+  appended system prompt, which the classifier does not count as a request, so it denied
+  `gh pr ready` as unrequested. A trigger's `allow` grants what its hand-off needs.
+  `src/session.ts:TRIGGERS`
 
 ## Where it lives
 
