@@ -58,7 +58,7 @@ Your title is the line the squashed merge commit carries, so write it for
 
 ## Link the ticket
 
-`Closes #123` at the bottom of the body, so merging closes the ticket. Reference
+`Closes owner/repo#123` at the bottom of the body, so merging closes the ticket. Reference
 the ticket by ID rather than pasting a link: some trackers put private detail in
 the URL.
 
