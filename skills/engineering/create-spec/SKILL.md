@@ -86,7 +86,7 @@ Resolves #<origin>
 **Agent, before the pull request**
 
 - [ ] <check>
-- [ ] The pull request body carries `Closes #<origin>` beside the line that closes this spec.
+- [ ] The pull request body carries `Closes <owner>/<repo>#<origin>` beside the line that closes this spec.
 
 **Owner, after merge**
 
@@ -184,7 +184,7 @@ The printed URL ends in the spec's number, `<n>`. When there are records:
 ```bash
 git switch -c spec/<n> origin/<default-branch>
 git add <record paths>
-git commit -m "<the repo's commit convention>: record decisions for #<n>"
+git commit -m "<the repo's commit convention>: record decisions for <owner>/<repo>#<n>"
 git push -u origin spec/<n>
 git switch -
 ```
