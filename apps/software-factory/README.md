@@ -133,8 +133,7 @@ flowchart LR
 ```
 
 When a run starts, the server swaps the trigger label for its `…ing` label, which comes off when the session stops with no subagent still running.
-The first time it stops like that, it is sent back once to put anything left for a human on GitHub and finish its hand-off.
-A turn that dies on an API error leaves the `…ing` label on and says so in a comment on the work item.
+A turn that dies on an API error takes the `…ing` label off too, and says so in a comment on the work item.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
 Then, on the factory machine:

@@ -28,13 +28,13 @@ stop and no Fixer run has gone end to end on a served repo.
 
 Known gaps:
 
-- A turn that ends on a question, after the session has been sent back once, takes the
-  working label off while the session is still open.
+- A turn that ends on a question takes the working label off while the session is still
+  open.
 - A session that never reaches Stop keeps its working label, and its trigger label is
-  ignored, until a human removes the working label. Only an API error says so on the work
-  item.
-- A hand-off is the session's own act. A session that skips it even after being sent back
-  leaves the pull request with no `agent:*` label, and a human applies the next one.
+  ignored, until a human removes the working label. A turn that dies on an API error is
+  the exception: it releases the label and says so on the work item.
+- A hand-off is the session's own act. A session that skips it leaves the pull request
+  with no `agent:*` label, and a human applies the next one.
 
 Deliberately unbuilt:
 

@@ -12,8 +12,11 @@ function subject(...labels: string[]) {
     labels: labels.map((name) => ({ name })),
   }
 }
+function settings(args: string[]) {
+  return JSON.parse(args[args.indexOf('--settings') + 1] ?? '')
+}
 function hookCommand(args: string[], event: 'Stop' | 'StopFailure'): string {
-  return JSON.parse(args[args.indexOf('--settings') + 1] ?? '').hooks[event][0].hooks[0].command
+  return settings(args).hooks[event][0].hooks[0].command
 }
 
 test('claudeArgs starts a skill only for a matching label event', () => {
@@ -81,6 +84,7 @@ test('claudeArgs tells each session who to mention and which agent it hands off 
   }
   const implement = handOff('issues', 'agent:implement', { issue: subject('issue:spec') })
   assert.match(implement, /@octocat applied agent:implement/)
+  assert.match(implement, /goes on https:\/\/github.com\/acme\/app\/issues\/12, mentioning them/)
   assert.match(implement, /apply the agent:review label/)
   assert.match(
     handOff('pull_request', 'agent:review', { pull_request: subject() }),
@@ -110,17 +114,14 @@ test('claudeArgs tells each session who to mention and which agent it hands off 
     pull_request: subject(),
   })
   assert.ok('args' in review)
-  assert.deepEqual(
-    JSON.parse(review.args[review.args.indexOf('--settings') + 1] ?? '').permissions.allow,
-    ['Bash(gh pr ready:*)', 'Bash(gh pr edit:*)'],
-  )
-  assert.equal(
-    JSON.parse(review.args[review.args.indexOf('--settings') + 1] ?? '').worktree.baseRef,
-    'fresh',
-  )
+  assert.deepEqual(settings(review.args).permissions.allow, [
+    'Bash(gh pr ready:*)',
+    'Bash(gh pr edit:*)',
+  ])
+  assert.equal(settings(review.args).worktree.baseRef, 'fresh')
 })
 
-test('claudeArgs swaps the trigger label for the working label and releases it once the idle session has been sent back', () => {
+test('claudeArgs swaps the trigger label for the working label and releases it once the session is idle', () => {
   const edit = ['pr', 'edit', 'https://github.com/acme/app/issues/12']
   const review = claudeArgs('pull_request', {
     ...labeled,
@@ -137,38 +138,21 @@ test('claudeArgs swaps the trigger label for the working label and releases it o
   ])
   assert.deepEqual(review.release, [...edit, '--remove-label', 'agent:reviewing'])
 
-  const [gate, released] = hookCommand(review.args, 'Stop').split(' && ')
-  assert.equal(
-    released,
-    "'gh' 'pr' 'edit' 'https://github.com/acme/app/issues/12' '--remove-label' 'agent:reviewing'",
-  )
-  const stop = (background_tasks: object[], stop_hook_active: boolean) =>
-    spawnSync('sh', ['-c', `${gate} && echo released`], {
-      input: JSON.stringify({ background_tasks, stop_hook_active }),
+  const released =
+    "'gh' 'pr' 'edit' 'https://github.com/acme/app/issues/12' '--remove-label' 'agent:reviewing'"
+  const [idle, stopReleased] = hookCommand(review.args, 'Stop').split(' && ')
+  assert.equal(stopReleased, released)
+  const stop = (background_tasks: object[]) =>
+    spawnSync('sh', ['-c', `${idle} && echo released`], {
+      input: JSON.stringify({ background_tasks }),
       encoding: 'utf8',
-    })
-  const sentBack = stop([], false)
-  assert.equal(sentBack.status, 2)
-  assert.equal(sentBack.stdout, '')
-  assert.match(
-    sentBack.stderr,
-    /on https:\/\/github.com\/acme\/app\/issues\/12, mentioning @octocat/,
+    }).stdout
+  assert.equal(stop([]), 'released\n')
+  assert.equal(stop([{ type: 'shell', status: 'running' }]), '')
+  assert.equal(
+    hookCommand(review.args, 'StopFailure'),
+    `${released}; 'gh' 'pr' 'comment' 'https://github.com/acme/app/issues/12' '--body' '@octocat the agent:review run stopped on an API error before it finished. Apply agent:review again to retry.'`,
   )
-  assert.equal(stop([], true).stdout, 'released\n')
-  assert.equal(stop([{ type: 'shell', status: 'running' }], true).stdout, '')
-
-  const comment = spawnSync(
-    'sh',
-    ['-c', hookCommand(review.args, 'StopFailure').replace("'gh'", "printf '%s\\n'")],
-    { encoding: 'utf8' },
-  ).stdout
-  assert.deepEqual(comment.split('\n').slice(0, 4), [
-    'pr',
-    'comment',
-    'https://github.com/acme/app/issues/12',
-    '--body',
-  ])
-  assert.match(comment, /^@octocat agent:review stopped on an API error.*"agent:review app#12"/m)
 
   assert.deepEqual(
     claudeArgs('pull_request', {

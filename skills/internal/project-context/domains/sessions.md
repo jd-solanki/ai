@@ -31,8 +31,9 @@ _Avoid_: sandbox
   - A session that only edits code spends its context on the code.
 - The boundary gives way to the skills: they already run git and `gh`, so the factory
   starts from them.
-- A hand-off is the session's: only it knows the outcome that picks the next agent. A
-  skipped hand-off stalls in plain sight, as a pull request with no `agent:*` label.
+- A hand-off is the session's, and so is telling a human what is left for them: only it
+  knows the outcome that picks the next agent or the human step. A skipped hand-off stalls
+  in plain sight, as a pull request with no `agent:*` label.
 - The walk stays in the session because its inputs live on GitHub and the spec branch: a
   re-trigger recomputes it, so a mis-step costs one re-run, and a walk in static code
   rebuilds what `/implement-spec` already does.
@@ -46,10 +47,8 @@ _Avoid_: sandbox
 ## Fences
 
 - **A Stop hook is not a done edge.** Stop fires after every turn, so a turn that ends on
-  a question, or on a wait for subagents, looks like a finished session. The first idle Stop
-  sends the session back once, so a run does not end on a question in a terminal nobody
-  reads, or before its hand-off. A turn that dies on an API error never reaches Stop:
-  StopFailure comments on the work item and the working label stays.
+  a question, or on a wait for subagents, looks like a finished session. A turn that dies on
+  an API error never reaches Stop at all.
   `apps/software-factory/src/session.ts:hooks`
 - **A worktree holds only the default branch.** A skill a session needs must be pushed to the
   served repo's default branch, or the session starts without it. Claude Code branches a
