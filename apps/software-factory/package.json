@@ -1,11 +1,12 @@
 {
+  "name": "software-factory",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": "^22.18.0 || >=24.2.0"
-  },
   "scripts": {
     "start": "node --env-file=.env src/server.ts",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
   }
 }
