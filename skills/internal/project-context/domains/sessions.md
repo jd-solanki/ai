@@ -40,12 +40,17 @@ _Avoid_: sandbox
   changes that module alone.
 - Review runs at higher effort than implementation: review depth decides how many rounds
   a pull request takes, and implementation time is the factory's bottleneck.
+- Every session runs in auto mode, whatever the owner's default: each trigger's `allow` and
+  hand-off assume it, and under a manual default a run stops at its first approval prompt.
 
 ## Fences
 
 - **A Stop hook is not a done edge.** Stop fires after every turn, so a turn that ends on
-  a question, or on a wait for subagents, looks like a finished session.
-  `apps/software-factory/src/session.ts:runWhenIdle`
+  a question, or on a wait for subagents, looks like a finished session. The first idle Stop
+  sends the session back once, so a run does not end on a question in a terminal nobody
+  reads, or before its hand-off. A turn that dies on an API error never reaches Stop:
+  StopFailure comments on the work item and the working label stays.
+  `apps/software-factory/src/session.ts:hooks`
 - **A worktree holds only the default branch.** A skill a session needs must be pushed to the
   served repo's default branch, or the session starts without it. Claude Code branches a
   worktree from the clone's checkout under the owner's `worktree.baseRef: head`, so the factory

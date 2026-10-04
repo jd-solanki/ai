@@ -12,8 +12,8 @@ function subject(...labels: string[]) {
     labels: labels.map((name) => ({ name })),
   }
 }
-function stopCommand(args: string[]): string {
-  return JSON.parse(args[args.indexOf('--settings') + 1] ?? '').hooks.Stop[0].hooks[0].command
+function hookCommand(args: string[], event: 'Stop' | 'StopFailure'): string {
+  return JSON.parse(args[args.indexOf('--settings') + 1] ?? '').hooks[event][0].hooks[0].command
 }
 
 test('claudeArgs starts a skill only for a matching label event', () => {
@@ -24,7 +24,7 @@ test('claudeArgs starts a skill only for a matching label event', () => {
     label: { name: 'agent:implement' },
     issue: subject('issue:spec'),
   })
-  assert.deepEqual(implement?.slice(0, 9), [
+  assert.deepEqual(implement?.slice(0, 11), [
     '--bg',
     '--name',
     'agent:implement app#12',
@@ -34,6 +34,8 @@ test('claudeArgs starts a skill only for a matching label event', () => {
     'opus',
     '--effort',
     'medium',
+    '--permission-mode',
+    'auto',
   ])
   assert.equal(implement?.at(-1), '/implement-spec https://github.com/acme/app/issues/12')
   assert.deepEqual(
@@ -118,7 +120,7 @@ test('claudeArgs tells each session who to mention and which agent it hands off 
   )
 })
 
-test('claudeArgs swaps the trigger label for the working label and releases it once the session is idle', () => {
+test('claudeArgs swaps the trigger label for the working label and releases it once the idle session has been sent back', () => {
   const edit = ['pr', 'edit', 'https://github.com/acme/app/issues/12']
   const review = claudeArgs('pull_request', {
     ...labeled,
@@ -135,15 +137,38 @@ test('claudeArgs swaps the trigger label for the working label and releases it o
   ])
   assert.deepEqual(review.release, [...edit, '--remove-label', 'agent:reviewing'])
 
-  const [idle, released] = stopCommand(review.args).split(' && ')
-  assert.equal(released, `gh ${review.release.join(' ')}`)
-  const stop = (background_tasks: object[]) =>
-    spawnSync('sh', ['-c', `${idle} && echo released`], {
-      input: JSON.stringify({ background_tasks }),
+  const [gate, released] = hookCommand(review.args, 'Stop').split(' && ')
+  assert.equal(
+    released,
+    "'gh' 'pr' 'edit' 'https://github.com/acme/app/issues/12' '--remove-label' 'agent:reviewing'",
+  )
+  const stop = (background_tasks: object[], stop_hook_active: boolean) =>
+    spawnSync('sh', ['-c', `${gate} && echo released`], {
+      input: JSON.stringify({ background_tasks, stop_hook_active }),
       encoding: 'utf8',
-    }).stdout
-  assert.equal(stop([]), 'released\n')
-  assert.equal(stop([{ type: 'shell', status: 'running' }]), '')
+    })
+  const sentBack = stop([], false)
+  assert.equal(sentBack.status, 2)
+  assert.equal(sentBack.stdout, '')
+  assert.match(
+    sentBack.stderr,
+    /on https:\/\/github.com\/acme\/app\/issues\/12, mentioning @octocat/,
+  )
+  assert.equal(stop([], true).stdout, 'released\n')
+  assert.equal(stop([{ type: 'shell', status: 'running' }], true).stdout, '')
+
+  const comment = spawnSync(
+    'sh',
+    ['-c', hookCommand(review.args, 'StopFailure').replace("'gh'", "printf '%s\\n'")],
+    { encoding: 'utf8' },
+  ).stdout
+  assert.deepEqual(comment.split('\n').slice(0, 4), [
+    'pr',
+    'comment',
+    'https://github.com/acme/app/issues/12',
+    '--body',
+  ])
+  assert.match(comment, /^@octocat agent:review stopped on an API error.*"agent:review app#12"/m)
 
   assert.deepEqual(
     claudeArgs('pull_request', {

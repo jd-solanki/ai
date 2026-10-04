@@ -133,6 +133,8 @@ flowchart LR
 ```
 
 When a run starts, the server swaps the trigger label for its `…ing` label, which comes off when the session stops with no subagent still running.
+The first time it stops like that, it is sent back once to put anything left for a human on GitHub and finish its hand-off.
+A turn that dies on an API error leaves the `…ing` label on and says so in a comment on the work item.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
 Then, on the factory machine:
@@ -143,7 +145,7 @@ claude attach <id>   # open one in this terminal
 claude rm <id>       # delete it, and its worktree when that is safe
 ```
 
-Sessions start in your default Claude Code permission mode. A session waiting on an approval stays stuck until you attach to it.
+Sessions run in auto mode, whatever your default permission mode is. A session waiting on an approval stays stuck until you attach to it.
 
 To add a trigger, add a line to `TRIGGERS` in `src/session.ts`, create its label in each repo, and restart the server.
 

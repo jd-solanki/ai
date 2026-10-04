@@ -74,7 +74,8 @@ export function claudeArgs(
 
   const url = subject.html_url
   const working = trigger.label.replace(/e?$/, 'ing')
-  const edit = [payload.issue ? 'issue' : 'pr', 'edit', url]
+  const kind = payload.issue ? 'issue' : 'pr'
+  const edit = [kind, 'edit', url]
   // A trigger label left on the work item could not be applied again.
   if (subject.labels.some((l) => l.name === working))
     return {
@@ -82,11 +83,13 @@ export function claudeArgs(
       unlabel: [...edit, '--remove-label', trigger.label],
     }
 
+  const name = `${trigger.label} ${payload.repository.name}#${subject.number}`
+  const mention = `@${payload.sender.login}`
   const release = [...edit, '--remove-label', working]
   const args = [
     '--bg',
     '--name',
-    `${trigger.label} ${payload.repository.name}#${subject.number}`,
+    name,
     // Concurrent sessions in one checkout clobber each other; a re-trigger reuses its worktree.
     '--worktree',
     `${trigger.skill}-${subject.number}`,
@@ -94,12 +97,25 @@ export function claudeArgs(
     'opus',
     '--effort',
     trigger.effort,
+    // Every trigger's `allow` and hand-off assume auto mode, whatever the owner's default is.
+    '--permission-mode',
+    'auto',
     '--append-system-prompt',
-    `You run unattended for the software factory: nobody answers a question. @${payload.sender.login} applied ${trigger.label}: mention them wherever you stop for a human. ${trigger.handOff}`,
+    `You run unattended for the software factory: nobody answers a question. ${mention} applied ${trigger.label}: mention them wherever you stop for a human. ${trigger.handOff}`,
     '--settings',
     // The owner's `baseRef: head` would branch from whatever the clone has checked out, skills and all.
     JSON.stringify({
-      ...runWhenIdle(`gh ${release.join(' ')}`),
+      hooks: hooks(
+        release,
+        `Nobody reads this terminal, so a question asked here goes unanswered. Before you stop, make sure anything left for a human is on ${url}, mentioning ${mention}, and that the hand-off in your instructions is done.`,
+        [
+          kind,
+          'comment',
+          url,
+          '--body',
+          `${mention} ${trigger.label} stopped on an API error before it finished, and ${working} stays on. If "${name}" is not working in \`claude agents\`, remove ${working} and apply ${trigger.label} again.`,
+        ],
+      ),
       permissions: { allow: trigger.allow ?? [] },
       worktree: { baseRef: 'fresh' },
     }),
@@ -113,16 +129,27 @@ export function claudeArgs(
 }
 
 // Stop fires after every turn, and a turn that ends while subagents run is not the end of the run.
-// ponytail: a turn that ends on a question with nothing running still releases the claim while the session is open.
+// The first idle Stop sends the session back once with `reason` (exit 2), so a run does not end on
+// a question nobody reads, or before its hand-off.
+// ponytail: a turn that ends on a question after that still releases the claim while the session is open.
 // Sessions are told nobody answers; gate on a done signal if a re-trigger ever doubles a run.
-function runWhenIdle(command: string) {
-  const idle = `node -e 'process.exit(JSON.parse(require("fs").readFileSync(0)).background_tasks.length ? 1 : 0)'`
+// A turn that dies on an API error never reaches Stop: `failure` says so and leaves the claim on.
+function hooks(release: string[], reason: string, failure: string[]) {
+  const gate = `const input = JSON.parse(require("fs").readFileSync(0))
+if (input.background_tasks.length) process.exitCode = 1
+else if (!input.stop_hook_active) {
+  process.stderr.write(${JSON.stringify(reason)})
+  process.exitCode = 2
+}`
+  const hook = (command: string) => [{ hooks: [{ type: 'command', command, timeout: 60 }] }]
   return {
-    hooks: {
-      Stop: [{ hooks: [{ type: 'command', command: `${idle} && ${command}`, timeout: 60 }] }],
-    },
+    Stop: hook(`${shell(['node', '-e', gate])} && ${shell(['gh', ...release])}`),
+    StopFailure: hook(shell(['gh', ...failure])),
   }
 }
+
+// A hook command runs in a shell; a script or comment body must reach its program as one argument.
+const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`).join(' ')
 
 function run(file: string, args: string[], cwd?: string): Promise<{ ok: boolean; output: string }> {
   return new Promise((resolve) => {
