@@ -99,7 +99,7 @@ Steps 4 and 5 change the project itself, so commit them there:
 
 ```bash
 cd "$REPOS_DIR/$REPO"
-npx skills@latest add <source> --skill <name>   # once per skill
+pnpm dlx skills@latest add <source> --skill <name>   # once per skill
 echo '.claude/worktrees/' >> .gitignore
 git add -A && git commit -m "chore: set up agent factory" && git push
 ```
