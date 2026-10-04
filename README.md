@@ -29,7 +29,7 @@ The server finds everything by convention. Each repo it serves needs:
 1. A clone at `$REPOS_DIR/<owner>/<repo>`, matching GitHub's `owner/repo`. With `REPOS_DIR=~/Projects/github`, `acme/app` lives at `~/Projects/github/acme/app`. Sessions run there, not in the folder the server runs from.
 2. Claude Code trust. `claude --bg` refuses a folder you haven't trusted.
 3. Every label in step 3 of [Add a project](#add-a-project).
-4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, committed and pushed. A worktree only holds committed files. `skills-lock.json` in this repo lists where each skill comes from.
+4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. `skills-lock.json` in this repo lists where each skill comes from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
 6. A webhook to this server, using the JSON content type, the `issues` and `pull_request` events, and the secret from `.env`.
 
@@ -80,6 +80,8 @@ gh label create agent:review -R "$REPO" --force -d "Factory: review this PR"
 gh label create agent:reviewing -R "$REPO" --force -d "Factory: a review run holds this PR"
 gh label create agent:fix -R "$REPO" --force -d "Factory: fix this PR's review findings"
 gh label create agent:fixing -R "$REPO" --force -d "Factory: a Fixer run holds this PR"
+gh label create agent:upgrade -R "$REPO" --force -d "Factory: upgrade the code for this Renovate PR (needs ⬆️ Renovate)"
+gh label create agent:upgrading -R "$REPO" --force -d "Factory: an Upgrader run holds this PR"
 
 # 6. Webhook
 HOOK_ID=$(gh api "repos/$REPO/hooks" \
@@ -111,12 +113,15 @@ Apply a trigger label on GitHub:
 - `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session builds the spec's sub-issues, in parallel where none blocks another, opens a draft PR and hands it to the review.
 - `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score.
 - `agent:fix` on a pull request. The session fixes the review's threads and hands the PR back to the review.
+- `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, brings the code in line with the new versions, and hands the PR to the review. With nothing to change, it marks the PR ready instead.
 
 You apply the first label. Each session applies the next one:
 
 ```mermaid
 flowchart LR
   I["agent:implement<br/>on a spec"] -->|"draft PR"| R["agent:review"]
+  A["agent:upgrade<br/>on a Renovate PR"] -->|"commits on its branch"| R
+  A -->|"nothing to change"| D
   R -->|"findings"| X["agent:fix"] --> R
   R -->|"no findings"| D["PR ready for review"]
   R -->|"third review, findings open"| H["A human decides"]

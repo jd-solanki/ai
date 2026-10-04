@@ -46,8 +46,12 @@ _Avoid_: sandbox
 - **A Stop hook is not a done edge.** Stop fires after every turn, so a turn that ends on
   a question, or on a wait for subagents, looks like a finished session.
   `src/session.ts:runWhenIdle`
-- **A worktree holds only committed files.** A skill a session needs must be committed and
-  pushed in the served repo, or the session starts without it. `src/session.ts:claudeArgs`
+- **A worktree holds only the default branch.** A skill a session needs must be pushed to the
+  served repo's default branch, or the session starts without it. Claude Code branches a
+  worktree from the clone's checkout under the owner's `worktree.baseRef: head`, so the factory
+  pins `fresh`. `fresh` reads the clone's `origin/HEAD`, which moves only on a fetch and keeps
+  the default branch it was cloned with, so `startSession` fetches and runs `set-head` first.
+  `src/session.ts:claudeArgs`
 - **Auto mode refuses a hand-off it never saw requested.** The hand-off arrives in the
   appended system prompt, which the classifier does not count as a request, so it denied
   `gh pr ready` as unrequested. A trigger's `allow` grants what its hand-off needs.

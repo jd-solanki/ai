@@ -39,10 +39,20 @@ test('claudeArgs tells each session who to mention and which agent it hands off 
   assert.match(implement, /apply the agent:review label/)
   assert.match(handOff('pull_request', 'agent:review', { pull_request: subject() }), /apply the agent:fix label/)
   assert.match(handOff('pull_request', 'agent:fix', { pull_request: subject() }), /apply the agent:review label/)
+  const upgradeHandOff = handOff('pull_request', 'agent:upgrade', { pull_request: subject('⬆️ Renovate') })
+  assert.match(upgradeHandOff, /With commits, .*apply the agent:review label/)
+  assert.match(upgradeHandOff, /With none, .*mark the pull request ready for review/)
+  assert.match(upgradeHandOff, /Comment on each match, not on this pull request/)
+  const upgrade = { ...labeled, label: { name: 'agent:upgrade' } }
+  assert.deepEqual(claudeArgs('pull_request', { ...upgrade, pull_request: subject() }), { skip: 'Work item lacks ⬆️ Renovate' })
+  const claimed = claudeArgs('pull_request', { ...upgrade, pull_request: subject('⬆️ Renovate') })
+  assert.ok('claim' in claimed)
+  assert.equal(claimed.claim.at(-1), 'agent:upgrading')
 
   const review = claudeArgs('pull_request', { ...labeled, label: { name: 'agent:review' }, pull_request: subject() })
   assert.ok('args' in review)
-  assert.deepEqual(JSON.parse(review.args[review.args.indexOf('--settings') + 1] ?? '').permissions.allow, ['Bash(gh pr ready:*)'])
+  assert.deepEqual(JSON.parse(review.args[review.args.indexOf('--settings') + 1] ?? '').permissions.allow, ['Bash(gh pr ready:*)', 'Bash(gh pr edit:*)'])
+  assert.equal(JSON.parse(review.args[review.args.indexOf('--settings') + 1] ?? '').worktree.baseRef, 'fresh')
 })
 
 test('claudeArgs swaps the trigger label for the working label and releases it once the session is idle', () => {

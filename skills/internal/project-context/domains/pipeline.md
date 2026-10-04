@@ -13,8 +13,12 @@ The sub-issues outside the done set whose blocking siblings are all inside it.
 A human step a spec lists for its pull request: it blocks merge or production, never an
 AFK issue.
 
-**Implementer**, **Reviewer**, **Fixer**:
-The agents that `agent:implement`, `agent:review` and `agent:fix` request.
+**Implementer**, **Reviewer**, **Fixer**, **Upgrader**:
+The agents that `agent:implement`, `agent:review`, `agent:fix` and `agent:upgrade` request.
+
+**Dependency update**:
+A pull request that bumps dependency versions and carries their release notes in its body,
+as Renovate opens one.
 
 ## Rules
 
@@ -34,6 +38,17 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
      defines dry, and files what the review leaves for later as one issue. The pull request body is then rewritten with `/create-pr`, keeping every
      `Closes` line, and the pull request is marked ready for review.
   6. A human merges, then does the Owner steps.
+- A dependency update enters the pipeline at its pull request: a teammate applies
+  `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
+  runs `/implement` with instructions appended: the release notes are the spec, and the code
+  ends as it would read had it been written against the new versions. With commits, it pushes
+  them onto the update's branch and hands it to the Reviewer, and stage 5 follows. With none,
+  it marks the pull request ready for review. Renovate's body stays: it carries the
+  Upgrader's spec.
+- The Upgrader matches the upstream issues and pull requests the release notes name against the
+  repository's open issues and pull requests, and comments on each match. A commit that does an
+  open issue's work carries `Closes <owner>/<repo>#<n>`; an issue the release does not make
+  doable gets a comment at most.
 - One spec, one spec branch, one pull request. Work too big for one pull request is two
   specs.
 - When `/create-spec` pushed no records, the spec branch is cut from the default branch.
@@ -96,8 +111,16 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
   last fix with no review after it leaves the pull request's final code unreviewed.
 - The Fixer resolves the threads it fixes so the pull request's conversation reads
   resolved.
-- The Fixer reuses `/implement` because the skill stays as written: what a fix adds rides
-  in the appended instructions.
+- The Fixer and the Upgrader reuse `/implement` because the skill stays as written: what a
+  fix or an upgrade adds rides in the appended instructions.
+- The Upgrader comments on the matched issue or pull request, not on the update's: the update
+  merges and its conversation goes unread, while the link shows on both.
+- A match is a shared upstream reference, not a shared package name: a package name alone
+  matches issues the release does nothing for.
+- An upgrade with no commit skips review: its diff is Renovate's version bump, which CI checks
+  once the pull request is ready, and a review would only repeat the Upgrader's reading.
+- The Upgrader's instructions name the outcome, not a list of changes: a release can ask any
+  change of the code, and a list misses the next kind.
 - `/create-spec` never triggers: a human reads a spec before an unattended run spends
   budget, and the skill stays usable in repos the factory does not serve.
 - Merge stays human: the Reviewer has no track record yet.
@@ -110,6 +133,10 @@ The agents that `agent:implement`, `agent:review` and `agent:fix` request.
 - **A review cannot approve the pull request natively.** Every run acts as the factory
   owner's GitHub login, and GitHub refuses an author's approval of their own pull request,
   so a review with no findings is the approval. `src/session.ts:TRIGGERS`
+
+- **Renovate's rebase checkbox drops the Upgrader's commits.** Renovate stops rebasing a
+  branch once another author commits to it, and the checkbox recreates the branch from
+  scratch. Re-apply `agent:upgrade` after ticking it. `src/session.ts:TRIGGERS`
 
 ## Where it lives
 
