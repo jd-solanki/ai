@@ -66,7 +66,7 @@ inside them. Read the body for secrets, redact, then publish.
 Call the `/humanizer` skill on the draft. Missing? Install it, it is one command:
 
 ```shell
-npx skills@latest add jd-solanki/ai --skill humanizer
+pnpm dlx skills@latest add jd-solanki/ai --skill humanizer
 ```
 
 Two tells humanizer will not catch, because they only show up in documents like
