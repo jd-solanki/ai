@@ -13,7 +13,7 @@
 1. Run the skills.sh installer:
 
    ```shell
-   npx skills@latest add jd-solanki/ai
+   pnpm dlx skills@latest add jd-solanki/ai
    ```
 
 2. Pick the skills you want, and which coding agents you want to install them on. **Make sure you select /setup-jd-solanki-skills.**
