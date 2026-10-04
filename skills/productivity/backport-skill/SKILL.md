@@ -23,7 +23,7 @@ The project's `skills-lock.json` names the source under the skill's key:
 
 ```json
 "create-ticket": {
-  "source": "jd-solanki/skills",
+  "source": "jd-solanki/ai",
   "skillPath": "skills/engineering/create-ticket/SKILL.md"
 }
 ```
