@@ -1,10 +1,10 @@
 # JD Solanki's AI Agent Skills
 
-<a href="https://skilld.dev/gh/jd-solanki/skills">
+<a href="https://skilld.dev/gh/jd-solanki/ai">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://skilld.dev/b/jd-solanki/skills?theme=dark">
-    <source media="(prefers-color-scheme: light)" srcset="https://skilld.dev/b/jd-solanki/skills?theme=light">
-    <img alt="Skill repository on skilld.dev" src="https://skilld.dev/b/jd-solanki/skills?theme=light">
+    <source media="(prefers-color-scheme: dark)" srcset="https://skilld.dev/b/jd-solanki/ai?theme=dark">
+    <source media="(prefers-color-scheme: light)" srcset="https://skilld.dev/b/jd-solanki/ai?theme=light">
+    <img alt="Skill repository on skilld.dev" src="https://skilld.dev/b/jd-solanki/ai?theme=light">
   </picture>
 </a>
 
@@ -12,14 +12,14 @@
 
 1. Run the skills.sh installer:
 
-    ```shell
-    npx skills@latest add jd-solanki/skills
-    ```
+   ```shell
+   npx skills@latest add jd-solanki/ai
+   ```
 
 2. Pick the skills you want, and which coding agents you want to install them on. **Make sure you select /setup-jd-solanki-skills.**
 3. Run `/setup-jd-solanki-skills` in your agent. It will:
-    - Upsert instructions into your `CLAUDE.md` or `AGENTS.md` file(s) for how to load and use these skills.
-    - Suggest you install and use third-party skills that I mostly use in my projects. See [`THIRD-PARTY.md`](./skills/scaffolding/setup-jd-solanki-skills/THIRD-PARTY.md) for a list of third-party skills.
+   - Upsert instructions into your `CLAUDE.md` or `AGENTS.md` file(s) for how to load and use these skills.
+   - Suggest you install and use third-party skills that I mostly use in my projects. See [`THIRD-PARTY.md`](./skills/scaffolding/setup-jd-solanki-skills/THIRD-PARTY.md) for a list of third-party skills.
 4. Bam - you're ready to go.
 5. Install `/context-engineering`, `/setup-project-context` and `/audit-project-context` together. Run `/setup-project-context` to give the agent this repo's own context — its words, rules, reasons, and the fences it must not walk into.
 
@@ -27,13 +27,13 @@
 
 An agent arrives holding coding guidelines and nothing else. `/setup-project-context` gives it the rest, split by **domain** so a task loads only what it needs:
 
-| File | Reader | Loads |
-| --- | --- | --- |
-| `AGENTS.md` / `CLAUDE.md` | agent | every turn — behaviour and one gate |
-| `CONTRIBUTING.md` | humans and agents | every session — what the project is and its status |
-| `/project-context` | agent | every session — the rules and the routing table |
-| `domains/<domain>.md` | agent | only when a task enters that domain |
-| `README.md` | humans | never read by an agent |
+| File                      | Reader            | Loads                                              |
+| ------------------------- | ----------------- | -------------------------------------------------- |
+| `AGENTS.md` / `CLAUDE.md` | agent             | every turn — behaviour and one gate                |
+| `CONTRIBUTING.md`         | humans and agents | every session — what the project is and its status |
+| `/project-context`        | agent             | every session — the rules and the routing table    |
+| `domains/<domain>.md`     | agent             | only when a task enters that domain                |
+| `README.md`               | humans            | never read by an agent                             |
 
 `/context-engineering <decision>` records a decision in the right domain file. `/audit-project-context` runs at the end of a pull request and trims whatever the week's work added that the code could have said itself. Install all three: the other two call `/context-engineering` for the shape and the rules.
 

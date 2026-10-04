@@ -11,13 +11,13 @@ flowchart LR
 
 `TRIGGERS` in `src/session.ts` lists each label, the skill it starts, the effort it runs at, and how its session hands off.
 
-Each session is named `<label> <repo>#<number>`, for example `agent:implement cl-factory#1`.
+Each session is named `<label> <repo>#<number>`, for example `agent:implement ai#1`.
 It works in its own git worktree, `.claude/worktrees/<skill>-<number>`, so two sessions never share a checkout.
 Applying the label again reuses that worktree.
 
 ## Requirements
 
-- Node, in the range `engines` in `package.json` sets. The server runs TypeScript directly, with no build step.
+- Node, in the range `engines` in the root `package.json` sets. The server runs TypeScript directly, with no build step.
 - Claude Code with `claude --bg`, on an account that can run Opus.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.
 - Tailscale, logged in. The first `tailscale funnel` run prints a link to allow Funnel on your tailnet.
@@ -29,18 +29,18 @@ The server finds everything by convention. Each repo it serves needs:
 1. A clone at `$REPOS_DIR/<owner>/<repo>`, matching GitHub's `owner/repo`. With `REPOS_DIR=~/Projects/github`, `acme/app` lives at `~/Projects/github/acme/app`. Sessions run there, not in the folder the server runs from.
 2. Claude Code trust. `claude --bg` refuses a folder you haven't trusted.
 3. Every label in step 3 of [Add a project](#add-a-project).
-4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. `skills-lock.json` in this repo lists where each skill comes from.
+4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. Ours install from `jd-solanki/ai`; the root `skills-lock.json` lists where the rest come from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
 6. A webhook to this server, using the JSON content type, the `issues` and `pull_request` events, and the secret from `.env`.
 
 ## Start the factory
 
-Once per machine, from this repo:
+Once per machine, from `apps/software-factory`:
 
 ```bash
 echo "GITHUB_WEBHOOK_SECRET=$(openssl rand -hex 32)" >> .env
 echo "REPOS_DIR=$HOME/Projects/github" >> .env
-npm start
+pnpm start
 ```
 
 Then, in a second terminal:
@@ -50,13 +50,13 @@ tailscale funnel --bg 3456   # the PORT in src/server.ts
 tailscale funnel status      # prints the public URL
 ```
 
-`npm start` runs in the foreground, so the factory stops when its terminal closes.
+`pnpm start` runs in the foreground, so the factory stops when its terminal closes.
 
 For the first few minutes after you enable Funnel, webhooks can time out before they reach the server.
 
 ## Add a project
 
-Run this from this repo so `.env` loads. The numbers match the conventions above.
+Run this from `apps/software-factory` so `.env` loads. The numbers match the conventions above.
 
 ```bash
 set -a; . ./.env; set +a
@@ -64,7 +64,7 @@ REPO=owner/repo
 FUNNEL_URL="https://$(tailscale status --json | jq -r '.Self.DNSName | rtrimstr(".")')/"
 
 # 1. Clone to the convention path
-gh repo clone "$REPO" "${REPOS_DIR:?run from this repo so .env loads}/$REPO"
+gh repo clone "$REPO" "${REPOS_DIR:?run from apps/software-factory so .env loads}/$REPO"
 
 # 2. Trust it: accept the prompt, then /exit
 (cd "$REPOS_DIR/$REPO" && claude)
@@ -86,7 +86,7 @@ gh label create agent:upgrading -R "$REPO" --force -d "Factory: an Upgrader run 
 # 6. Webhook
 HOOK_ID=$(gh api "repos/$REPO/hooks" \
   -f "config[url]=$FUNNEL_URL" -f 'config[content_type]=json' \
-  -f "config[secret]=${GITHUB_WEBHOOK_SECRET:?run from this repo so .env loads}" \
+  -f "config[secret]=${GITHUB_WEBHOOK_SECRET:?run from apps/software-factory so .env loads}" \
   -f 'events[]=issues' -f 'events[]=pull_request' --jq .id)
 ```
 
