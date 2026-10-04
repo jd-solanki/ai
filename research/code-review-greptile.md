@@ -12,14 +12,14 @@ re-fetched, `[I]` inferred here from the evidence, `[E]` an estimate made here.
 - Greptile has published no separate refuter or verification pass. Precision comes from
   the investigating agent challenging its own hypothesis, per-team learned filters, a
   cheap gate that runs only on re-reviews, and attached runtime evidence `[F: v3, shutup,
-  aku-variants, trex-eng]`.
+aku-variants, trex-eng]`.
 - Every standalone LLM judging step they disclosed was abandoned or dropped: a 1–10
   severity judge, a nitpick label, and later the `severity-reclassifier` and
   `post-review-deduplication` model aliases `[F: shutup, hn-nit, aku-f52]`.
 - Models are tiered by step: a frontier model for judgement, a fast no-thinking model for
   grep and tracing, nano models for gates. The self-hosted default moved from an Opus
   variant to a Sonnet one in June 2026 with no published quality delta `[F: valid,
-  aku-proxy, aku-052]`.
+aku-proxy, aku-052]`.
 - For `review-pr`, the largest lever is a scope pass that emits hypotheses, then one
   self-verifying agent per hypothesis, replacing dimension finders plus a refuter per
   finding `[E]`. Greptile's deepest tier reviews a comparable PR in 5–11 minutes
@@ -45,13 +45,13 @@ Stages, pieced together from the self-hosting repository and the engineering pos
 7. It posts a summary with a 0–5 confidence score and inline comments badged P0–P2
    `[F: docs-anatomy]`. A tester saw them arrive "all at once" `[F: devto]`.
 
-| Precomputed | Done per review |
-| --- | --- |
-| Chunk-and-embed index in pgvector `[F: aku-arch]` | Clone, fetch the exact PR commits `[F: trex-eng]` |
-| Code graph of files, functions, calls `[F: docs-graph]` | Diff reading and hypothesis generation `[I: inversion]` |
-| Knowledge-base wiki per repo `[F: valid, docs-kb]` | Grep and call tracing by subagents `[F: valid]` |
-| Learned rules and voted-comment embeddings `[F: shutup]` | Filtering and gating `[F: aku-variants]` |
-| Per-repository sandbox snapshots `[F: trex-eng]` | Runtime checks and artifacts `[F: trex-eng]` |
+| Precomputed                                              | Done per review                                         |
+| -------------------------------------------------------- | ------------------------------------------------------- |
+| Chunk-and-embed index in pgvector `[F: aku-arch]`        | Clone, fetch the exact PR commits `[F: trex-eng]`       |
+| Code graph of files, functions, calls `[F: docs-graph]`  | Diff reading and hypothesis generation `[I: inversion]` |
+| Knowledge-base wiki per repo `[F: valid, docs-kb]`       | Grep and call tracing by subagents `[F: valid]`         |
+| Learned rules and voted-comment embeddings `[F: shutup]` | Filtering and gating `[F: aku-variants]`                |
+| Per-repository sandbox snapshots `[F: trex-eng]`         | Runtime checks and artifacts `[F: trex-eng]`            |
 
 The wiki holds, per area, "what it does, how it works, how it's architected ... bugs that
 have been introduced in the past here, and potential sources of risk". It refreshes on
@@ -60,14 +60,14 @@ index on every commit" because PRs are rare next to editor saves `[F: yt-pod]`.
 
 ## Speed
 
-| Measurement | Value | Tag |
-| --- | --- | --- |
-| Median review, v4 → v5, over a million PRs | 5:04 → 2:25 | `[F: v5]` |
-| Docs guidance: small / medium / large PR | ~1–2 / ~3 / 3–5 min | `[F: docs-dev]` |
-| Tester's mean commit-to-first-finding, pre-v5 | 4.9 min, P95 38.0 min | `[F: devto]` |
-| Demo PR, 5 files +1530/−63: Base / Plus / Apex | 3.0 / 3.8 / 6.4 min | `[I: demo]` |
-| Demo PRs, 18 files +498/−146 and 7 files +344/−19 | 3.6 / 5.2 / 10.3 and 3.2 / 3.4 / 5.5 min | `[I: demo]` |
-| Plugin's Bash timeout for a CLI review | 600000 ms | `[F: plugin]` |
+| Measurement                                       | Value                                    | Tag             |
+| ------------------------------------------------- | ---------------------------------------- | --------------- |
+| Median review, v4 → v5, over a million PRs        | 5:04 → 2:25                              | `[F: v5]`       |
+| Docs guidance: small / medium / large PR          | ~1–2 / ~3 / 3–5 min                      | `[F: docs-dev]` |
+| Tester's mean commit-to-first-finding, pre-v5     | 4.9 min, P95 38.0 min                    | `[F: devto]`    |
+| Demo PR, 5 files +1530/−63: Base / Plus / Apex    | 3.0 / 3.8 / 6.4 min                      | `[I: demo]`     |
+| Demo PRs, 18 files +498/−146 and 7 files +344/−19 | 3.6 / 5.2 / 10.3 and 3.2 / 3.4 / 5.5 min | `[I: demo]`     |
+| Plugin's Bash timeout for a CLI review            | 600000 ms                                | `[F: plugin]`   |
 
 The v5 post prints the unit as "seconds"; the docs and a founder post read as minutes
 `[F: v5, docs-dev]` `[S: x-v5]`. The demo timings are the gap between PR creation and the
@@ -132,19 +132,19 @@ them",
 and recovered when told to target 7–10 comments. The wide model lost precision: "a
 holistic approach without proper verification produces false positives" `[F: inversion]`.
 
-| Number | Value | Tag |
-| --- | --- | --- |
-| Comments before filtering, 2024 | ~19% good, 2% wrong, 79% nits | `[F: shutup]` |
-| Action rate, v2 → v3 | 34.75% → 59.24% | `[F: v3]` |
-| Upvote/downvote ratio, v2 → v3 | 1.44 → 5.13 | `[F: v3]` |
-| Comments addressed, v3 → v4 (LLM-judged) | 30% → 43% | `[F: v4]` |
-| Addressed comments per PR, v3 → v4 | 0.92 → 1.60 | `[F: v4]` |
-| Comments addressed, v4 → v5 | 52% → 66% | `[F: v5]` |
-| Own benchmark, 50 bugs in 5 repos, July 2025 | 82% caught; 58% of critical | `[F: bench]` |
-| Runtime execution on top of review | "20% more bugs" | `[F: trex]` |
-| Comments per PR, founder's figure | "about four" | `[F: yt-talk]` |
-| Independent tester, 120 findings on 55 PRs | 2.2 per PR, zero false positives | `[F: devto]` |
-| Rival vendor's rescoring, 39 PRs | 33.5% precision, 34.0% recall | `[F, S: codepulse]` |
+| Number                                       | Value                            | Tag                 |
+| -------------------------------------------- | -------------------------------- | ------------------- |
+| Comments before filtering, 2024              | ~19% good, 2% wrong, 79% nits    | `[F: shutup]`       |
+| Action rate, v2 → v3                         | 34.75% → 59.24%                  | `[F: v3]`           |
+| Upvote/downvote ratio, v2 → v3               | 1.44 → 5.13                      | `[F: v3]`           |
+| Comments addressed, v3 → v4 (LLM-judged)     | 30% → 43%                        | `[F: v4]`           |
+| Addressed comments per PR, v3 → v4           | 0.92 → 1.60                      | `[F: v4]`           |
+| Comments addressed, v4 → v5                  | 52% → 66%                        | `[F: v5]`           |
+| Own benchmark, 50 bugs in 5 repos, July 2025 | 82% caught; 58% of critical      | `[F: bench]`        |
+| Runtime execution on top of review           | "20% more bugs"                  | `[F: trex]`         |
+| Comments per PR, founder's figure            | "about four"                     | `[F: yt-talk]`      |
+| Independent tester, 120 findings on 55 PRs   | 2.2 per PR, zero false positives | `[F: devto]`        |
+| Rival vendor's rescoring, 39 PRs             | 33.5% precision, 34.0% recall    | `[F, S: codepulse]` |
 
 The address-rate baselines do not line up between releases (59% after v3, 30% as v3's
 starting point, 43% after v4, 52% as v4's starting point), so the definition or the
@@ -161,16 +161,16 @@ fix in their name and then we find the original pull request that caused the thi
 "A lightweight internal router sends each task to the model that handles it best"
 `[F: nemo-ultra]`. The self-hosted proxy config names the steps `[F: aku-proxy]`:
 
-| Step alias | Model, 2026-09-28 |
-| --- | --- |
-| `review` (default) | `claude-sonnet-4-6` |
-| `review-deep` | `claude-opus-4-6` |
-| `review-light` | `claude-haiku-4-5` |
-| `refiner` (role undocumented) | `claude-sonnet-4-6` |
-| `post-review-gate`, `comment-classifier`, `addressed-judge` | `gpt-5.4-nano` |
-| `memory-embeddings` | `text-embedding-3-small` |
-| `memory-clustering`, `memory-learning`, `reply-agent` | `claude-sonnet-4-6` |
-| `dsv4-flash-leased-nothink` (OpenAI variant only) | DeepSeek v4 flash, or `gpt-5.6-luna` at `reasoning_effort: low` |
+| Step alias                                                  | Model, 2026-09-28                                               |
+| ----------------------------------------------------------- | --------------------------------------------------------------- |
+| `review` (default)                                          | `claude-sonnet-4-6`                                             |
+| `review-deep`                                               | `claude-opus-4-6`                                               |
+| `review-light`                                              | `claude-haiku-4-5`                                              |
+| `refiner` (role undocumented)                               | `claude-sonnet-4-6`                                             |
+| `post-review-gate`, `comment-classifier`, `addressed-judge` | `gpt-5.4-nano`                                                  |
+| `memory-embeddings`                                         | `text-embedding-3-small`                                        |
+| `memory-clustering`, `memory-learning`, `reply-agent`       | `claude-sonnet-4-6`                                             |
+| `dsv4-flash-leased-nothink` (OpenAI variant only)           | DeepSeek v4 flash, or `gpt-5.6-luna` at `reasoning_effort: low` |
 
 - **Where the frontier model goes.** "for simple tasks like running grep and following
   traces which are very token-heavy but don't need frontier intelligence, we use fast
@@ -196,17 +196,17 @@ fix in their name and then we find the original pull request that caused the thi
 
 ## Architecture timeline
 
-| When | Change | Stated reason |
-| --- | --- | --- |
-| 2024 | Fixed flowchart over an embedding index; code translated to prose and chunked per function `[F: v3, search]` | "Noise negatively impacts retrieval quality in a huge way" `[F: search]` |
-| Dec 2024 | Per-team embedding filter on voted comments `[F: shutup]` | Prompting and LLM judging failed; "Nits are subjective" `[F: shutup]` |
-| May 2025 | Long-term memory from teammates' PR comments; scoped rules; ticket context `[F: update]` | To "learn your company's idiosyncrasies" `[F: update]` |
-| Sep 2025 | v3: one agent loop with shell and grep on the checkout `[F: v3, sandbox]` | "The rigidity of the flowchart prevents the system from using new information" `[F: v3]` |
-| Mar 2026 | v4 `[F: v4]` | "far lower false positive rate"; no architecture disclosed `[F: v4]` |
-| Jun 2026 | T-Rex: orchestrator spawning sandboxed subagents per issue `[F: trex-eng]` | A separate agent duplicated work; a single agent "got overloaded" `[F: trex-eng]` |
-| Jun 2026 | Default variant Opus → Sonnet; review-number routing `[F: aku-052]` | None given |
-| Aug 2026 | v5: swarm of hypothesis-scoped agents `[F: v5]` | "agents perform better when their task is narrowly scoped" `[F: v5]` |
-| Sep 2026 | Review tiers Base, Plus, Apex, Auto `[F: tiers]` | More parallel subagent time for hard PRs `[F: tiers]` |
+| When     | Change                                                                                                       | Stated reason                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| 2024     | Fixed flowchart over an embedding index; code translated to prose and chunked per function `[F: v3, search]` | "Noise negatively impacts retrieval quality in a huge way" `[F: search]`                 |
+| Dec 2024 | Per-team embedding filter on voted comments `[F: shutup]`                                                    | Prompting and LLM judging failed; "Nits are subjective" `[F: shutup]`                    |
+| May 2025 | Long-term memory from teammates' PR comments; scoped rules; ticket context `[F: update]`                     | To "learn your company's idiosyncrasies" `[F: update]`                                   |
+| Sep 2025 | v3: one agent loop with shell and grep on the checkout `[F: v3, sandbox]`                                    | "The rigidity of the flowchart prevents the system from using new information" `[F: v3]` |
+| Mar 2026 | v4 `[F: v4]`                                                                                                 | "far lower false positive rate"; no architecture disclosed `[F: v4]`                     |
+| Jun 2026 | T-Rex: orchestrator spawning sandboxed subagents per issue `[F: trex-eng]`                                   | A separate agent duplicated work; a single agent "got overloaded" `[F: trex-eng]`        |
+| Jun 2026 | Default variant Opus → Sonnet; review-number routing `[F: aku-052]`                                          | None given                                                                               |
+| Aug 2026 | v5: swarm of hypothesis-scoped agents `[F: v5]`                                                              | "agents perform better when their task is narrowly scoped" `[F: v5]`                     |
+| Sep 2026 | Review tiers Base, Plus, Apex, Auto `[F: tiers]`                                                             | More parallel subagent time for hard PRs `[F: tiers]`                                    |
 
 ## Tried and removed
 
@@ -278,13 +278,13 @@ high effort. Target: 10–15 minutes at equal quality. All minute figures below 
    is unpublished; the nearest evidence is that models "identify potential issues" while
    reading the diff `[F: inversion]` and that tiers bound subagent time `[F: tiers]`.
    Dedupe before dispatch, by location and root cause `[E]`.
-   *Risk:* the scope pass becomes the single point for recall, and a wide scoper
+   _Risk:_ the scope pass becomes the single point for recall, and a wide scoper
    over-posts `[F: inversion]`. Hold a coverage check that every changed file is named
    by a hypothesis or an explicit "nothing suspected", as their hook does `[F: claude]`.
 2. **Model and effort per step (10–15 min).** Largest model for the scope pass and for
    judging confirmed findings; a small model at low effort for call-site enumeration and
    tracing; the smallest for dedupe and gating `[F: valid, aku-proxy]`.
-   *Risk:* a small model stays "close to the diff" `[F: nemo-super]`, and Greptile
+   _Risk:_ a small model stays "close to the diff" `[F: nemo-super]`, and Greptile
    published no quality figure for its own Opus-to-Sonnet move. Measure on PRs mined from
    later fix commits, as they do `[F: yt-pod]`, before lowering any step.
 3. **Findings carry evidence; verification becomes checking, not re-investigating
@@ -292,22 +292,22 @@ high effort. Target: 10–15 minutes at equal quality. All minute figures below 
    locations, the grep output, or a test run. A refuter then runs only for serious
    findings whose evidence is not mechanical `[E]`. A local checkout can run a targeted
    test, which is the cheap form of T-Rex `[I: trex-eng]`.
-   *Risk:* an agent can overstate what it checked `[F: trex-eng]`; reject findings whose
+   _Risk:_ an agent can overstate what it checked `[F: trex-eng]`; reject findings whose
    evidence cannot be re-run or re-read.
-4. **A shared brief (5–10 min).** *Needs a persistent service at Greptile:* the wiki,
+4. **A shared brief (5–10 min).** _Needs a persistent service at Greptile:_ the wiki,
    graph and learned rules are precomputed. The no-service equivalent is one brief the
    probe writes per run and every subagent receives, optionally cached in the checkout
    keyed by base commit, plus pointers to existing docs in the manner of
    `.greptile/files.json` `[F: docs-cfg]`.
-   *Risk:* an error in the brief reaches every agent.
-5. **Suppression and re-review (3–8 min on repeat runs).** *Needs a persistent service
-   at Greptile:* the voted-comment vector store. The no-service equivalent is a checked-in
+   _Risk:_ an error in the brief reaches every agent.
+5. **Suppression and re-review (3–8 min on repeat runs).** _Needs a persistent service
+   at Greptile:_ the voted-comment vector store. The no-service equivalent is a checked-in
    file of dismissed finding patterns, and fetching prior review threads at probe time so
    a re-run checks only the new commits against findings already raised.
-   *Risk:* over-suppression; keep a never-suppress list `[F: docs-nit]`.
+   _Risk:_ over-suppression; keep a never-suppress list `[F: docs-nit]`.
 6. **Effort tier by PR risk (large on small PRs, none on this one).** Cap the number of
    hypothesis agents by size and touched paths `[F: docs-tiers]`.
-   *Risk:* direct recall loss. Their own Base run found one of the four issues Apex
+   _Risk:_ direct recall loss. Their own Base run found one of the four issues Apex
    found `[F: tiers]`, so this conflicts with the no-loss constraint unless reserved for
    trivial PRs.
 
@@ -335,38 +335,38 @@ context gives independence of context only `[I]`; the founder's objection is tha
 `https://github.com/greptileai/akupara`, `H` is `https://news.ycombinator.com/item?id=`.
 Dates on docs pages are the fetch date.
 
-| Key | Source | Date | Read |
-| --- | --- | --- | --- |
-| v5 | `B/greptile-v5` | 2026-08-05 | F |
-| v4 | `B/greptile-v4` | 2026-03-05 | F |
-| v3 | `B/greptile-v3-agentic-code-review` | 2025-11-26 | F |
-| shutup, search | `B/make-llms-shut-up`, `B/semantic-codebase-search` | 2024-12-18, 2025-04-15 | F |
-| update, sandbox | `B/greptile-update`, `B/sandboxing-agents-at-the-kernel-level` | 2025-05-30, 2025-09-29 | F |
-| trex, trex-eng | `B/trex`, `B/trex-code-execution` | 2026-06-15, 2026-06-17 | F |
-| valid | `B/automating-code-validation` | 2026-07-10 | F |
-| inversion | `B/model-inversion` | 2026-07-21 | F |
-| nemo-super, nemo-ultra | `B/nvidia-nemotron-{super,ultra}-in-code-review` | 2026-03-11, 2026-06-04 | F |
-| tiers | `B/introducing-plus-and-apex` | 2026-09-25 | F |
-| bench | `https://www.greptile.com/benchmarks` | 2025-07 | F |
-| docs-dev, docs-anatomy | `D/code-review/{developer-essentials,first-pr-review}.md` | 2026-10-02 | F |
-| docs-cfg, docs-tiers | `D/code-review/{greptile-config-reference,review-tiers}.md` | 2026-10-02 | F |
-| docs-nit | `D/how-greptile-works/nitpicks.md`, `D/code-review/controlling-nitpickiness.md` | 2026-10-02 | F |
-| docs-learn, docs-graph, docs-kb | `D/how-greptile-works/{memory-and-learning,graph-based-codebase-context,knowledge-bases}.md` | 2026-10-02 | F |
-| docs-log | `D/changelog.md` | 2026-10-02 | F |
-| aku-variants, aku-proxy | `A/blob/main/docs/configuration/review-variants.md`, `A/blob/main/deploy/docker-compose/llmproxy-config.yaml` | 2026-09-28 | F |
-| aku-arch, aku-scaling | `A/blob/main/docs/{reference/architecture,operations/scaling}.md` | 2026-09 | F |
-| aku-052, aku-662 | `A/commit/052ea78`, `A/commit/662b412` | 2026-06-29 | F |
-| aku-857, aku-f52 | `A/commit/8574fa3`, `A/commit/f52bdc1` | 2026-07-26, 2026-09-21 | F |
-| plugin | `https://github.com/greptileai/claude-plugin` (`commands/review.md`) | 2026-10-01 | F |
-| skills | `https://github.com/greptileai/skills`, `https://github.com/greptileai/cli` | 2026-10-01 | F |
-| demo | GitHub API timestamps, `greptileai/demo-{celestia-core,onyx,itk,cline,fuser}` | 2026-09-21..25 | F, mapping I |
-| gh-openmrs, gh-dad | GitHub API: comments and reviews on `openmrs/openmrs-esm-core#1930`, `vfarcic/dot-agent-deck#353` | 2026-10-02, 2026-08-03 | F |
-| dad-366 | `https://github.com/vfarcic/dot-agent-deck/issues/366` | 2026-08-03 | F |
-| docs-json | `D/code-review/greptile-json-reference` | 2026-10-02 | S |
-| claude | `https://claude.com/customers/greptile` | undated on page | F |
-| hn-label, hn-one, hn-grep | `H42483721`, `H43862283`, `H45417130` | 2024-12-22, 2025-05-01, 2025-09-29 | F |
-| hn-judge, hn-indep, hn-nit | `H46305093`, `H46769696`, `H46776408` | 2025-12-17, 2026-01-26, 2026-01-27 | F |
-| devto | `https://dev.to/_vjk/best-ai-code-reviewer-in-2026-we-ran-4-in-parallel-for-3-weeks-146-prs-679-findings-1c0f` | 2026-05-12 | F |
-| yt-pod, yt-talk | `https://www.youtube.com/watch?v=aR6CTD5Gl_E`, `...?v=474j-n1Ltxc` (auto-caption transcripts) | 2025-11-19, 2026-09-27; dates S | F |
-| codepulse | `https://codepulse.review/` | 2026-08-21 | F precision, S recall |
-| x-v5 | `https://x.com/dakshgup/status/2085018917563769025` | 2026-08-05 | S, fetch refused |
+| Key                             | Source                                                                                                         | Date                               | Read                  |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------- |
+| v5                              | `B/greptile-v5`                                                                                                | 2026-08-05                         | F                     |
+| v4                              | `B/greptile-v4`                                                                                                | 2026-03-05                         | F                     |
+| v3                              | `B/greptile-v3-agentic-code-review`                                                                            | 2025-11-26                         | F                     |
+| shutup, search                  | `B/make-llms-shut-up`, `B/semantic-codebase-search`                                                            | 2024-12-18, 2025-04-15             | F                     |
+| update, sandbox                 | `B/greptile-update`, `B/sandboxing-agents-at-the-kernel-level`                                                 | 2025-05-30, 2025-09-29             | F                     |
+| trex, trex-eng                  | `B/trex`, `B/trex-code-execution`                                                                              | 2026-06-15, 2026-06-17             | F                     |
+| valid                           | `B/automating-code-validation`                                                                                 | 2026-07-10                         | F                     |
+| inversion                       | `B/model-inversion`                                                                                            | 2026-07-21                         | F                     |
+| nemo-super, nemo-ultra          | `B/nvidia-nemotron-{super,ultra}-in-code-review`                                                               | 2026-03-11, 2026-06-04             | F                     |
+| tiers                           | `B/introducing-plus-and-apex`                                                                                  | 2026-09-25                         | F                     |
+| bench                           | `https://www.greptile.com/benchmarks`                                                                          | 2025-07                            | F                     |
+| docs-dev, docs-anatomy          | `D/code-review/{developer-essentials,first-pr-review}.md`                                                      | 2026-10-02                         | F                     |
+| docs-cfg, docs-tiers            | `D/code-review/{greptile-config-reference,review-tiers}.md`                                                    | 2026-10-02                         | F                     |
+| docs-nit                        | `D/how-greptile-works/nitpicks.md`, `D/code-review/controlling-nitpickiness.md`                                | 2026-10-02                         | F                     |
+| docs-learn, docs-graph, docs-kb | `D/how-greptile-works/{memory-and-learning,graph-based-codebase-context,knowledge-bases}.md`                   | 2026-10-02                         | F                     |
+| docs-log                        | `D/changelog.md`                                                                                               | 2026-10-02                         | F                     |
+| aku-variants, aku-proxy         | `A/blob/main/docs/configuration/review-variants.md`, `A/blob/main/deploy/docker-compose/llmproxy-config.yaml`  | 2026-09-28                         | F                     |
+| aku-arch, aku-scaling           | `A/blob/main/docs/{reference/architecture,operations/scaling}.md`                                              | 2026-09                            | F                     |
+| aku-052, aku-662                | `A/commit/052ea78`, `A/commit/662b412`                                                                         | 2026-06-29                         | F                     |
+| aku-857, aku-f52                | `A/commit/8574fa3`, `A/commit/f52bdc1`                                                                         | 2026-07-26, 2026-09-21             | F                     |
+| plugin                          | `https://github.com/greptileai/claude-plugin` (`commands/review.md`)                                           | 2026-10-01                         | F                     |
+| skills                          | `https://github.com/greptileai/skills`, `https://github.com/greptileai/cli`                                    | 2026-10-01                         | F                     |
+| demo                            | GitHub API timestamps, `greptileai/demo-{celestia-core,onyx,itk,cline,fuser}`                                  | 2026-09-21..25                     | F, mapping I          |
+| gh-openmrs, gh-dad              | GitHub API: comments and reviews on `openmrs/openmrs-esm-core#1930`, `vfarcic/dot-agent-deck#353`              | 2026-10-02, 2026-08-03             | F                     |
+| dad-366                         | `https://github.com/vfarcic/dot-agent-deck/issues/366`                                                         | 2026-08-03                         | F                     |
+| docs-json                       | `D/code-review/greptile-json-reference`                                                                        | 2026-10-02                         | S                     |
+| claude                          | `https://claude.com/customers/greptile`                                                                        | undated on page                    | F                     |
+| hn-label, hn-one, hn-grep       | `H42483721`, `H43862283`, `H45417130`                                                                          | 2024-12-22, 2025-05-01, 2025-09-29 | F                     |
+| hn-judge, hn-indep, hn-nit      | `H46305093`, `H46769696`, `H46776408`                                                                          | 2025-12-17, 2026-01-26, 2026-01-27 | F                     |
+| devto                           | `https://dev.to/_vjk/best-ai-code-reviewer-in-2026-we-ran-4-in-parallel-for-3-weeks-146-prs-679-findings-1c0f` | 2026-05-12                         | F                     |
+| yt-pod, yt-talk                 | `https://www.youtube.com/watch?v=aR6CTD5Gl_E`, `...?v=474j-n1Ltxc` (auto-caption transcripts)                  | 2025-11-19, 2026-09-27; dates S    | F                     |
+| codepulse                       | `https://codepulse.review/`                                                                                    | 2026-08-21                         | F precision, S recall |
+| x-v5                            | `https://x.com/dakshgup/status/2085018917563769025`                                                            | 2026-08-05                         | S, fetch refused      |

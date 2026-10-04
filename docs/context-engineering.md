@@ -40,7 +40,7 @@ answer. Every mined line stays a draft until the owner confirms it as a decision
 A **domain** is a subject a task is about: environments, deploys, auth. Everything
 about one subject goes in one file — its words, its rules, its reasons, its traps.
 
-The alternative is to split by *type*: a glossary here, ADRs there, conventions
+The alternative is to split by _type_: a glossary here, ADRs there, conventions
 somewhere else. That scatters one subject across three folders. Read two of the three
 and the miss is silent.
 
@@ -48,11 +48,11 @@ One subject, one file. There is nothing left to miss.
 
 ## Three tiers, three prices
 
-| Tier | Price |
-| --- | --- |
-| `AGENTS.md` / `CLAUDE.md` | paid every turn |
-| `CONTRIBUTING.md`, the router, the glossary | paid once a session |
-| a domain file | paid only by tasks that enter that domain |
+| Tier                                        | Price                                     |
+| ------------------------------------------- | ----------------------------------------- |
+| `AGENTS.md` / `CLAUDE.md`                   | paid every turn                           |
+| `CONTRIBUTING.md`, the router, the glossary | paid once a session                       |
+| a domain file                               | paid only by tasks that enter that domain |
 
 So tier 1 holds only what is true in any repo: behaviour, and the one gate that
 reaches the rest. A 200-line `AGENTS.md` full of this project's deploy rules charges
@@ -105,7 +105,7 @@ The failure mode of any agent-facing doc is restatement: a paragraph explaining 
 function does, next to the function. It costs tokens, it goes stale the moment the
 code changes, and readers then trust the wrong one.
 
-So the test is one question — *could I learn this by reading the code?* If yes, link
+So the test is one question — _could I learn this by reading the code?_ If yes, link
 the path under **Where it lives** and write nothing.
 
 What survives the test is worth more than what it replaced:

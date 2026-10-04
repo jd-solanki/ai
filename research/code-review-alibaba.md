@@ -4,7 +4,7 @@ _Researched 2026-10-02. Evidence: **[F]** fetched and read first-hand, **[S]** s
 
 ## Summary
 
-- **Shape.** A script picks the files, then one sub-agent per *file group* runs in
+- **Shape.** A script picks the files, then one sub-agent per _file group_ runs in
   parallel (8 at a time). Each agent carries every review dimension as one checklist.
   There is no fan-out by dimension and no agent per bug hypothesis. [F]
 - **Speed.** 1m23s per PR against 13m06s for Claude Code `/code-review` on the same model,
@@ -13,7 +13,7 @@ _Researched 2026-10-02. Evidence: **[F]** fetched and read first-hand, **[S]** s
 - **Verification.** One diff-only "prove it wrong or approve" request per group, not one
   agent per finding. It is a single request without tools and, on a strong model, deletes
   only 2–3% of comments (estimate). Precision is earned inside the finder. [F] [I]
-- **Models.** One model for every step. `--effort` means review *rounds* (1/2/3), not
+- **Models.** One model for every step. `--effort` means review _rounds_ (1/2/3), not
   reasoning depth. Thinking is disabled by default in CI. No tiering was ever measured. [F]
 - **The trade.** Recall is 20.0% against Claude Code's 28.9%. The system buys precision
   with recall, on a vendor benchmark, with no ablations. It does not show "faster with no
@@ -23,16 +23,16 @@ _Researched 2026-10-02. Evidence: **[F]** fetched and read first-hand, **[S]** s
 
 Current source, v1.12.11. The paper covers v1.3.1: per-file agents, one round. [F]
 
-| # | Stage | Model requests | What happens |
-| --- | --- | --- | --- |
-| 1 | Select | 0 | Drop binary, secret, excluded, unsupported, deleted, and over-size files. Test files are excluded by default. |
-| 2 | Rules | 0 | First matching glob picks one checklist per file (54 built-in). |
-| 3 | Group | 0 or 1 | Under 4 files: none. Otherwise one request over file *metadata* only. |
-| 4 | Plan | 0 or 1 per group | Only when a file has ≥50 changed lines, or 2+ files total ≥100. No tools. |
-| 5 | Review | tool loop, ≤100 turns | Six tools. Findings leave through `code_comment`. |
-| 6 | Anchor | 0, rarely 1 | String-match the quoted snippet to line numbers, off the main loop. |
-| 7 | Filter | 1 per group per round | Diff-only falsification. Deletes, never adds. |
-| 8 | Rounds | repeat 5–7 | Up to 1/2/3 passes; stops when a pass adds nothing. |
+| #   | Stage  | Model requests        | What happens                                                                                                  |
+| --- | ------ | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 1   | Select | 0                     | Drop binary, secret, excluded, unsupported, deleted, and over-size files. Test files are excluded by default. |
+| 2   | Rules  | 0                     | First matching glob picks one checklist per file (54 built-in).                                               |
+| 3   | Group  | 0 or 1                | Under 4 files: none. Otherwise one request over file _metadata_ only.                                         |
+| 4   | Plan   | 0 or 1 per group      | Only when a file has ≥50 changed lines, or 2+ files total ≥100. No tools.                                     |
+| 5   | Review | tool loop, ≤100 turns | Six tools. Findings leave through `code_comment`.                                                             |
+| 6   | Anchor | 0, rarely 1           | String-match the quoted snippet to line numbers, off the main loop.                                           |
+| 7   | Filter | 1 per group per round | Diff-only falsification. Deletes, never adds.                                                                 |
+| 8   | Rounds | repeat 5–7            | Up to 1/2/3 passes; stops when a pass adds nothing.                                                           |
 
 **Fan-out is by file group.** The paper rejects both ends: one agent over the whole change
 "dilutes the signal", and "overly fine partitioning (e.g., per hunk or per function
@@ -44,7 +44,7 @@ under 200 lines, otherwise one agent per file. [F]
 **Dimensions are a checklist, not agents.** The rule document for a file's language is
 pasted into the one prompt: correctness, security, performance, maintainability, tests.
 **Hypotheses are generated, not fanned out.** The plan request returns a numbered list,
-`[high|medium|low]` plus the tool calls that would check each, and the *same* agent then
+`[high|medium|low]` plus the tool calls that would check each, and the _same_ agent then
 works through it. The prompt says "Do not invent issues to fill the list." [F]
 
 **Dedupe is structural.** Each agent owns its files: "never produce comments targeting
@@ -58,14 +58,14 @@ is no post-hoc dedupe on the review path; near-duplicates are an open bug (#709)
 Vendor benchmark, 200 PRs; median 152 changed lines, mean 242, maximum 971 (my count over
 the 196 samples in `positive_samples.json`). OpenCodeReview rows are v1.3.1. [F]
 
-| System, model | Tokens in / out per PR | Avg time | Precision | Recall |
-| --- | --- | --- | --- | --- |
-| OCR, Claude-4.6-Opus | 375K / 10K | 1m23s | 33.9% | 20.0% |
-| OCR, Claude-4.8-Opus | 342K / 11K | 1m06s | 37.8% | 11.7% |
-| OCR, GPT-5.5 | 409K / 13K | 2m51s | 32.1% | 15.5% |
-| OCR, Deepseek-V4-Pro | 350K / 44K | 6m28s | 30.6% | 12.7% |
-| Claude Code, Claude-4.6-Opus | 5,603K / 60K | 13m06s | 7.2% | 28.9% |
-| Claude Code, Claude-4.8-Opus | 2,039K / 23K | 5m38s | 15.9% | 12.7% |
+| System, model                | Tokens in / out per PR | Avg time | Precision | Recall |
+| ---------------------------- | ---------------------- | -------- | --------- | ------ |
+| OCR, Claude-4.6-Opus         | 375K / 10K             | 1m23s    | 33.9%     | 20.0%  |
+| OCR, Claude-4.8-Opus         | 342K / 11K             | 1m06s    | 37.8%     | 11.7%  |
+| OCR, GPT-5.5                 | 409K / 13K             | 2m51s    | 32.1%     | 15.5%  |
+| OCR, Deepseek-V4-Pro         | 350K / 44K             | 6m28s    | 30.6%     | 12.7%  |
+| Claude Code, Claude-4.6-Opus | 5,603K / 60K           | 13m06s   | 7.2%      | 28.9%  |
+| Claude Code, Claude-4.8-Opus | 2,039K / 23K           | 5m38s    | 15.9%     | 12.7%  |
 
 Where the time goes away:
 
@@ -74,7 +74,7 @@ Where the time goes away:
 - **Bounded tools, no shell.** `file_read` returns at most 500 lines, `code_search` 100
   matches with a 10s timeout. This is what stops the "token snowball". [F]
 - **Auxiliary steps are single requests without tools.** Grouping sees metadata only and
-  answers with integer indices. The plan gets tool *descriptions* as text. The filter sees
+  answers with integer indices. The plan gets tool _descriptions_ as text. The filter sees
   only the diff. The re-anchor prompt ends in `/no_think`. [F]
 - **Stages are gated on size.** "For small changes the plan adds latency without value,
   so it's skipped". The grouping request is skipped under 4 files. [F]
@@ -99,14 +99,14 @@ deliberate trade-off favoring precision over noise". [F]
 
 **Verification has three layers, and the cheap ones do most of the work.**
 
-1. *Inside the finder.* 32 of 54 rule documents say "Favor precision over recall: report
+1. _Inside the finder._ 32 of 54 rule documents say "Favor precision over recall: report
    only defects that are likely real". The Go rules add: "Before reporting a non-local
    claim, use `file_read` and `code_search` to establish the relevant call sites". The
    system prompt allows a comment only once an issue is "identified and confirmed". [F]
-2. *In code.* Every comment must quote `existing_code` verbatim from the diff. A
+2. _In code._ Every comment must quote `existing_code` verbatim from the diff. A
    sliding-window match turns it into line numbers; a unique match in another file
    re-files the comment; only then is the model asked. No match leaves line `0`. [F]
-3. *The filter.* One request per group per round. It sees the diffs and the comments,
+3. _The filter._ One request per group per round. It sees the diffs and the comments,
    and nothing the finder read through tools. [F]
 
 The filter prompt is the most reusable text in the repository:
@@ -165,19 +165,19 @@ claims an internal "false-positive rate under 5%" without defining it. [F]
 
 ## Tried and removed
 
-| Was | Now | Why |
-| --- | --- | --- |
-| One agent per file (v1.3.1) | Semantic file groups (v1.10.0) | "Per-file review misses cross-file inconsistencies". First cut "recall from 20.0% to 12.7%"; headers "lost 79% of their comments". [F] |
-| Filter step "misidentifies clearly normal code as a defect" | Two literal grounds plus vetoes | It "invited a value judgement and was the entry point for most wrong removals". [F] |
-| Filter emits ids, then reasons | `analysis` field serialised first | The model wrote "I should not remove it" after the id was already listed. [F] |
-| Filter with forced tool choice | Tool choice left free | Forced tool choice conflicts with thinking. [F] |
-| Plan as JSON, then MUST/SHOULD tiers with `[quick]`/`[deep]` tags | Plain numbered text | "Nothing parses the plan output"; the missing third tier starved `low` findings. [F] |
-| Plan shown in every round | Round 1 only | It acts as "a coverage ceiling". [F] |
-| Plan gated on group churn | Gated on the largest file | Otherwise the plan phase is "effectively unconditional". [F] |
-| Grouping request always | Skipped under 4 files; indices, not paths | "the call buys no information"; path output overflowed and forced per-file fallback. [F] |
-| Model re-anchors a failed snippet first | Cross-file string search first | The model "answers with whatever token in that diff looks closest". [F] |
-| 20, then 30 tool turns, hard stop | 100 turns, then a grace round | Findings were lost when the budget ran out. [F] |
-| Release on unit tests | Full 200-PR eval before any core-path change | An AI-chosen tool change broke code search as launch traffic arrived; one eval run takes 8 hours. [F] |
+| Was                                                               | Now                                          | Why                                                                                                                                    |
+| ----------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| One agent per file (v1.3.1)                                       | Semantic file groups (v1.10.0)               | "Per-file review misses cross-file inconsistencies". First cut "recall from 20.0% to 12.7%"; headers "lost 79% of their comments". [F] |
+| Filter step "misidentifies clearly normal code as a defect"       | Two literal grounds plus vetoes              | It "invited a value judgement and was the entry point for most wrong removals". [F]                                                    |
+| Filter emits ids, then reasons                                    | `analysis` field serialised first            | The model wrote "I should not remove it" after the id was already listed. [F]                                                          |
+| Filter with forced tool choice                                    | Tool choice left free                        | Forced tool choice conflicts with thinking. [F]                                                                                        |
+| Plan as JSON, then MUST/SHOULD tiers with `[quick]`/`[deep]` tags | Plain numbered text                          | "Nothing parses the plan output"; the missing third tier starved `low` findings. [F]                                                   |
+| Plan shown in every round                                         | Round 1 only                                 | It acts as "a coverage ceiling". [F]                                                                                                   |
+| Plan gated on group churn                                         | Gated on the largest file                    | Otherwise the plan phase is "effectively unconditional". [F]                                                                           |
+| Grouping request always                                           | Skipped under 4 files; indices, not paths    | "the call buys no information"; path output overflowed and forced per-file fallback. [F]                                               |
+| Model re-anchors a failed snippet first                           | Cross-file string search first               | The model "answers with whatever token in that diff looks closest". [F]                                                                |
+| 20, then 30 tool turns, hard stop                                 | 100 turns, then a grace round                | Findings were lost when the budget ran out. [F]                                                                                        |
+| Release on unit tests                                             | Full 200-PR eval before any core-path change | An AI-chosen tool change broke code search as launch traffic arrived; one eval run takes 8 hours. [F]                                  |
 
 Not built: diff-only "rapid review" (#1206, open) and a higher-recall "Ultra Mode". [F]
 
@@ -186,30 +186,30 @@ Not built: diff-only "rapid review" (#1206, open) and a higher-recall "Ultra Mod
 Ranked by time saved against strength of evidence.
 
 1. **Do triage in the orchestrator, not in agents.** Hand each finder its diffs, the other
-   changed files and its checklist. *Risk:* low; do not copy the test-file exclusion.
+   changed files and its checklist. _Risk:_ low; do not copy the test-file exclusion.
 2. **Replace one refuter agent per finding with one batched, diff-only falsifier.** No
    tools, deletion only, keep-all on failure, reasoning before ids, a never-remove list.
    Move evidence gathering into the finder: a verbatim snippet and a checked call site
-   before any non-local claim. *Risk:* high if today's refuters reject many findings; this
+   before any non-local claim. _Risk:_ high if today's refuters reject many findings; this
    filter catches only what the diff contradicts and removed 2–3% here. Measure the
    refuter's rejection rate first, and keep it for claims resting on code outside the
    diff. [I]
 3. **Fan out by file group with dimensions as a checklist.** Each diff is read once, not
-   once per dimension, and file ownership removes most duplicates. *Risk:* the highest for
+   once per dimension, and file ownership removes most duplicates. _Risk:_ the highest for
    recall. This shape scores 20.0% recall against 28.9%, and grouping starved secondary
    files until a per-file pass was enforced. A/B it; bundle only small changes.
 4. **Gate stages on size.** No plan under 50 changed lines per file, no grouping request
-   under 4 files, stop when a pass adds nothing. *Risk:* the thresholds are tuned to their
+   under 4 files, stop when a pass adds nothing. _Risk:_ the thresholds are tuned to their
    benchmark and carry no published numbers.
 5. **Spend reasoning only in finders.** Run grouping, dedupe, anchoring and posting as
-   single requests at minimal effort, or as code. *Risk:* unmeasured upstream; the 4.6 to
+   single requests at minimal effort, or as code. _Risk:_ unmeasured upstream; the 4.6 to
    4.8 swap cut true positives by 42%, so re-measure after any model or effort change.
 6. **Buy recall with a second pass, not deeper thinking.** Inject confirmed findings, drop
-   the plan, stop when nothing new arrives. *Risk:* adds a pass of wall-clock; its effect
+   the plan, stop when nothing new arrives. _Risk:_ adds a pass of wall-clock; its effect
    on recall is unpublished.
 7. **Anchor by quoted snippet, resolved in code**, so posting threads needs no agent.
-   *Risk:* none to quality; unanchored comments still need a file-level fallback.
-8. **Keep a fixed PR set with known findings** to prove "no loss". *Risk:* cost only.
+   _Risk:_ none to quality; unanchored comments still need a file-level fallback.
+8. **Keep a fixed PR set with known findings** to prove "no loss". _Risk:_ cost only.
 
 ## Not found
 

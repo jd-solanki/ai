@@ -61,13 +61,13 @@ was dropped. Defaults: `gpt-3.5-turbo`, `gpt-4`, six concurrent calls `[F: oss]`
 
 ## Speed
 
-| Stated duration | Scope | Tag |
-| --- | --- | --- |
-| "often taking 10-20 minutes to complete" | whole review task, 2025-04 | `[F: gcp]` |
-| "up to five minutes before you see the first comment", or one to three | 2025-11 | `[F: slow]` |
-| mean 8:31 per full review trace | production mix, 105 problems, 2026-06 | `[F: nemo]` |
-| mean 5:27 (13 hard PRs); mean 6:33, median 5:44 (44 PRs) | Sonnet 5.5 lanes; Sonnet 5 took 9:55 and 13:31 | `[F: sonnet55]` |
-| "can take 7-30+ minutes depending on the scope of changes" | CLI | `[F: docs]` |
+| Stated duration                                                        | Scope                                          | Tag             |
+| ---------------------------------------------------------------------- | ---------------------------------------------- | --------------- |
+| "often taking 10-20 minutes to complete"                               | whole review task, 2025-04                     | `[F: gcp]`      |
+| "up to five minutes before you see the first comment", or one to three | 2025-11                                        | `[F: slow]`     |
+| mean 8:31 per full review trace                                        | production mix, 105 problems, 2026-06          | `[F: nemo]`     |
+| mean 5:27 (13 hard PRs); mean 6:33, median 5:44 (44 PRs)               | Sonnet 5.5 lanes; Sonnet 5 took 9:55 and 13:31 | `[F: sonnet55]` |
+| "can take 7-30+ minutes depending on the scope of changes"             | CLI                                            | `[F: docs]`     |
 
 Target: "A five minute review is fine. Thirty minutes is not." `[F: codex]`. Mechanisms:
 
@@ -120,40 +120,40 @@ No numeric cap was found. On 44 benchmark PRs, 2.5 to 3.3 comments survive per P
 - Security findings get a stricter verifier that "reopens the cited paths" and checks
   reachability, safeguards elsewhere and exploit conditions `[F: security]`.
 
-| Measure | Value | Tag |
-| --- | --- | --- |
-| Own sets, production mix | 61.3% recall, 39.3% precision (80 patterns); 5/13, 29.4% (13 hard cases) | `[F: opus55]` |
-| Same 13, Opus 5.5 Standard / Sonnet 5.5 | 8/13 at 66.7% / 6/13 at 41.2% | `[F: opus55, sonnet55]` |
+| Measure                                  | Value                                                                                                   | Tag                        |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------- |
+| Own sets, production mix                 | 61.3% recall, 39.3% precision (80 patterns); 5/13, 29.4% (13 hard cases)                                | `[F: opus55]`              |
+| Same 13, Opus 5.5 Standard / Sonnet 5.5  | 8/13 at 66.7% / 6/13 at 41.2%                                                                           | `[F: opus55, sonnet55]`    |
 | Martian online bench (developer actions) | 49.2% precision, 53.5% recall, ~300k PRs, Jan–Feb 2026; 64.9% and 51.6%, rank 5, 2026-07-30 per a rival | `[F: martian, greptile-m]` |
-| After adopting o3 | "50% increase in accurate suggestions" | `[F: openai]` |
-| Move to GPT-5 | comments "nearly doubled", acceptance fell | `[F: codex]` |
+| After adopting o3                        | "50% increase in accurate suggestions"                                                                  | `[F: openai]`              |
+| Move to GPT-5                            | comments "nearly doubled", acceptance fell                                                              | `[F: codex]`               |
 
 Users report both noise ("it's made PRs unreadable") and the opposite ("wanting to read
 the low confidence comments") `[F: hn]`.
 
 ## Models and effort
 
-| When | Cheap tier | Reasoning tier | Tag |
-| --- | --- | --- | --- |
-| 2023 | `gpt-3.5-turbo`: summary, triage | `gpt-4`: per-file review | `[F: oss, cost23]` |
-| 2025-05/06 | GPT-4.1 family: summaries, context clean-up, "routine QA checks" | o3, o4-mini: cross-file bugs; "seven or eight models" in all | `[F: openai, sed]` |
-| 2025-08/09 | — | GPT-5 "core reasoning model", then GPT-5 Codex | `[F: gpt5, codex]` |
-| 2026-01 | Nemotron 3 Nano: summaries (self-hosted) | GPT-5.2-Codex, Claude 4.5: review and "review verification" | `[F: nemo]` |
-| 2026-05/06 | Nemotron 3 Ultra viable at trivial and junior tiers | Opus 4.8 on senior-tier changes only | `[F: nemo, opus48]` |
-| 2026-09 | "shared smaller models that handle summaries and verification" | GPT-5.6 lanes; Sonnet 5.5 taking "simple and moderate reviews" | `[F: sonnet55, opus5]` |
+| When       | Cheap tier                                                       | Reasoning tier                                                 | Tag                    |
+| ---------- | ---------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------- |
+| 2023       | `gpt-3.5-turbo`: summary, triage                                 | `gpt-4`: per-file review                                       | `[F: oss, cost23]`     |
+| 2025-05/06 | GPT-4.1 family: summaries, context clean-up, "routine QA checks" | o3, o4-mini: cross-file bugs; "seven or eight models" in all   | `[F: openai, sed]`     |
+| 2025-08/09 | —                                                                | GPT-5 "core reasoning model", then GPT-5 Codex                 | `[F: gpt5, codex]`     |
+| 2026-01    | Nemotron 3 Nano: summaries (self-hosted)                         | GPT-5.2-Codex, Claude 4.5: review and "review verification"    | `[F: nemo]`            |
+| 2026-05/06 | Nemotron 3 Ultra viable at trivial and junior tiers              | Opus 4.8 on senior-tier changes only                           | `[F: nemo, opus48]`    |
+| 2026-09    | "shared smaller models that handle summaries and verification"   | GPT-5.6 lanes; Sonnet 5.5 taking "simple and moderate reviews" | `[F: sonnet55, opus5]` |
 
 Verification therefore moved from the frontier tier to the smaller tier during 2026
 `[I]`; no quality delta is published. Effort is set per cohort: "Low, medium, and high
 effort for the trivial, junior, and senior review cohorts respectively" `[F: sonnet55]`.
 
-| Model | Lower setting | Higher setting | Tag |
-| --- | --- | --- | --- |
-| Sonnet 5.5, thinking off / on | 5/13, 38.5%, 5:58 | 6/13, 41.2%, 5:27, +15% cost | `[F: sonnet55]` |
-| Opus 5.5, Standard / Max | 63.8% recall, 38.6% (80 patterns); 8/13, 66.7% (hard) | 62.5%, 35.7%; 10/13, 52.0% | `[F: opus55]` |
-| Fable 5.1, Low / High | 61.0% recall, 18:38 | 57.1%, 21:36, same call count | `[F: fable51]` |
-| Sonnet 5 | ~50% recall | "barely moved its score and roughly doubled the cost" | `[F: sonnet5]` |
-| Opus 5, medium / x-high | most issues found, 110 nitpicks | 39.3% precision, 55.2% recall | `[F: opus5]` |
-| Opus 4.8, one step down / default | −4 points precision, −5 pass rate | 61% pass, 33.8% | `[F: opus48]` |
+| Model                             | Lower setting                                         | Higher setting                                        | Tag             |
+| --------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | --------------- |
+| Sonnet 5.5, thinking off / on     | 5/13, 38.5%, 5:58                                     | 6/13, 41.2%, 5:27, +15% cost                          | `[F: sonnet55]` |
+| Opus 5.5, Standard / Max          | 63.8% recall, 38.6% (80 patterns); 8/13, 66.7% (hard) | 62.5%, 35.7%; 10/13, 52.0%                            | `[F: opus55]`   |
+| Fable 5.1, Low / High             | 61.0% recall, 18:38                                   | 57.1%, 21:36, same call count                         | `[F: fable51]`  |
+| Sonnet 5                          | ~50% recall                                           | "barely moved its score and roughly doubled the cost" | `[F: sonnet5]`  |
+| Opus 5, medium / x-high           | most issues found, 110 nitpicks                       | 39.3% precision, 55.2% recall                         | `[F: opus5]`    |
+| Opus 4.8, one step down / default | −4 points precision, −5 pass rate                     | 61% pass, 33.8%                                       | `[F: opus48]`   |
 
 Their reading: "treat effort as a choice between failure modes" `[F: opus5]`. Model size
 still matters at the top: "four of our 13 hard cases defeated every Sonnet configuration
@@ -203,37 +203,37 @@ severity.
 Ranked by expected minutes saved `[E]`. Each item ends with its quality risk.
 
 1. **Tier effort by cohort.** Half the measured time was thinking. Medium by default, high
-   for senior-tier cohorts, never the top setting. *Risk:* the top setting caught 10/13
+   for senior-tier cohorts, never the top setting. _Risk:_ the top setting caught 10/13
    against 8/13 on the hardest cases.
-2. **Route first.** One small-model call tags the PR and each cohort. *Risk:* a subtle
+2. **Route first.** One small-model call tags the PR and each cohort. _Risk:_ a subtle
    change tagged trivial; CodeRabbit's router matches its reference 80.7% of the time
    `[F: router]`. Keep the 2023 rule: "When in doubt, always err on the side of caution".
 3. **Build one brief, once.** File summaries that note signature changes, PR intent, and
-   one-hop callers and callees of changed symbols, handed to every finder. *Risk:* a wrong
+   one-hop callers and callees of changed symbols, handed to every finder. _Risk:_ a wrong
    summary misleads all finders; the 2023 prompt bans verdicts in summaries `[F: oss]`.
 4. **Split finders by cohort, not dimension.** Two or three finders, each owning a
    dependency-ordered group of hunks and a checklist of all dimensions; add a security
-   finder only when the router sees auth, input or secrets. *Risk:* a generalist
+   finder only when the router sees auth, input or secrets. _Risk:_ a generalist
    under-attends a dimension; no source tests dimension against cohort splitting `[I]`.
-5. **Dedup in code before verifying**: normalised text plus file and line. *Risk:* two
+5. **Dedup in code before verifying**: normalised text plus file and line. _Risk:_ two
    distinct bugs on one line merge.
 6. **Verify in batches on a smaller model, with shell evidence.** One verifier per cohort
    runs `grep`, `ast-grep`, the type checker or a test and must cite output to drop a
    finding; otherwise post it as unverified. Keep a per-finding refuter for critical
-   severity only. *Risk:* a weaker verifier kills a true positive.
+   severity only. _Risk:_ a weaker verifier kills a true positive.
 7. **Gate by severity, do not cap.** Bugs always, refactors only when essential, nitpicks
-   dropped before verification. *Risk:* useful low-confidence comments are lost.
+   dropped before verification. _Risk:_ useful low-confidence comments are lost.
 8. **Filter scope and run linters, type checker and tests before any model**, passing only
-   the top issues. *Risk:* a poisoned lock file goes unread.
-9. **Review only the delta on re-runs.** *Needs state*, below.
+   the top issues. _Risk:_ a poisoned lock file goes unread.
+9. **Review only the delta on re-runs.** _Needs state_, below.
 
-| Needs a service at CodeRabbit | No-service equivalent |
-| --- | --- |
-| Last-reviewed commit | Hidden marker in the posted review; the 2023 action used `<!-- commit_ids_reviewed_start -->` `[F: oss]` |
-| Learnings store | A learnings file in the repo, matched by path glob |
-| Code graph, semantic index | `git grep` or `ast-grep` on changed symbols; `git log --name-only` for co-change |
-| Sandbox cache, fine-tuned router | The local checkout; a prompt on the smallest model |
-| Eval set of ~100 known-bug PRs | A few past PRs with frozen finder inputs, re-run after each change; CodeRabbit replays "a frozen cassette" `[F: sonnet55]` |
+| Needs a service at CodeRabbit    | No-service equivalent                                                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Last-reviewed commit             | Hidden marker in the posted review; the 2023 action used `<!-- commit_ids_reviewed_start -->` `[F: oss]`                   |
+| Learnings store                  | A learnings file in the repo, matched by path glob                                                                         |
+| Code graph, semantic index       | `git grep` or `ast-grep` on changed symbols; `git log --name-only` for co-change                                           |
+| Sandbox cache, fine-tuned router | The local checkout; a prompt on the smallest model                                                                         |
+| Eval set of ~100 known-bug PRs   | A few past PRs with frozen finder inputs, re-run after each change; CodeRabbit replays "a frozen cassette" `[F: sonnet55]` |
 
 Budget for the 10-file PR `[E]`: brief 1–2 min, finders 4–6, verification 2–4, post 1.
 
@@ -252,23 +252,23 @@ Budget for the 10-file PR `[E]`: brief 1–2 min, finders 4–6, verification 2�
 
 `B/` is `https://www.coderabbit.ai/blog/`; `D/` is `https://docs.coderabbit.ai/`.
 
-| Key | URL | Date | Tag |
-| --- | --- | --- | --- |
-| oss | `https://github.com/rohitpaulk/ai-pr-reviewer` (`src/prompts.ts`, `review.ts`, `commenter.ts`, `action.yml`, `README.md`; fork at upstream commit d5ec397) | 2023-11-26 | F |
-| cost23, ide | `B/how-we-built-cost-effective-generative-ai-application`, `B/how-we-built-our-ai-code-review-tool-for-ides` | 2023-12-22, 2025-05-14 | F |
-| gcp | `https://cloud.google.com/blog/products/ai-machine-learning/how-coderabbit-built-its-ai-code-review-agent-with-google-cloud-run` | 2025-04-23 | F |
-| openai | `https://openai.com/index/coderabbit/` (through a reader proxy; direct fetch 403) | 2025-05-22, date S | F |
-| sed | `https://pod.wave.co/podcast/software-engineering-daily/coderabbit-and-rag-for-code-review-with-harjot-gill-41e3d15a` (transcript) | 2025-06-24 | F |
-| ctx-eng, massive | `B/context-engineering-ai-code-reviews`, `B/how-coderabbit-delivers-accurate-ai-code-reviews-on-massive-codebases` | 2025-07-17, 09-05 | F |
-| gpt5, codex | `B/benchmarking-gpt-5-why-its-a-generational-leap-in-reasoning`, `B/gpt-5-codex-how-it-solves-for-gpt-5s-drawbacks` | 2025-08-07, 09-30 | F |
-| prompts, slow, emoji, online | `B/the-end-of-one-sized-fits-all-prompts-why-llm-models-are-no-longer-interchangeable`, `B/the-rise-of-slow-ai-why-devs-should-stop-speedrunning-stupid`, `B/why-emojis-suck-for-reinforcement-learning`, `B/behind-the-curtain-what-it-really-takes-to-bring-a-new-model-online-at-coderabbit` | 2025-10-24, 11-05, 11-07, 12-05 | F |
-| odsc, skills | `https://github.com/coderabbitai/odsc-west-2025` (`review_demo.py`), `https://github.com/coderabbitai/skills` (`skills/code-review/SKILL.md`) | 2025-10-30, 2026-10-01 | F |
-| nemo | `B/coderabbit-ai-code-reviews-now-support-nvidia-nemotron`, `B/coderabbit-supports-nvidia-nemotron-3-ultra`, `B/nemotron-3-ultra-release` | 2026-01-05, 06-04, 06-04 | F |
-| hn, arxiv | `https://news.ycombinator.com/item?id=46766961`, `https://arxiv.org/abs/2606.15689` (abstract only) | 2026-01-26, 04-09 | F |
-| martian, greptile-m | `B/coderabbit-tops-martian-code-review-benchmark`, `https://www.greptile.com/content-library/greptile-martian-code-review-benchmark` | 2026-03-03, 07-30 | F |
-| opus47, opus48, engine | `B/claude-opus-4-7-for-ai-code-review`, `B/opus-4-8-release`, `B/explainable-reviews-coderabbit-review-context-engine`, `B/coderabbit-review-reads-a-pr-how-author-would-explain-it` | 2026-04-16, 05-28, 05-19, 06-09 | F |
-| sonnet5, gpt56, opus5 | `B/claude-sonnet-5-review`, `B/gpt-5-6-sol-and-terra-benchmark`, `B/opus-5-model-review` | 2026-06-30, 07-09, 07-24 | F |
-| router, security | `B/teaching-nvidia-nemotron-3-5-lightning-to-route-code-reviews`, `B/introducing-coderabbit-security` | 2026-08-11, 08-13 | F |
-| fable51, opus55, sonnet55 | `B/fable-5-1-model-review`, `B/opus-5-5-model-review`, `B/sonnet-5-5-model-review` | 2026-09-01, 09-22, 09-28 | F |
-| gh-nuxt | GitHub API: comments, reviews and commits on `nuxt/nuxt#36421` (`issuecomment-5855704554`) | 2026-10-01 | F |
-| docs | `D/guides/code-review-overview`, `D/configuration/path-instructions`, `D/configuration/auto-review`, `D/reference/configuration`, `D/reference/caching`, `D/knowledge-base/learnings`, `D/tools`, `D/cli`, `D/changelog`, `D/llms.txt` | read 2026-10-02 | F |
+| Key                          | URL                                                                                                                                                                                                                                                                                             | Date                            | Tag |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | --- |
+| oss                          | `https://github.com/rohitpaulk/ai-pr-reviewer` (`src/prompts.ts`, `review.ts`, `commenter.ts`, `action.yml`, `README.md`; fork at upstream commit d5ec397)                                                                                                                                      | 2023-11-26                      | F   |
+| cost23, ide                  | `B/how-we-built-cost-effective-generative-ai-application`, `B/how-we-built-our-ai-code-review-tool-for-ides`                                                                                                                                                                                    | 2023-12-22, 2025-05-14          | F   |
+| gcp                          | `https://cloud.google.com/blog/products/ai-machine-learning/how-coderabbit-built-its-ai-code-review-agent-with-google-cloud-run`                                                                                                                                                                | 2025-04-23                      | F   |
+| openai                       | `https://openai.com/index/coderabbit/` (through a reader proxy; direct fetch 403)                                                                                                                                                                                                               | 2025-05-22, date S              | F   |
+| sed                          | `https://pod.wave.co/podcast/software-engineering-daily/coderabbit-and-rag-for-code-review-with-harjot-gill-41e3d15a` (transcript)                                                                                                                                                              | 2025-06-24                      | F   |
+| ctx-eng, massive             | `B/context-engineering-ai-code-reviews`, `B/how-coderabbit-delivers-accurate-ai-code-reviews-on-massive-codebases`                                                                                                                                                                              | 2025-07-17, 09-05               | F   |
+| gpt5, codex                  | `B/benchmarking-gpt-5-why-its-a-generational-leap-in-reasoning`, `B/gpt-5-codex-how-it-solves-for-gpt-5s-drawbacks`                                                                                                                                                                             | 2025-08-07, 09-30               | F   |
+| prompts, slow, emoji, online | `B/the-end-of-one-sized-fits-all-prompts-why-llm-models-are-no-longer-interchangeable`, `B/the-rise-of-slow-ai-why-devs-should-stop-speedrunning-stupid`, `B/why-emojis-suck-for-reinforcement-learning`, `B/behind-the-curtain-what-it-really-takes-to-bring-a-new-model-online-at-coderabbit` | 2025-10-24, 11-05, 11-07, 12-05 | F   |
+| odsc, skills                 | `https://github.com/coderabbitai/odsc-west-2025` (`review_demo.py`), `https://github.com/coderabbitai/skills` (`skills/code-review/SKILL.md`)                                                                                                                                                   | 2025-10-30, 2026-10-01          | F   |
+| nemo                         | `B/coderabbit-ai-code-reviews-now-support-nvidia-nemotron`, `B/coderabbit-supports-nvidia-nemotron-3-ultra`, `B/nemotron-3-ultra-release`                                                                                                                                                       | 2026-01-05, 06-04, 06-04        | F   |
+| hn, arxiv                    | `https://news.ycombinator.com/item?id=46766961`, `https://arxiv.org/abs/2606.15689` (abstract only)                                                                                                                                                                                             | 2026-01-26, 04-09               | F   |
+| martian, greptile-m          | `B/coderabbit-tops-martian-code-review-benchmark`, `https://www.greptile.com/content-library/greptile-martian-code-review-benchmark`                                                                                                                                                            | 2026-03-03, 07-30               | F   |
+| opus47, opus48, engine       | `B/claude-opus-4-7-for-ai-code-review`, `B/opus-4-8-release`, `B/explainable-reviews-coderabbit-review-context-engine`, `B/coderabbit-review-reads-a-pr-how-author-would-explain-it`                                                                                                            | 2026-04-16, 05-28, 05-19, 06-09 | F   |
+| sonnet5, gpt56, opus5        | `B/claude-sonnet-5-review`, `B/gpt-5-6-sol-and-terra-benchmark`, `B/opus-5-model-review`                                                                                                                                                                                                        | 2026-06-30, 07-09, 07-24        | F   |
+| router, security             | `B/teaching-nvidia-nemotron-3-5-lightning-to-route-code-reviews`, `B/introducing-coderabbit-security`                                                                                                                                                                                           | 2026-08-11, 08-13               | F   |
+| fable51, opus55, sonnet55    | `B/fable-5-1-model-review`, `B/opus-5-5-model-review`, `B/sonnet-5-5-model-review`                                                                                                                                                                                                              | 2026-09-01, 09-22, 09-28        | F   |
+| gh-nuxt                      | GitHub API: comments, reviews and commits on `nuxt/nuxt#36421` (`issuecomment-5855704554`)                                                                                                                                                                                                      | 2026-10-01                      | F   |
+| docs                         | `D/guides/code-review-overview`, `D/configuration/path-instructions`, `D/configuration/auto-review`, `D/reference/configuration`, `D/reference/caching`, `D/knowledge-base/learnings`, `D/tools`, `D/cli`, `D/changelog`, `D/llms.txt`                                                          | read 2026-10-02                 | F   |

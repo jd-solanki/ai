@@ -40,13 +40,13 @@ covers only minor, low-severity and nitpick findings.
   issues. Qodo's and Bugbot's auto-fix skip minors by default
   `[F: cp-use, qd-anatomy, qd-thresh, bb-docs, qd-fix, bb-log]`.
 
-| | CodeRabbit (`chill`, default) | Greptile (strictness 2, default) |
-| --- | --- | --- |
-| Minor defect | Inline thread, `🟡 Minor` | Inline thread, P2 |
-| Polish | Folded `🧹 Nitpick comments` in the review body | Inline thread, P2, `style` type |
-| Blocks merge | Inline threads only, and only with `request_changes_workflow` | No; check passes, review is `COMMENTED` |
-| Next round | Fixed threads resolved; open ones restated as duplicates | Fixed threads resolved; summary lists what is open |
-| Fix path | Per-comment agent prompt, fix-all prompt, Autofix | Suggested code, Fix with your Agent, Fix All |
+|              | CodeRabbit (`chill`, default)                                 | Greptile (strictness 2, default)                   |
+| ------------ | ------------------------------------------------------------- | -------------------------------------------------- |
+| Minor defect | Inline thread, `🟡 Minor`                                     | Inline thread, P2                                  |
+| Polish       | Folded `🧹 Nitpick comments` in the review body               | Inline thread, P2, `style` type                    |
+| Blocks merge | Inline threads only, and only with `request_changes_workflow` | No; check passes, review is `COMMENTED`            |
+| Next round   | Fixed threads resolved; open ones restated as duplicates      | Fixed threads resolved; summary lists what is open |
+| Fix path     | Per-comment agent prompt, fix-all prompt, Autofix             | Suggested code, Fix with your Agent, Fix All       |
 
 ## Severity model
 
@@ -366,7 +366,7 @@ Everything here is `[I]`, drawn from the sections above.
 
 - **(a) Fix minors before merge?** No tool holds a merge on polish by default. Qodo calls
   Medium "Non-blocking", Greptile calls an open P2 "non-blocking", and Bugbot's check stays
-  `neutral`. The one hard gate, CodeRabbit's opt-in workflow, blocks a minor *defect*
+  `neutral`. The one hard gate, CodeRabbit's opt-in workflow, blocks a minor _defect_
   posted inline but never a folded nitpick. So: split minor into small defect and polish.
   A confirmed small defect with a quick-win fix can be a task; polish never blocks.
 - **(b) Keep minors from costing a round.** No tool spends a round on minors alone. Each
@@ -408,40 +408,40 @@ is `https://www.greptile.com/docs/`, `GB/` is `https://www.greptile.com/blog/`, 
 `https://github.com/The-PR-Agent/pr-agent/blob/main/pr_agent/settings/`. Dates on docs
 pages are the fetch date.
 
-| Key | Source | Date | Read |
-| --- | --- | --- | --- |
-| cr-overview, cr-findings | `CD/guides/code-review-overview`, `CD/change-stack/findings` | 2026-10-03 | F |
-| cr-config | `CD/reference/configuration`, `https://coderabbit.ai/integrations/schema.v2.json` | 2026-10-03 | F |
-| cr-glossary, cr-reports, cr-metrics | `CD/reference/glossary`, `CD/guides/custom-reports`, `CD/guides/dashboard-metrics` | 2026-10-03 | F |
-| cr-rcw, cr-sec | `CD/pr-reviews/request-changes-workflow`, `CD/security/pull-request-check` | 2026-10-03 | F |
-| cr-cmd, cr-autofix, cr-reviewing | `CD/guides/commands`, `CD/finishing-touches/autofix`, `CD/change-stack/reviewing` | 2026-10-03 | F |
-| cr-learn, cr-pma | `CD/knowledge-base/learnings`, `CD/pr-reviews/post-merge-actions` | 2026-10-03 | F |
-| cr-log | `CD/changelog` (entries 2026-07-02, 2026-07-10, 2026-10-01) | 2026-10-03 | F |
-| codex | `CB/gpt-5-codex-how-it-solves-for-gpt-5s-drawbacks` | 2025-09-30 | F |
-| gemini31, opus48 | `CB/gemini-3-1-pro-for-code-related-tasks-more-focus-higher-signal-to-noise`, `CB/opus-4-8-release` | 2026-03-12, 2026-05-28 | F |
-| opus5, sonnet55 | `CB/opus-5-model-review`, `CB/sonnet-5-5-model-review` | 2026-07-24, 2026-09-28 | F |
-| gh-bf | GitHub API: reviews, comments and threads on `betaflight/betaflight-configurator#5575`, `#5624`, and its `.coderabbit.yaml` | 2026-09-24, 2026-10-03 | F |
-| gh-tsd | GitHub API: reviews, comments and threads on `TanStack/devtools#290` | 2026-03-13 | F |
-| gh-ph | GitHub API: reviews `5399095202`, `5399145436` and inline comments on `PostHog/posthog#111226` | 2026-10-03 | F |
-| gr-anatomy, gr-nit, gr-reduce | `GD/code-review/first-pr-review`, `GD/code-review/controlling-nitpickiness`, `GD/how-greptile-works/nitpicks` | 2026-10-03 | F |
-| gr-json, gr-cfg, gr-approve | `GD/code-review/greptile-json-reference`, `GD/code-review/greptile-config-reference`, `GD/code-review/auto-approve-prs` | 2026-10-03 | F |
-| gr-agent, gr-autofix | `GD/integrations/fix-with-your-agent`, `GD/mcp-v2/auto-fix` | 2026-10-03 | F |
-| gr-log, gr-analytics, gr-org | `GD/changelog` (entries 2026-03-06, 2026-03-28), `GD/analytics`, `GD/account/organization-settings` | 2026-10-03 | F |
-| gr-greploop | `https://github.com/greptileai/skills` (`greploop/SKILL.md`, v1.3, at `646e2df`) | 2026-07-22 | F |
-| shutup | `GB/make-llms-shut-up` | 2024-12-18 | F |
-| hn-label, hn-nit | `H42483721`, `H46776408` (Greptile co-founder) | 2024-12-22, 2026-01-27 | F |
-| gh-rakazo, gh-litellm | GitHub API: summary comment and threads on `elie222/rakazo#1145`; summary on `BerriAI/litellm#44310` | 2026-10-03 | F |
-| gh-omarchy, gh-tri, gh-respire | GitHub API: check run on `omacom/omarchy#13426`; threads on `TriliumNext/Trilium#11829`, `thomhurst/Respire#678` | 2026-10-03 | F |
-| gh-gr | GitHub API: latest `<!-- greptile_summary -->` comment, inline comments and reviews on 44 PRs from a search for `commenter:app/greptile-apps`, sorted by update | 2026-10-03 | F |
-| cp-use, cp-con, cp-cust | `GH/how-tos/use-copilot-agents/use-code-review.md`, `GH/concepts/agents/code-review.md`, `GH/tutorials/customize-code-review.md` | 2026-10-03 | F |
-| cp-may, cp-sep11, cp-sep18 | `https://github.blog/changelog/2026-05-12-copilot-code-review-comment-experience-improvements/`, `.../2026-09-11-auto-resolution-and-analysis-updates-in-copilot-code-review/`, `.../2026-09-18-copilot-code-review-an-improved-review-experience/` | 2026-05-12, 2026-09-11, 2026-09-18 | F |
-| gh-vsc | GitHub API: Copilot reviews and threads on `microsoft/vscode#339437` | 2026-10-03 | F |
-| gt-feat, gt-cust | `https://graphite.com/features/ai-reviews`, `https://graphite.com/docs/ai-review-customization` | 2026-10-03 | F |
-| gt-launch | `https://graphite.com/blog/graphite-reviewer-launch` | 2024-09-30 | F |
-| qd-anatomy, qd-thresh, qd-noise | `QD/comment-anatomy`, `QD/severity-thresholds`, `QD/reduce-review-noise` | 2026-10-03 | F |
-| qd-track, qd-fix, qd-home | `QD/track-resolved-findings`, `QD/remediate-findings-in-prs`, `https://docs.qodo.ai/code-review` | 2026-10-03 | F, qd-home S |
-| qd-blog | `https://www.qodo.ai/blog/effective-code-suggestions-llms-less-is-more/` | 2025-01-29 | F |
-| pa-reflect, pa-cfg | `PA/code_suggestions/pr_code_suggestions_reflect_prompts.toml`, `PA/configuration.toml` | `main`, 2026-10-03 | F |
-| bb-docs, bb-page, bb-log | `https://cursor.com/docs/bugbot`, `https://cursor.com/bugbot`, `https://cursor.com/changelog/04-08-26` | 2026-10-03, 2026-04-08 | F |
-| gh-bb | GitHub API: Bugbot comments on `danthony504-svg/stadium-edge#588`, `ZeAlenu/zan.org.il#3` | 2026-10-03 | F |
-| helper | Helper-agent sampling of public Graphite, Bugbot and Copilot PRs; Qodo portal and TOML defaults | 2026-10-03 | S |
+| Key                                 | Source                                                                                                                                                                                                                                              | Date                               | Read         |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------ |
+| cr-overview, cr-findings            | `CD/guides/code-review-overview`, `CD/change-stack/findings`                                                                                                                                                                                        | 2026-10-03                         | F            |
+| cr-config                           | `CD/reference/configuration`, `https://coderabbit.ai/integrations/schema.v2.json`                                                                                                                                                                   | 2026-10-03                         | F            |
+| cr-glossary, cr-reports, cr-metrics | `CD/reference/glossary`, `CD/guides/custom-reports`, `CD/guides/dashboard-metrics`                                                                                                                                                                  | 2026-10-03                         | F            |
+| cr-rcw, cr-sec                      | `CD/pr-reviews/request-changes-workflow`, `CD/security/pull-request-check`                                                                                                                                                                          | 2026-10-03                         | F            |
+| cr-cmd, cr-autofix, cr-reviewing    | `CD/guides/commands`, `CD/finishing-touches/autofix`, `CD/change-stack/reviewing`                                                                                                                                                                   | 2026-10-03                         | F            |
+| cr-learn, cr-pma                    | `CD/knowledge-base/learnings`, `CD/pr-reviews/post-merge-actions`                                                                                                                                                                                   | 2026-10-03                         | F            |
+| cr-log                              | `CD/changelog` (entries 2026-07-02, 2026-07-10, 2026-10-01)                                                                                                                                                                                         | 2026-10-03                         | F            |
+| codex                               | `CB/gpt-5-codex-how-it-solves-for-gpt-5s-drawbacks`                                                                                                                                                                                                 | 2025-09-30                         | F            |
+| gemini31, opus48                    | `CB/gemini-3-1-pro-for-code-related-tasks-more-focus-higher-signal-to-noise`, `CB/opus-4-8-release`                                                                                                                                                 | 2026-03-12, 2026-05-28             | F            |
+| opus5, sonnet55                     | `CB/opus-5-model-review`, `CB/sonnet-5-5-model-review`                                                                                                                                                                                              | 2026-07-24, 2026-09-28             | F            |
+| gh-bf                               | GitHub API: reviews, comments and threads on `betaflight/betaflight-configurator#5575`, `#5624`, and its `.coderabbit.yaml`                                                                                                                         | 2026-09-24, 2026-10-03             | F            |
+| gh-tsd                              | GitHub API: reviews, comments and threads on `TanStack/devtools#290`                                                                                                                                                                                | 2026-03-13                         | F            |
+| gh-ph                               | GitHub API: reviews `5399095202`, `5399145436` and inline comments on `PostHog/posthog#111226`                                                                                                                                                      | 2026-10-03                         | F            |
+| gr-anatomy, gr-nit, gr-reduce       | `GD/code-review/first-pr-review`, `GD/code-review/controlling-nitpickiness`, `GD/how-greptile-works/nitpicks`                                                                                                                                       | 2026-10-03                         | F            |
+| gr-json, gr-cfg, gr-approve         | `GD/code-review/greptile-json-reference`, `GD/code-review/greptile-config-reference`, `GD/code-review/auto-approve-prs`                                                                                                                             | 2026-10-03                         | F            |
+| gr-agent, gr-autofix                | `GD/integrations/fix-with-your-agent`, `GD/mcp-v2/auto-fix`                                                                                                                                                                                         | 2026-10-03                         | F            |
+| gr-log, gr-analytics, gr-org        | `GD/changelog` (entries 2026-03-06, 2026-03-28), `GD/analytics`, `GD/account/organization-settings`                                                                                                                                                 | 2026-10-03                         | F            |
+| gr-greploop                         | `https://github.com/greptileai/skills` (`greploop/SKILL.md`, v1.3, at `646e2df`)                                                                                                                                                                    | 2026-07-22                         | F            |
+| shutup                              | `GB/make-llms-shut-up`                                                                                                                                                                                                                              | 2024-12-18                         | F            |
+| hn-label, hn-nit                    | `H42483721`, `H46776408` (Greptile co-founder)                                                                                                                                                                                                      | 2024-12-22, 2026-01-27             | F            |
+| gh-rakazo, gh-litellm               | GitHub API: summary comment and threads on `elie222/rakazo#1145`; summary on `BerriAI/litellm#44310`                                                                                                                                                | 2026-10-03                         | F            |
+| gh-omarchy, gh-tri, gh-respire      | GitHub API: check run on `omacom/omarchy#13426`; threads on `TriliumNext/Trilium#11829`, `thomhurst/Respire#678`                                                                                                                                    | 2026-10-03                         | F            |
+| gh-gr                               | GitHub API: latest `<!-- greptile_summary -->` comment, inline comments and reviews on 44 PRs from a search for `commenter:app/greptile-apps`, sorted by update                                                                                     | 2026-10-03                         | F            |
+| cp-use, cp-con, cp-cust             | `GH/how-tos/use-copilot-agents/use-code-review.md`, `GH/concepts/agents/code-review.md`, `GH/tutorials/customize-code-review.md`                                                                                                                    | 2026-10-03                         | F            |
+| cp-may, cp-sep11, cp-sep18          | `https://github.blog/changelog/2026-05-12-copilot-code-review-comment-experience-improvements/`, `.../2026-09-11-auto-resolution-and-analysis-updates-in-copilot-code-review/`, `.../2026-09-18-copilot-code-review-an-improved-review-experience/` | 2026-05-12, 2026-09-11, 2026-09-18 | F            |
+| gh-vsc                              | GitHub API: Copilot reviews and threads on `microsoft/vscode#339437`                                                                                                                                                                                | 2026-10-03                         | F            |
+| gt-feat, gt-cust                    | `https://graphite.com/features/ai-reviews`, `https://graphite.com/docs/ai-review-customization`                                                                                                                                                     | 2026-10-03                         | F            |
+| gt-launch                           | `https://graphite.com/blog/graphite-reviewer-launch`                                                                                                                                                                                                | 2024-09-30                         | F            |
+| qd-anatomy, qd-thresh, qd-noise     | `QD/comment-anatomy`, `QD/severity-thresholds`, `QD/reduce-review-noise`                                                                                                                                                                            | 2026-10-03                         | F            |
+| qd-track, qd-fix, qd-home           | `QD/track-resolved-findings`, `QD/remediate-findings-in-prs`, `https://docs.qodo.ai/code-review`                                                                                                                                                    | 2026-10-03                         | F, qd-home S |
+| qd-blog                             | `https://www.qodo.ai/blog/effective-code-suggestions-llms-less-is-more/`                                                                                                                                                                            | 2025-01-29                         | F            |
+| pa-reflect, pa-cfg                  | `PA/code_suggestions/pr_code_suggestions_reflect_prompts.toml`, `PA/configuration.toml`                                                                                                                                                             | `main`, 2026-10-03                 | F            |
+| bb-docs, bb-page, bb-log            | `https://cursor.com/docs/bugbot`, `https://cursor.com/bugbot`, `https://cursor.com/changelog/04-08-26`                                                                                                                                              | 2026-10-03, 2026-04-08             | F            |
+| gh-bb                               | GitHub API: Bugbot comments on `danthony504-svg/stadium-edge#588`, `ZeAlenu/zan.org.il#3`                                                                                                                                                           | 2026-10-03                         | F            |
+| helper                              | Helper-agent sampling of public Graphite, Bugbot and Copilot PRs; Qodo portal and TOML defaults                                                                                                                                                     | 2026-10-03                         | S            |

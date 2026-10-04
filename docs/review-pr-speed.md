@@ -16,15 +16,15 @@ files, +534/−158, behind a 33-file skills-update commit. The pipeline launched
 `--effort high`, and every first-round agent ran Opus 5.5 at that effort because a
 subagent copies its parent's.
 
-| Phase | Minutes | What held it |
-| --- | --- | --- |
-| Setup | 1.3 | checkout, range, spec |
-| Probe | 8.9 | one agent, 43 turns, for 61 seconds of check scripts |
-| Brief and dispatch | 2.5 | the batch starts only when the dispatch message ends |
-| Find, 8 agents | 15.9 | slowest was Deletion: 128 tool calls, four minors |
-| Collate | 1.6 | Anchor greps, duplicates merged |
-| Verify | 31.1 | refuter 13.5; a finder routed from `Not exercised` 31.1, one minor |
-| Judge | 9.6 | scored 12 minors the severity gate already excludes |
+| Phase              | Minutes | What held it                                                       |
+| ------------------ | ------- | ------------------------------------------------------------------ |
+| Setup              | 1.3     | checkout, range, spec                                              |
+| Probe              | 8.9     | one agent, 43 turns, for 61 seconds of check scripts               |
+| Brief and dispatch | 2.5     | the batch starts only when the dispatch message ends               |
+| Find, 8 agents     | 15.9    | slowest was Deletion: 128 tool calls, four minors                  |
+| Collate            | 1.6     | Anchor greps, duplicates merged                                    |
+| Verify             | 31.1    | refuter 13.5; a finder routed from `Not exercised` 31.1, one minor |
+| Judge              | 9.6     | scored 12 minors the severity gate already excludes                |
 
 It ended with one major and ten minors. Verification removed nothing.
 
@@ -64,13 +64,13 @@ nothing is posted. Each run is a `claude --bg` session in a fresh worktree, the 
 pipeline starts one. Goldens, reports, raw results and timelines are kept outside any
 repository, in the review data folder `/improve-review-pr` names.
 
-| | Original | Run 1 | Run 2 | Run 3 | Run 4 |
-| --- | --- | --- | --- | --- | --- |
-| Minutes to the report | 71.6 | 35.3 | 15.3 | 23.0 | 15.8 |
-| The major | found | confirmed | confirmed | confirmed | confirmed |
-| Majors the original lacked | | 1 | 0 | 2 | 0 |
-| Minors reported | 10 | 6 | 5 | 4 | 6 |
-| Original minors found again | | 2 | 2 | 3 | 3 |
+|                             | Original | Run 1     | Run 2     | Run 3     | Run 4     |
+| --------------------------- | -------- | --------- | --------- | --------- | --------- |
+| Minutes to the report       | 71.6     | 35.3      | 15.3      | 23.0      | 15.8      |
+| The major                   | found    | confirmed | confirmed | confirmed | confirmed |
+| Majors the original lacked  |          | 1         | 0         | 2         | 0         |
+| Minors reported             | 10       | 6         | 5         | 4         | 6         |
+| Original minors found again |          | 2         | 2         | 3         | 3         |
 
 What each run changed, and what it showed:
 
