@@ -31,8 +31,10 @@ Run changelogithub as the **last step** — after `npm publish` (if any) — so 
   with:
     fetch-depth: 0  # full tag history required; shallow clone produces empty changelog
 
+- uses: pnpm/action-setup@v6
+
 - name: Generate changelog
-  run: npx changelogithub
+  run: pnpm dlx changelogithub
   env:
     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 ```
@@ -53,7 +55,7 @@ Commits that don't follow the convention are omitted from the changelog.
 ## Preview before pushing a tag
 
 ```bash
-npx changelogithub --dry
+pnpm dlx changelogithub --dry
 ```
 
 ## Reference
