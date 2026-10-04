@@ -85,8 +85,8 @@ as Renovate opens one.
 - Every review run updates one summary comment on the pull request, carrying a score for
   how ready it is to merge. `/review-pr` defines the scale. The score informs; only open
   findings block.
-- A pull request gets three review runs at most. `/review-pr` counts them in the summary
-  comment. A third review that leaves findings open ends the alternation: the pull
+- `/review-pr` caps the review runs a pull request gets and counts them in the summary
+  comment. A last review that leaves findings open ends the alternation: the pull
   request stays a draft, and a human decides what happens to the open findings.
 
 ## Reasons
@@ -106,8 +106,7 @@ as Renovate opens one.
   needs no trigger of its own.
 - The Implementer reviews its branch before the pull request exists, so no pull request
   opens on unreviewed work. The Reviewer's read is a second one, made for the maintainer.
-- Review runs are capped: an alternation that does not converge spends budget with nobody
-  watching. The cap counts reviews, not fixes, so the alternation always ends on a review: a
+- The cap counts reviews, not fixes, so the alternation always ends on a review: a
   last fix with no review after it leaves the pull request's final code unreviewed.
 - The Fixer resolves the threads it fixes so the pull request's conversation reads
   resolved.
@@ -132,14 +131,13 @@ as Renovate opens one.
 
 - **A review cannot approve the pull request natively.** Every run acts as the factory
   owner's GitHub login, and GitHub refuses an author's approval of their own pull request,
-  so a review with no findings is the approval. `src/session.ts:TRIGGERS`
+  so a review with no findings is the approval. `apps/software-factory/src/session.ts:TRIGGERS`
 
 - **Renovate's rebase checkbox drops the Upgrader's commits.** Renovate stops rebasing a
   branch once another author commits to it, and the checkbox recreates the branch from
-  scratch. Re-apply `agent:upgrade` after ticking it. `src/session.ts:TRIGGERS`
+  scratch. Re-apply `agent:upgrade` after ticking it. `apps/software-factory/src/session.ts:TRIGGERS`
 
 ## Where it lives
 
-`src/session.ts` (`TRIGGERS`: the skill each trigger label starts), `.agents/skills/`
-(`create-spec`, `grill-with-docs`, `implement-spec`, `implement`, `review-pr`,
-`create-pr`), `README.md` (Add a project: the labels a served repo needs).
+`apps/software-factory/src/session.ts` (`TRIGGERS`: the skill each trigger label starts), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
+`create-pr`), `.agents/skills/` (`grill-with-docs`, `implement`), `apps/software-factory/README.md` (Add a project: the labels a served repo needs).

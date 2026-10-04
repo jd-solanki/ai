@@ -13,6 +13,10 @@
   published for installation elsewhere.
 - A published skill is used here through a symlink in an agent skills directory.
   `/link-skills` makes them.
+- An app lives at `apps/<name>/`, a package of the Vite+ workspace. Shared code goes in
+  `packages/<name>/` once a second app needs it.
+- `skills/` stays at the root and outside the workspace. A skill is not a package.
+- One `.agents/` and one `.claude/`, at the root. An app holds no agent directory of its own.
 
 ## Reasons
 
@@ -23,6 +27,11 @@
 - A fork lives in its real category because we maintain it now. Filing it under
   `third-party/` would claim upstream still does. Attribution goes in `README.md`
   rather than inside the skill, so it does not load on every invocation.
+
+- `skills/` stays at the root because the skills CLI finds published skills there and
+  `/link-skills` builds its relative links from it.
+- One set of agent directories because an agent works on this repository from its root,
+  whichever app the task touches.
 
 ## Fences
 
@@ -38,7 +47,15 @@
 - **`CLAUDE.md` is a symlink to `AGENTS.md`.** Both agents read one file, so a tool
   that refuses to write through a symlink must be pointed at `AGENTS.md` instead.
 
+- **`vp fmt` formats Markdown.** The staged pre-commit hook would rewrite every skill
+  committed, changing its hash in every repository that installed it, and would rewrite
+  the files the skills CLI owns. `fmt.ignorePatterns` in `vite.config.ts` keeps it out of
+  `skills/`, `.agents/`, `.claude/` and `skills-lock.json`.
+
+- **`npx` refuses to run at the root.** `devEngines` in `package.json` names pnpm, and npm
+  stops on any other package manager. Run the skills CLI as `pnpm dlx skills@latest`.
+
 ## Where it lives
 
-`skills/`, `.agents/skills/`, `.claude/skills/`, `skills-lock.json`,
+`apps/`, `vite.config.ts`, `pnpm-workspace.yaml`, `skills/`, `.agents/skills/`, `.claude/skills/`, `skills-lock.json`,
 `skills/productivity/link-skills/SKILL.md`, `AGENTS.md`

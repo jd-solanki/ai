@@ -5,7 +5,8 @@
 - Write and edit every skill with `/writing-for-agents`. Read its `SKILL-MECHANICS.md`
   for frontmatter and the model-invoked versus user-invoked choice.
 - Commit types are `feat`, `fix`, and the rest of the conventional set. Not `docs`.
-- The commit scope is the skill name: `feat(clean-code): ...`.
+- The commit scope is the skill name, `feat(clean-code): ...`, or the app name,
+  `feat(software-factory): ...`.
 - A forked skill records its source and what changed in `README.md`, under **Forked
   skills**. Nothing about the fork's origin goes inside the skill itself.
 - A skill folder holds steps, templates and the reference a run needs. Documentation
@@ -17,7 +18,7 @@
 
 ## Reasons
 
-- `docs` is the wrong type here because this repository's product **is** documents. A
+- `docs` is the wrong type for a skill because a skill's product **is** documents. A
   change to a skill is a feature or a fix, and typing it `docs` would make every commit
   the same.
 - Attribution sits in `README.md` because a block inside a skill loads every time the
@@ -25,9 +26,8 @@
 - Method documentation sits outside the skill for the same reason, plus one more: the
   skills CLI installs the **folder**, so anything left inside is shipped into every
   repository that installs the skill, whether or not that repository wants it.
-- `docs/` has no site generator because this repository has no `package.json` at all.
-  A build, a config and a deploy for a handful of pages would cost more than they
-  return while GitHub renders the markdown for free.
+- `docs/` has no site generator because a build, a config and a deploy for a handful of
+  pages would cost more than they return while GitHub renders the markdown for free.
 - Method docs stay in `docs/` rather than moving under a skill because the reader who
   most needs them has already installed the skill into their own repository and comes
   here to browse. `docs/` is the first place they look; `skills/internal/` announces

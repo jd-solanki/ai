@@ -15,8 +15,8 @@ description: This repository's words, rules, reasons and fences. Invoke before t
 **The test: could I learn this by reading the code?** Then link the path under
 **Where it lives**. Leave the prose out.
 
-Git holds the history and the skills CLI holds the install state. Both are sources of
-truth already; point at them.
+Git holds the history, the skills CLI holds the install state, and `package.json` holds the
+commands. All are sources of truth already; point at them.
 
 Past ~150 lines, a file is two domains, or it is restating code. Split it or cut it.
 
@@ -46,4 +46,7 @@ governs.
 | `glossary.md` | always |
 | `domains/layout.md` | adding, moving, renaming or linking a skill |
 | `domains/authoring.md` | writing or editing the text inside a skill, and committing it |
+| `domains/pipeline.md` | writing a spec, or changing how agents pick up, pause, resume or hand off work |
+| `domains/labels.md` | adding or changing a trigger label, a working label, or how a GitHub event starts a run |
+| `domains/sessions.md` | changing how a session is launched, what it may do, or what static code does around it |
 | `docs/context-engineering.md` | changing the shape of `/context-engineering`, `/setup-project-context`, `/audit-project-context`, or the layout they build |

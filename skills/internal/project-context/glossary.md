@@ -1,7 +1,11 @@
 # Glossary
 
-This repository publishes skills. It also installs other people's skills to use while
-working on them, so almost every word here exists to keep those two apart.
+This repository publishes skills and runs the software factory they are written for.
+
+## Skills
+
+The repository also installs other people's skills to use while working on them, so almost every
+word in this section exists to keep those two apart.
 
 **Skill**:
 A folder holding a `SKILL.md` and the reference files beside it. The folder is the
@@ -40,3 +44,65 @@ _Avoid_: draft, wip, staging
 The instruction text this repository writes into other people's `CLAUDE.md` or
 `AGENTS.md`. It has exactly one home, named in `domains/authoring.md`.
 _Avoid_: the template, the preamble
+
+## Software factory
+
+The software factory, `apps/software-factory`, starts an agent on a GitHub work item when a
+teammate applies a trigger label. It is one Node server on the owner's machine, running
+Claude Code in local clones of the served repos.
+
+**Agent**:
+Software that does one kind of work on a work item, requested through its own trigger
+label.
+_Avoid_: bot, worker
+
+**Trigger label**:
+An `agent:<verb>` GitHub label that requests an agent's work on a work item.
+_Avoid_: tag, command
+
+**Working label**:
+The `agent:<verb>ing` label a work item carries while a run holds it.
+_Avoid_: status label, in-progress label
+
+**Run**:
+One agent's work on one request, from claim to exit.
+_Avoid_: job, execution
+
+**Session**:
+One fresh Claude Code conversation inside a run.
+_Avoid_: agent (for the model's part), conversation
+
+**Static code**:
+The factory's own deterministic code, as opposed to a session.
+_Avoid_: orchestrator, harness
+
+**Served repo**:
+A repository the factory runs agents on.
+_Avoid_: target repo
+
+**Pipeline**:
+The stages a change travels through from an idea to a merged pull request.
+
+### Work items
+
+**Work item**:
+The issue or pull request a trigger label is applied to.
+
+**Spec**:
+The issue an agent is asked to implement: a standalone issue, or a parent whose sub-issues
+split the work.
+_Avoid_: ticket, epic, PRD
+
+**Sub-issue**:
+A spec's native GitHub child: one piece of the spec's work, blocked by the siblings it
+waits on.
+_Avoid_: slice, child issue, ticket
+
+**Done set**:
+The sub-issues of a spec that count as done.
+
+**AFK issue**:
+A sub-issue an agent does unattended.
+
+**HITL issue**:
+A sub-issue a human does.
