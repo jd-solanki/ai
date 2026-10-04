@@ -62,7 +62,7 @@ baseline for step 4.
 lock holds, grouped by the `source` recorded there:
 
 ```bash
-npx skills@latest add <source> -s <names...> -a <agents...> -y
+pnpm dlx skills@latest add <source> -s <names...> -a <agents...> -y
 ```
 
 - `-a` names the agents the project already installs for: `universal` for
@@ -82,7 +82,7 @@ npx skills@latest add <source> -s <names...> -a <agents...> -y
 **Remove** runs bare, with no `-a`:
 
 ```bash
-npx skills@latest remove <names...> -y
+pnpm dlx skills@latest remove <names...> -y
 ```
 
 - Given `-a`, the CLI unlinks those agents and leaves the `.agents/skills/` copy and
