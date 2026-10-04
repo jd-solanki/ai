@@ -140,7 +140,7 @@ jobs:
           PACKAGE_DIR: ${{ steps.package.outputs.dir }}
 
       - name: Create GitHub release
-        run: npx changelogithub@latest --from "${FROM_REF}" --to "${GITHUB_REF_NAME}" --github "${GITHUB_REPOSITORY}" --name "${GITHUB_REF_NAME}"
+        run: pnpm dlx changelogithub@latest --from "${FROM_REF}" --to "${GITHUB_REF_NAME}" --github "${GITHUB_REPOSITORY}" --name "${GITHUB_REF_NAME}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FROM_REF: ${{ steps.previous-tag.outputs.from }}

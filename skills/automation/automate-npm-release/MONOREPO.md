@@ -75,7 +75,7 @@ Never rely on a release-note tool's default `from` tag in a monorepo. Defaults o
 Always derive the previous same-package tag and pass it explicitly to changelogithub:
 
 ```bash
-npx changelogithub@latest \
+pnpm dlx changelogithub@latest \
   --from env-parser-v0.1.2 \
   --to env-parser-v0.1.3 \
   --github owner/repo \
