@@ -27,7 +27,10 @@
 - A fork lives in its real category because we maintain it now. Filing it under
   `third-party/` would claim upstream still does. Attribution goes in `README.md`
   rather than inside the skill, so it does not load on every invocation.
-
+- The software factory lives here, beside the skills it runs, because a change to how a
+  skill is launched or run lands in both, and one project context answers a question
+  about either. The library stays public: a repository that runs no factory installs from
+  `skills/` and never sees the app.
 - `skills/` stays at the root because the skills CLI finds published skills there and
   `/link-skills` builds its relative links from it.
 - One set of agent directories because an agent works on this repository from its root,
@@ -46,14 +49,15 @@
   `skills/productivity/link-skills/SKILL.md`
 - **`CLAUDE.md` is a symlink to `AGENTS.md`.** Both agents read one file, so a tool
   that refuses to write through a symlink must be pointed at `AGENTS.md` instead.
-
 - **`vp fmt` formats Markdown.** The staged pre-commit hook would rewrite every skill
   committed, changing its hash in every repository that installed it, and would rewrite
   the files the skills CLI owns. `fmt.ignorePatterns` in `vite.config.ts` keeps it out of
   `skills/`, `.agents/`, `.claude/` and `skills-lock.json`.
-
 - **`npx` refuses to run at the root.** `devEngines` in `package.json` names pnpm, and npm
   stops on any other package manager. Run the skills CLI as `pnpm dlx skills@latest`.
+- **`skills add -a claude-code` alone copies.** The CLI copies whenever every target agent
+  shares one skills directory, so the skill lands in `.claude/skills/` and nowhere else.
+  Pass `-a claude-code universal`: two directories make it keep `.agents/skills/` and link.
 
 ## Where it lives
 
