@@ -3,7 +3,7 @@ export const meta = {
   description: 'Raise candidates per dimension, prove or kill each serious one, judge the survivors',
   phases: [
     { title: 'Raise', detail: 'one agent per dimension lists candidates' },
-    { title: 'Prove', detail: 'one investigator per blocker or major candidate' },
+    { title: 'Prove', detail: 'one investigator per defect candidate' },
     { title: 'Judge', detail: 'one judge when two or more findings are confirmed' },
   ],
 }
@@ -13,7 +13,7 @@ export const meta = {
 const a = args
 const str = { type: 'string' }
 const list = items => ({ type: 'array', items })
-const SEVERITY = { type: 'string', enum: ['blocker', 'major', 'minor'] }
+const SEVERITY = { type: 'string', enum: ['blocker', 'major', 'minor', 'nitpick'] }
 const CANDIDATE = {
   type: 'object',
   properties: {
@@ -65,6 +65,10 @@ const FIXED = {
 }
 
 const BUDGET = { lens: 40, specialist: 60 }
+const SEVERITY_RULE = `correctness and security earn a blocker. A minor is a small defect: wrong
+     output for some input at low cost, or prose that states something false. A nitpick is polish,
+     where nothing breaks if it stays: dead code, a missing test, a simpler shape. Style and idiom
+     earn a nitpick at most.`
 // Every agent runs the session's model at high effort; no call names a smaller model. A specialist
 // on Sonnet at medium returned in under a minute and missed every minor its dimension found at high.
 const STRONG = { effort: 'high' }
@@ -119,7 +123,7 @@ const CLOSING = budget => `covered: every file of the range you read for your di
   not_exercised.`
 
 const LENS = d => `<your-job>
-  You raise candidates. A separate investigator proves or kills each blocker and major, so spend
+  You raise candidates. A separate investigator proves or kills each defect, so spend
   your budget reading the range closely and leave harnesses and reproductions to it.
   1. List the changed units of your dimension first, then work the list. A range read straight
      through is sampled; a list is closed.
@@ -130,8 +134,7 @@ const LENS = d => `<your-job>
      that exact text first, so a line retyped from memory dies there.
   4. confirm_by and kill_by: the one observation that proves the candidate, and the one that
      kills it. The investigator starts from them.
-  5. severity is what the candidate earns if it is true: correctness and security earn a
-     blocker, style and idiom earn a minor at most.
+  5. severity is what the candidate earns if it is true: ${SEVERITY_RULE}
   6. ${CLOSING(d.budget || BUDGET.lens)}
 </your-job>`
 
@@ -148,7 +151,7 @@ const SPECIALIST = d => `<your-job>
      trade-offs the spec names, are not candidates.
   5. Open every file the fix touches, plus the callers and the docs it cites, before you write
      the fix. Prefer a fix that deletes.
-  6. severity: correctness and security earn a blocker, style and idiom earn a minor at most.
+  6. severity: ${SEVERITY_RULE}
   7. ${CLOSING(d.budget || BUDGET.specialist)}
 </your-job>`
 
@@ -274,7 +277,7 @@ async function prove(c) {
   }
   const f = { ...c, ...p }
   if (p.verdict === 'killed') out.killed.push({ id: c.id, title: c.title, file: c.file, line: c.line, why: p.why })
-  else if (f.severity === 'minor' && !c.raised_by_human) out.deferred.push({ ...f, verified: p.verdict === 'confirmed' })
+  else if (f.severity === 'nitpick' && !c.raised_by_human) out.deferred.push({ ...f, verified: p.verdict === 'confirmed' })
   else out[p.verdict].push(f)
 }
 
@@ -290,7 +293,7 @@ async function settle(raised, d) {
   const jobs = []
   raised.candidates.forEach((c, i) => {
     const cand = { ...c, id: `${d.key}${i + 1}`, raised_by: d.name }
-    if (c.severity === 'minor') out.deferred.push(cand)
+    if (c.severity === 'nitpick') out.deferred.push(cand)
     else jobs.push(() => prove(cand))
   })
   await parallel(jobs)
@@ -303,7 +306,7 @@ if (a.mode === 'fix-verify') {
   else out.not_reviewed.push('fix-verify')
   await parallel([
     () => settle(fv && { candidates: fv.candidates, not_exercised: [] }, { key: 'fv', name: 'Fix-verify' }),
-    // A minor the human raised is proved before it becomes a task.
+    // A nitpick the human raised is proved before it becomes a task.
     ...(a.raised || []).map(c => () => prove({ ...c, raised_by_human: true })),
   ])
 } else {

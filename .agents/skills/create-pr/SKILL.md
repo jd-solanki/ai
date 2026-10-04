@@ -58,7 +58,7 @@ Your title is the line the squashed merge commit carries, so write it for
 
 ## Link the ticket
 
-`Closes #123` at the bottom of the body, so merging closes the ticket. Reference
+`Closes owner/repo#123` at the bottom of the body, so merging closes the ticket. Reference
 the ticket by ID rather than pasting a link: some trackers put private detail in
 the URL.
 
@@ -76,7 +76,7 @@ two things at once, and they will do both worse.
 
 You need a branch that is not the default one, and a clean tree with your work
 committed. On the default branch, or holding uncommitted changes? Say so and
-stop. Committing is `/git-commit`.
+stop.
 
 **Done when:** you know the base branch, the current branch, and that nothing is
 uncommitted.

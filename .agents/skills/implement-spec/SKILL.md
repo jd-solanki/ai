@@ -27,7 +27,7 @@ never with text those already hold.
   from it.
 - **Done set**: the sub-issues that count as done. An AFK issue is done when a commit on
   the spec branch, and not on the default branch, has a message ending in
-  `Closes #<its number>`. A HITL issue is done when it carries `issue:HITL-done`. Open or
+  `Closes <owner>/<repo>#<its number>`. A HITL issue is done when it carries `issue:HITL-done`. Open or
   closed state never counts: only the merge closes an issue.
 - **Frontier**: the sub-issues outside the done set whose blockers are all inside it.
 
@@ -59,7 +59,7 @@ notes in a folder outside the repo, so every implementer starts from findings.
 ### 4. Work the frontier
 
 **The spec is its own AFK issue:** build it yourself on the spec branch with `/tdd`, as
-one commit whose subject is the spec's title and whose message ends in `Closes #<n>`.
+one commit whose subject is the spec's title and whose message ends in `Closes <owner>/<repo>#<n>`.
 
 **Otherwise** start one implementer subagent per AFK issue on the frontier, all at once,
 in the background, each in its own worktree on its own branch. An implementer:
@@ -73,7 +73,7 @@ in the background, each in its own worktree on its own branch. An implementer:
 
 Land each `done` branch with a merger subagent, one landing at a time. A landing is a
 squash onto the spec branch: one commit, its subject the sub-issue's title, its message
-ending in `Closes #<n>`. That commit is the done marker. Push after every landing.
+ending in `Closes <owner>/<repo>#<n>`. That commit is the done marker. Push after every landing.
 
 Every landing moves the frontier. Read it again and start what became ready.
 
@@ -94,7 +94,7 @@ branch is pushed.
 ### 6. Open the draft
 
 Open the pull request with `/create-pr`. Its title is the spec's title, and its body
-carries `Closes #<n>` for the spec. It stays a draft.
+carries `Closes <owner>/<repo>#<n>` for the spec. It stays a draft.
 
 Then remove every implementer worktree and branch.
 

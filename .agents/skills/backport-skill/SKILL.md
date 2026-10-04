@@ -62,8 +62,7 @@ Both sides changed the same lines? Stop and show the user both versions.
 
 ### 4. Commit in the source repo
 
-Run `/git-commit` in the source repo. Scope the message to the skill, for example
-`feat(create-ticket): ...`.
+Scope the message to the skill, for example `feat(create-ticket): ...`.
 
 Push is a separate ask.
 

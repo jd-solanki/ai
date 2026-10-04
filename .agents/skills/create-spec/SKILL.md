@@ -86,7 +86,7 @@ Resolves #<origin>
 **Agent, before the pull request**
 
 - [ ] <check>
-- [ ] The pull request body carries `Closes #<origin>` beside the line that closes this spec.
+- [ ] The pull request body carries `Closes <owner>/<repo>#<origin>` beside the line that closes this spec.
 
 **Owner, after merge**
 
@@ -179,12 +179,19 @@ gh issue create --label issue:spec --title "<title>" --body-file <spec.md>
 A spec with an origin adds `--blocking <origin>`, so the origin shows as blocked by the
 spec.
 
+When the repository has an open milestone, the spec and every sub-issue add
+`--milestone "<title>"`, taking the one due soonest:
+
+```bash
+gh api 'repos/{owner}/{repo}/milestones' --jq '.[0].title'
+```
+
 The printed URL ends in the spec's number, `<n>`. When there are records:
 
 ```bash
 git switch -c spec/<n> origin/<default-branch>
 git add <record paths>
-git commit -m "<the repo's commit convention>: record decisions for #<n>"
+git commit -m "<the repo's commit convention>: record decisions for <owner>/<repo>#<n>"
 git push -u origin spec/<n>
 git switch -
 ```

@@ -7,7 +7,7 @@
   - ponytail-review
   - ponytail-audit
 - [mattpocock/skills](https://github.com/mattpocock/skills)
-  - codebase-design — `/grilling` points at it
+  - codebase-design — `/grilling`, `/tdd` and `/improve-codebase-architecture` point at it
   - research
   - writing-for-agents
   - grill-with-docs

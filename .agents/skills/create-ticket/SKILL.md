@@ -84,6 +84,10 @@ shape the tracker asks for (see below). Print it as a `file://` URL on its own
 line, so the terminal renders it clickable. That file is what the user reviews and
 edits.
 
+On GitHub, when the repository has an open milestone, propose the one due soonest
+(`gh api 'repos/{owner}/{repo}/milestones' --jq '.[0].title'`) beside the link. The
+go-ahead covers it; filing adds `--milestone "<title>"`.
+
 ### 5. Clean it up
 
 Run the draft through `/writing-for-humans` skill: the title, the evidence, the secrets
