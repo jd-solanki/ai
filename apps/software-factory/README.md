@@ -40,17 +40,22 @@ Once per machine, from `apps/software-factory`:
 ```bash
 echo "GITHUB_WEBHOOK_SECRET=$(openssl rand -hex 32)" >> .env
 echo "REPOS_DIR=$HOME/Projects/github" >> .env
-pnpm start
 ```
 
-Then, in a second terminal:
+Then, from the repository root:
+
+```bash
+pnpm factory
+```
+
+In a second terminal:
 
 ```bash
 tailscale funnel --bg 3456   # the PORT in src/server.ts
 tailscale funnel status      # prints the public URL
 ```
 
-`pnpm start` runs in the foreground, so the factory stops when its terminal closes.
+`pnpm factory` runs in the foreground, so the factory stops when its terminal closes.
 
 For the first few minutes after you enable Funnel, webhooks can time out before they reach the server.
 

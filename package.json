@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "ready": "vp check && vp run -r test",
+    "factory": "pnpm --filter software-factory start",
     "prepare": "vp config"
   },
   "devDependencies": {
