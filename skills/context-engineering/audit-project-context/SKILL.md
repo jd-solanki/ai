@@ -75,10 +75,16 @@ decision the context is missing?
 
 ## 4. Check the shape
 
-Hold every context file against **The shape**, **Domains**, **A domain file** and **Live
-and record** in `context-engineering`.
+Hold every context file against **The shape**, **Domains**, **A domain file**,
+**Landscapes** and **Live and record** in `context-engineering`.
 
-**Done when** every rule there has been applied to every file.
+Match the router against `skills-lock.json`: one landscape row for each `*-landscape` the
+lock lists, and no row or fence naming a landscape it does not. A connection's who and
+how written here is cut to this repo's fence; the report hands its text to
+`/setup-landscape`.
+
+**Done when** every rule there has been applied to every file, and every landscape row
+and fence matches the lock.
 
 ## 5. Apply and report
 
@@ -88,6 +94,8 @@ Make the cuts. Then say:
 - The three biggest cuts, each with the `file:line` that proved it was restatement.
 - Every drift, with both `file:line`s and the two options.
 - Every fence still missing a reason.
+- Every connection cut for a landscape, with its text, for `/setup-landscape` in the
+  landscape's repo.
 
 Drift and missing reasons are the owner's to answer, and they are the only things here
 that block.
