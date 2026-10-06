@@ -21,7 +21,9 @@ exists: `/context-engineering <decision>` records a change, and
 `/audit-project-context` keeps it. This skill does not run twice.
 
 Read what is already there: `README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`,
-`CONTEXT.md`, `docs/`, `package.json` and `skills/`. Run `git remote -v`.
+`CONTEXT.md`, `docs/`, `package.json`, `skills/` and `skills-lock.json`. Run
+`git remote -v`. Read every `*-landscape` skill the lock lists: its connections are
+already written, so the mining below writes only this repo's side of them.
 
 **Done when** you can name every agent-facing doc in the repo and say which tier it
 belongs in.
@@ -40,6 +42,9 @@ Dig in every seam:
 - Skipped and disabled tests: `.skip`, `xit`, `it.todo`, `test.todo`.
 - Commented-out code, dead flags, config that departs from the default.
 - Closed issues and merged pull requests, through `gh`, when the remote is GitHub.
+- Connections to other repos: API clients and routes, event names, a sibling repo's
+  package. This repo's side is a fence. Who uses it and how belongs to a landscape, so
+  hold it for the report.
 
 Every candidate fence gets a `file:symbol`. Grep hands you a line number; carry the
 enclosing symbol instead, because the fence outlives the line.
@@ -80,6 +85,8 @@ Write each file from `TEMPLATES.md` in `context-engineering`:
 - `skills/internal/project-context/domains/<domain>.md`, one per domain
 - `README.md`, cut back to pointers
 
+The router gets one landscape row for each `*-landscape` in `skills-lock.json`.
+
 Rehome the scattered docs. **Move the text. Never copy it.** A root `CONTEXT.md`
 becomes `glossary.md`, less the terms that belong to one domain's **Words**.
 `docs/agents/*` becomes domain files, and the folder goes. `docs/adr/` and
@@ -118,4 +125,5 @@ Say plainly:
 - Which fences were dropped, and why.
 - Every draft where the code breaks the owner's decision, with its `file:line`: code to
   fix.
+- Every connection no installed landscape holds yet, for `/setup-landscape` to map.
 - How many lines `AGENTS.md` lost.
