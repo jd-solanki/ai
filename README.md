@@ -39,6 +39,8 @@ An agent arrives holding coding guidelines and nothing else. `/setup-project-con
 
 The reasoning behind all of it — why domain and not document type, why the glossary left the repo root, why the method is three skills — is in [`docs/context-engineering.md`](./docs/context-engineering.md).
 
+Repos connected to each other also share a **landscape**, which `/setup-landscape` writes and joins each repo to. The steps for one repo or many, with an organisation example and one across owners, are in [`docs/setting-up-context.md`](./docs/setting-up-context.md).
+
 ## Tips
 
 - Use global instruction files (`~/.claude/CLAUDE.md` & `~/.codex/AGENTS.md`) for behavioural changes and use project instructions for working instructions.
