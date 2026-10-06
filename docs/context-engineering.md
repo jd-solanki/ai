@@ -99,6 +99,56 @@ Terms split by reach. `glossary.md` holds what is used **across** domains and lo
 every session. A term that only matters inside one domain lives in that domain file's
 **Words**, so a task that never enters the domain never pays for it.
 
+## A landscape spans repos
+
+Some repos are connected: one calls another's API, consumes its events, or installs its
+package. Each repo's context sees only its own side, so a connection written into both
+repos becomes two copies that drift apart.
+
+**Landscape**:
+A named set of connected repos and the connections between them. Its scope is chosen —
+an organisation, a product, or repos with different owners. The term is the C4 model's
+system landscape.
+_Avoid_: org context, workspace, ecosystem
+
+A landscape ships as a skill named `<name>-landscape`, installed by the skills CLI into
+every repo with a connection in it, at `.agents/skills/<name>-landscape/`. Each
+connection splits into two facts: **that** a repo is one end of it is a fence in that
+repo, and **who** uses it and **how** is the landscape's. `/setup-landscape` writes it
+and joins the members. The rules are **Landscapes** in `/context-engineering`; the steps
+across repos are in [`setting-up-context.md`](./setting-up-context.md).
+
+Why this shape:
+
+- **A skill, not a shared file.** A shared file does not travel; the skills CLI already
+  does. A repo that has not updated its install loses only the who and how: its own
+  fence still stops the mistake.
+- **Never inside a member.** A member would hold it twice, published under `skills/` and
+  installed under `.agents/skills/`, and edit one while its agents read the other. Any
+  other repo can host it. `<owner>/<name>-landscape` is the convention because the name
+  says what the repo holds.
+- **One skill, run from the landscape's repo.** It is the one repo every member shares,
+  so one run maps, publishes and joins them all, and each member still gets its own pull
+  request. A later run is the same run, so adding a member or catching up with a change
+  needs no step of its own.
+- **It maps merged code.** A connection change reaches the landscape on the next run
+  after it merges. Until then, the fence in the changed repo holds.
+- **User-invoked.** The router reads it by path. A description would sit in every
+  session's skill list and buy nothing.
+- **Named per landscape.** A generic name such as `org-context` collides at
+  `.agents/skills/` the day a repo joins a second landscape. Named ones install side by
+  side.
+- **Not `<name>-context`.** `project-context`, `setup-project-context` and
+  `audit-project-context` already end in `-context`. The `-landscape` suffix lets the
+  audit find a landscape by name.
+- **Project context alone** holds for two repos and one connection: a fence on each
+  side. Past that, the map and the shared words get copied.
+- **A parent-folder `AGENTS.md`** depends on how each machine lays out its clones, and
+  the factory clones served repos into folders of its own.
+
+Not built until a real case asks: landscapes that overlap, and connections between
+landscapes.
+
 ## A doc earns a line only if the code cannot say it
 
 The failure mode of any agent-facing doc is restatement: a paragraph explaining what a

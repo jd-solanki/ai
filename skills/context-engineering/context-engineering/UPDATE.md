@@ -12,6 +12,9 @@ Invoke `/project-context` and read its table. Pick the file the decision governs
 
 - a word used across domains → `glossary.md`
 - the project's status, or something deliberately unbuilt → `CONTRIBUTING.md`
+- a connection to another repo, or a word another repo shares → the landscape. Here,
+  write only this repo's fence naming the landscape; `/setup-landscape` carries the rest
+  once this merges.
 - anything else → the domain file whose tasks it changes
 
 No domain fits? Propose one name that obeys **Domains**, with one line on what it owns,
@@ -49,3 +52,5 @@ contradicts it.
 
 - Each file changed, and the lines added or replaced.
 - Every drift, with its `file:line`: code to change, in the same pull request.
+- Every part that belongs in a landscape, for `/setup-landscape` in its repo once this
+  merges.

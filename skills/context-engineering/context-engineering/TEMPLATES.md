@@ -1,6 +1,7 @@
 # Templates
 
-Six files to write. Fill the slots. Keep the headings.
+Six files to write in a repo, and a seventh in a landscape's own repo. Fill the slots.
+Keep the headings.
 
 Every one of them obeys the rule: a doc earns a line only if the code cannot say it.
 
@@ -103,7 +104,11 @@ governs.
 | --- | --- |
 | `glossary.md` | always |
 | `domains/[domain].md` | [the tasks that need it] |
+| `.agents/skills/[name]-landscape/SKILL.md` | changing or using a connection to another repo |
 ```
+
+Write the landscape row once for each `*-landscape` that `skills-lock.json` lists. A repo
+that lists none has no landscape row.
 
 ## 4. `glossary.md`
 
@@ -175,3 +180,46 @@ Humans only. Agents never read it for context.
 - Contributing and project status: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 - Commands: the `scripts` block in [`package.json`](./package.json)
 ```
+
+## 7. `skills/<name>-landscape/SKILL.md` — in the landscape's repo
+
+`/setup-landscape` writes this one. The router reads it by path, so it is user-invoked and
+costs no context load.
+
+```markdown
+---
+name: [name]-landscape
+description: The [name] landscape — [what the repos make together], how they connect, and the words they share.
+disable-model-invocation: true
+---
+
+# [Name] landscape
+
+[One or two sentences: what these repos make together, in their shared vocabulary.]
+
+## Repos
+
+| Repo | Owns |
+| --- | --- |
+| `[owner/repo]` | [what it owns, in landscape words] |
+
+## Connections
+
+- **[Contract]**: `[owner/provider]` → `[owner/consumer]`, over [an API | an event | a
+  package]. `[owner/repo]` owns its shape. [What breaks when it changes, and how a change
+  ships safely.]
+
+## Words
+
+**[Term]**:
+[What it is, in one or two sentences.]
+_Avoid_: [the words it replaces]
+
+## Reasons
+
+- [Why the repos split or connect this way, when no repo's code shows it.]
+```
+
+A connection names repos, never another repo's files: those move without the landscape
+hearing. Past ~150 lines, move each group of connections into a file beside `SKILL.md`
+and list the files in a table, the way the router does.

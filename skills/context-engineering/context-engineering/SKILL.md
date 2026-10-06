@@ -1,6 +1,6 @@
 ---
 name: context-engineering
-description: Shared reference for project context — its shape and the law every file obeys. Invoked by name from /setup-project-context and /audit-project-context.
+description: Shared reference for project context — its shape and the law every file obeys. Invoked by name from /setup-project-context, /setup-landscape and /audit-project-context.
 argument-hint: "[a decision to record]"
 ---
 
@@ -41,6 +41,7 @@ a decision nobody made.
 | 2 | `skills/internal/project-context/SKILL.md` | every session — the rules and the table |
 | 2 | `glossary.md` | every session — the words used across domains |
 | 3 | `domains/<domain>.md` | only when the task enters that domain |
+| 3 | `.agents/skills/<name>-landscape/SKILL.md` | only when the task changes or uses a connection to another repo |
 | — | `docs/` | by link only — the decisions and investigations behind a reason |
 | — | `README.md` | humans only — pointers out |
 
@@ -94,6 +95,33 @@ For example, a Nuxt project may have `layer-auth` owning identity and access,
 delivery. Write `identity-and-access.md`, `payments.md` and `email-delivery.md`. A checkout
 task that emails a receipt loads all three. Do not hide their ownership in a
 `customer-lifecycle.md` umbrella.
+
+## Landscapes
+
+A **landscape** is a named set of connected repos and the connections between them: one
+repo calls another's API, consumes its events, or installs its package. Its scope is
+chosen: an organisation, a product, or repos with different owners.
+
+A landscape is a skill named `<name>-landscape`, installed by the skills CLI into every
+repo with a connection in it. Its repo is `<owner>/<name>-landscape`; any repo that is
+not a member also works. `/setup-landscape` writes it from `TEMPLATES.md` and joins the
+members.
+
+Each connection is two facts, and each has one home:
+
+- **That** this repo is one end of a connection, and where it bites → a fence in this
+  repo's domain file, naming the landscape.
+- **Who** uses it and **how**, and the words more than one repo shares → the landscape.
+
+The rules that keep it one copy:
+
+- The router has one row per landscape `skills-lock.json` lists, and no other.
+- A repo's glossary never redefines a landscape word. A local meaning that differs is a
+  fence.
+- A landscape names repos and connections, never another repo's domain files.
+- A change to a connection reaches the landscape through `/setup-landscape`, run from its
+  repo once the change merges.
+- A repo with no connection installs no landscape, whatever organisation it sits in.
 
 ## A domain file
 
