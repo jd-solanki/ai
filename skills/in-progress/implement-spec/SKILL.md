@@ -3,6 +3,11 @@ name: implement-spec
 description: Deliver a spec filed by /create-spec. Its AFK issues are built in parallel on the spec branch, reviewed, and opened as one draft pull request.
 argument-hint: "[the spec's issue URL or number]"
 disable-model-invocation: true
+metadata:
+  credits:
+    skill: implement-spec
+    author: Matt Pocock
+    url: "https://github.com/mattpocock/skills/blob/main/skills/engineering/implement-spec/SKILL.md"
 ---
 
 # Implement Spec
