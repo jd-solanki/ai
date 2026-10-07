@@ -25,8 +25,7 @@
 - `in-progress` is an incubator borrowed from `mattpocock/skills`. It lets a skill ship
   and be used before it has settled, without claiming it is stable.
 - A fork lives in its real category because we maintain it now. Filing it under
-  `third-party/` would claim upstream still does. Attribution goes in `README.md`
-  rather than inside the skill, so it does not load on every invocation.
+  `third-party/` would claim upstream still does.
 - The software factory lives here, beside the skills it runs, because a change to how a
   skill is launched or run lands in both, and one project context answers a question
   about either. The library stays public: a repository that runs no factory installs from

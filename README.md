@@ -47,19 +47,13 @@ Repos connected to each other also share a **landscape**, which `/setup-landscap
 
 ## Forked skills
 
-Skills taken from elsewhere and changed. They are maintained here now, so they live in their real category rather than under `third-party/`.
+Skills taken from elsewhere and changed. Each credits its source in its frontmatter.
 
-- **[`skills/engineering/code-review`](./skills/engineering/code-review/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
-  The Standards axis reads `/project-context` instead of `CONTRIBUTING.md`, because this repo's rules live in domain files. The spec source uses `gh` directly, because `docs/agents/issue-tracker.md` is no longer part of the layout.
-- **[`skills/engineering/domain-modeling`](./skills/engineering/domain-modeling/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
-  The glossary moved from a root `CONTEXT.md` into `/project-context`, and the multi-context `CONTEXT-MAP.md` branch was dropped: a term used inside one domain now lives in that domain file's **Words**.
-- **[`skills/engineering/improve-codebase-architecture`](./skills/engineering/improve-codebase-architecture/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
-  The domain language is read from `/project-context` instead of a root `GLOSSARY.md`, and a new or sharpened term is written by `/domain-modeling`, because creating the root file lazily would split the glossary in two. A **Reason** or a **Fence** in a domain file counts as a recorded decision beside the ADRs.
-- **[`skills/engineering/tdd`](./skills/engineering/tdd/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
-  Who agrees the seams depends on where the work came from. A spec runs **AFK**: the seams it names are agreed, and where it names none the agent takes the highest seam and names it in the commit message, because the session that writes the tests ends before the pull request exists. Work from the user in conversation still confirms the seams with them. The domain language is read from `/project-context` instead of a root `GLOSSARY.md`.
-- **[`skills/engineering/grilling`](./skills/engineering/grilling/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
-  The frontier is filtered by **altitude**: the goal always clears it, a technical question only when it is a one-way door, and every two-way door is the agent's to settle and list under **Assumed**. `/codebase-design` and `/domain-modeling` supply the vocabulary for the two levels, and the session closes on an ADR offer.
-- **[`skills/in-progress/implement-spec`](./skills/in-progress/implement-spec/)** — from [mattpocock/skills](https://github.com/mattpocock/skills).
-  It speaks `/create-spec`'s language: a spec, its AFK and HITL sub-issues, and the spec branch. A sub-issue lands as one squashed commit ending in `Closes #<n>`, so a run that is started again reads what is done off the branch. A question becomes a HITL issue instead of a prompt, because the run is AFK. A spec with no sub-issues is built in place. The review runs before the pull request opens, `/create-pr` opens it, and it stays a draft.
+- [`code-review`](./skills/engineering/code-review/)
+- [`domain-modeling`](./skills/engineering/domain-modeling/)
+- [`grilling`](./skills/engineering/grilling/)
+- [`improve-codebase-architecture`](./skills/engineering/improve-codebase-architecture/)
+- [`implement-spec`](./skills/in-progress/implement-spec/)
+- [`tdd`](./skills/engineering/tdd/)
 
 Used unchanged, so not forked: see [`THIRD-PARTY.md`](./skills/scaffolding/setup-jd-solanki-skills/THIRD-PARTY.md).

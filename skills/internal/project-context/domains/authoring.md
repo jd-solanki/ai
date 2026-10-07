@@ -7,8 +7,11 @@
 - Commit types are `feat`, `fix`, and the rest of the conventional set. Not `docs`.
 - The commit scope is the skill name, `feat(clean-code): ...`, or the app name,
   `feat(software-factory): ...`.
-- A forked skill records its source and what changed in `README.md`, under **Forked
-  skills**. Nothing about the fork's origin goes inside the skill itself.
+- A skill built on someone else's credits it in frontmatter, under `metadata.credits`:
+  `skill`, `author`, `url`, and `organisation` when there is one. Two sources make it a
+  list.
+- A fork is also listed in `README.md`, under **Forked skills**, by name only. What it
+  changed lives in its commits.
 - A skill folder holds steps, templates and the reference a run needs. Documentation
   *about* a method — its reasoning, its decisions, its history — goes in `docs/`.
 - `docs/` is one flat folder of plain markdown. Reach for VitePress once it passes
@@ -21,11 +24,12 @@
 - `docs` is the wrong type for a skill because a skill's product **is** documents. A
   change to a skill is a feature or a fix, and typing it `docs` would make every commit
   the same.
-- Attribution sits in `README.md` because a block inside a skill loads every time the
-  skill fires, and the reader who needs it is a human browsing the repository.
-- Method documentation sits outside the skill for the same reason, plus one more: the
-  skills CLI installs the **folder**, so anything left inside is shipped into every
-  repository that installs the skill, whether or not that repository wants it.
+- The credit sits in frontmatter because the harness parses frontmatter and loads only
+  the body, so it costs no tokens and still travels with every install.
+- Method documentation sits outside the skill because a skill's body loads every time
+  the skill fires, while its reader is a human, and because the skills CLI installs the
+  **folder**, so anything left inside is shipped into every repository that installs the
+  skill, whether or not that repository wants it.
 - `docs/` has no site generator because a build, a config and a deploy for a handful of
   pages would cost more than they return while GitHub renders the markdown for free.
 - Method docs stay in `docs/` rather than moving under a skill because the reader who
