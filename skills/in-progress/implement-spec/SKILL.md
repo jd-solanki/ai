@@ -8,6 +8,7 @@ metadata:
     skill: implement-spec
     author: Matt Pocock
     url: "https://github.com/mattpocock/skills/blob/main/skills/engineering/implement-spec/SKILL.md"
+    ref: 24fe0ef7737efae15c87225755e9f6f5965e4888
 ---
 
 # Implement Spec
