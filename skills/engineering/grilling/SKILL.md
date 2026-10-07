@@ -6,6 +6,7 @@ metadata:
     skill: grilling
     author: Matt Pocock
     url: "https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md"
+    ref: 24fe0ef7737efae15c87225755e9f6f5965e4888
 ---
 
 Interview the user relentlessly until you reach a shared understanding. Map this as a **design tree**: every decision branches into the decisions that hang off it.
