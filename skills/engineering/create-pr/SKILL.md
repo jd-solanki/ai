@@ -1,6 +1,15 @@
 ---
 name: create-pr
 description: Open one pull request as a draft, with a body the reviewer can act on.
+metadata:
+  credits:
+    - skill: show-me
+      author: Dex Horthy
+      organisation: Humanlayer
+      url: "https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md"
+    - skill: pr
+      author: Matt Pocock
+      url: "https://github.com/mattpocock/skills/blob/main/skills/engineering/pr/SKILL.md"
 ---
 
 # Create PR
@@ -24,9 +33,13 @@ without giving the reviewer something new. The body is four sections, in this or
    the report, the deadline, the security note.
 2. `## How this PR solves it` — the idea holding the lines together, and the
    alternative you rejected. The reviewer reads the diff for the lines; they read
-   this for the shape.
+   this for the shape, so show it: see **Show the shape**.
 3. `## What happens when this merges` — the effect downstream. Behaviour that
-   changes for users, a migration that has to run, a follow-up this unblocks.
+   changes for users, a migration that has to run, a follow-up this unblocks. Name
+   the **door**: one-way when the merge is hard to walk back (a destructive
+   migration, a published contract, deleted data), two-way when a revert undoes it.
+   Then the **blast radius**: what breaks if the change is wrong (consumers, layout,
+   mobile, a scheduled job).
 4. `## Notes` — what a careful reader still cannot infer from the diff after
    reading it. Invariants that hold across the change, a decision that looks
    arbitrary but was deliberate, a gotcha that will trip the next person, a
@@ -39,6 +52,30 @@ Every section survives on the test "could the reviewer figure this out from the 
 alone?" A section that fails comes out rather than getting padded. Section 1 stays
 regardless — the reason a change happened is never in the diff — so a one-line body
 carrying only the problem is a fine pull request.
+
+## Show the shape
+
+Pick the smallest visual that makes the approach clear, and place it beside the
+sentence it supports. Usually one, sometimes two:
+
+- Logic or an algorithm: pseudocode.
+- Runtime control flow: a call tree.
+- UI structure: a component tree, with the state and module boundaries that matter.
+- File responsibilities or a broad refactor: a shallow file tree, one comment per
+  folder.
+- Interaction or data flow between parts: a Mermaid diagram.
+- A change to a shape that already exists: a `diff` block of that tree or flow.
+
+```diff
+ submitForm
+   createSession
+     persistPrompt
++    expandSkillMention
+     launchAgent
+```
+
+Keep only the calls, files and boundaries the reviewer needs to see the idea. A
+visual that copies the code diff fails the diff-alone test like any bullet.
 
 ## Read the diff, don't imagine it
 
@@ -86,7 +123,7 @@ uncommitted.
 The diff, the log, and the ticket it closes.
 
 **Done when:** from what you read, you can state the problem, the approach, the
-downstream effect, and every Note you plan to include.
+downstream effect with its door and blast radius, and every Note you plan to include.
 
 ### 3. Draft the body
 
