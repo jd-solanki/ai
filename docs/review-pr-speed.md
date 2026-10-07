@@ -14,7 +14,7 @@ Codex, Copilot, and the benchmarks).
 One pull request in a private repository, first round, 71.6 minutes to the task list. The range was 10 source
 files, +534/−158, behind a 33-file skills-update commit. The pipeline launched it with
 `--effort high`, and every first-round agent ran Opus 5.5 at that effort because a
-subagent copies its parent's.
+subagent that names no effort copies its parent's, and that skill named none.
 
 | Phase              | Minutes | What held it                                                       |
 | ------------------ | ------- | ------------------------------------------------------------------ |
@@ -133,8 +133,5 @@ run's two later rounds took about 9 and 17 minutes.
   effort together, so it does not say.
 - Whether raising the tool-call budgets (40 for a lens, 60 for a specialist) brings the
   minors back, and what it costs in minutes.
-- The pipeline's session effort for a review can drop to medium once the new skill is
-  installed in every repository it serves. Before that, the old skill's agents copy the
-  session's effort, and lowering it would run every reviewer at medium.
 - Every workflow agent is shown the request that started the run. Each brief opens by
   saying which part of it is the agent's; a brief without that preamble reruns the review.
