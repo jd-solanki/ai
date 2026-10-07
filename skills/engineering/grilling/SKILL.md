@@ -1,6 +1,11 @@
 ---
 name: grilling
 description: Grill the user relentlessly about a goal, plan, or decision. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.
+metadata:
+  credits:
+    skill: grilling
+    author: Matt Pocock
+    url: "https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md"
 ---
 
 Interview the user relentlessly until you reach a shared understanding. Map this as a **design tree**: every decision branches into the decisions that hang off it.
