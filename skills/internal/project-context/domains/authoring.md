@@ -9,7 +9,8 @@
   `feat(software-factory): ...`.
 - A skill built on someone else's credits it in frontmatter, under `metadata.credits`:
   `skill`, `author`, `url`, and `organisation` when there is one. Two sources make it a
-  list.
+  list. A fork adds `ref`: the upstream commit it was last merged with, moved by
+  `/adopt-upstream`.
 - A fork is also listed in `README.md`, under **Forked skills**, by name only. What it
   changed lives in its commits.
 - A skill folder holds steps, templates and the reference a run needs. Documentation
