@@ -1,6 +1,11 @@
 ---
 name: tdd
 description: Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions "red-green-refactor", or wants integration tests.
+metadata:
+  credits:
+    skill: tdd
+    author: Matt Pocock
+    url: "https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md"
 ---
 
 # Test-Driven Development
