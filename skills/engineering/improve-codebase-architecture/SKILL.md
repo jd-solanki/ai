@@ -7,6 +7,7 @@ metadata:
     skill: improve-codebase-architecture
     author: Matt Pocock
     url: "https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md"
+    ref: 24fe0ef7737efae15c87225755e9f6f5965e4888
 ---
 
 # Improve Codebase Architecture
