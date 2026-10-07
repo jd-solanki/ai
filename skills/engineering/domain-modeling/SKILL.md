@@ -1,6 +1,11 @@
 ---
 name: domain-modeling
 description: Build and sharpen a project's domain model. Use when discussing codebase terminology, writing or editing the project glossary, or recording or editing an ADR.
+metadata:
+  credits:
+    skill: domain-modeling
+    author: Matt Pocock
+    url: "https://github.com/mattpocock/skills/blob/main/skills/engineering/domain-modeling/SKILL.md"
 ---
 
 # Domain Modeling
