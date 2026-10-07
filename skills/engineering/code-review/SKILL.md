@@ -59,6 +59,8 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 ### 4. Spawn both sub-agents in parallel
 
+Start both at high effort, whatever your own: a reviewer at lower effort misses findings silently.
+
 **Standards sub-agent prompt** should include:
 
 - The full diff command and commit list.
