@@ -71,7 +71,7 @@ in the background, each in its own worktree on its own branch. An implementer:
   it reports;
 - reports `done`, or `blocked` with the question it would have asked.
 
-Land each `done` branch with a merger subagent, one landing at a time. A landing is a
+Land each `done` branch with a merger subagent at low effort, one landing at a time. A landing is a
 squash onto the spec branch: one commit, its subject the sub-issue's title, its message
 ending in `Closes <owner>/<repo>#<n>`. That commit is the done marker. Push after every landing.
 
