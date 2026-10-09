@@ -123,6 +123,21 @@ The rules that keep it one copy:
   repo once the change merges.
 - A repo with no connection installs no landscape, whatever organisation it sits in.
 
+## Competitors
+
+An agent designing a feature in a commercial project needs to know what the project
+competes with. Once the owner names a competitor, the project has
+`domains/competitors.md`, and every competitor in it has a research note under
+`docs/research/`.
+
+- The domain file names each competitor, what the project takes from it, and where the
+  project parts ways: a fence, for a competitor's feature that would break one of this
+  project's rules.
+- Write a competitor's features in the glossary's words; its own product words stay in its
+  research note.
+- The research note is the record: dated, never pruned. A fresh look at a competitor is a
+  new note, and the domain's **Reasons** link the newest.
+
 ## A domain file
 
 Five sections, nothing else, plus a `confidence:` line under the heading when the domain

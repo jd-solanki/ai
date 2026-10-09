@@ -15,6 +15,8 @@ Invoke `/project-context` and read its table. Pick the file the decision governs
 - a connection to another repo, or a word another repo shares → the landscape. Here,
   write only this repo's fence naming the landscape; `/setup-landscape` carries the rest
   once this merges.
+- a competitor, or what the project takes from one → `domains/competitors.md`, with its
+  research note under `docs/research/`
 - anything else → the domain file whose tasks it changes
 
 No domain fits? Propose one name that obeys **Domains**, with one line on what it owns,
