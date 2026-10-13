@@ -3,8 +3,12 @@ name: clean-code
 description: 'Write readable, maintainable code through disciplined naming, focused functions, and clean error handling. Use when the user mentions "code review", "naming conventions", "function too long", "code smells", "readable code", "boy scout rule", "single responsibility", or "unit test quality". Also trigger when reviewing pull requests for readability, refactoring messy functions, debating comment styles, or improving error handling patterns. Covers SRP, comment discipline, formatting, and unit testing. For refactoring techniques, see refactoring-patterns. For architecture, see clean-architecture.'
 license: MIT
 metadata:
-  author: wondelai
-  version: "1.2.0"
+  credits:
+    skill: clean-code
+    author: Michal Jaskolski
+    organisation: Wondelai
+    url: "https://github.com/wondelai/skills/blob/main/clean-code/SKILL.md"
+    ref: 968c8716fae05819b5dd40b2327952572ee50fff
 ---
 
 # Clean Code Framework

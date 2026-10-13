@@ -49,6 +49,7 @@ Repos connected to each other also share a **landscape**, which `/setup-landscap
 
 Skills taken from elsewhere and changed. Each credits its source in its frontmatter.
 
+- [`clean-code`](./skills/coding/clean-code/)
 - [`code-review`](./skills/engineering/code-review/)
 - [`domain-modeling`](./skills/engineering/domain-modeling/)
 - [`grilling`](./skills/engineering/grilling/)
