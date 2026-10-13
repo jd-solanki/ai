@@ -10,7 +10,6 @@
   - codebase-design — `/grilling`, `/tdd` and `/improve-codebase-architecture` point at it
   - research
   - writing-for-agents
-  - grill-with-docs
   - implement
   - retro
 - [nostics](https://github.com/vercel-labs/nostics)

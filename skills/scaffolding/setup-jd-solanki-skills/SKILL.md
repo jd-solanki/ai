@@ -107,6 +107,21 @@ be clearer: rename or extract until it reads plainly, then drop the comment.
 ## 3. Third-Party Skills
 
 > [!IMPORTANT]
-> Only proceed with this section once **2. Upsert Project Agent Instructions** is fully done.
+> Only proceed with this section once **2. Upsert `AGENTS.md`** is fully done.
 
-Read [`THIRD-PARTY.md`](./THIRD-PARTY.md) for a list of third-party skills, list them and suggest user that these are skills that they may want to install and use in their projects.
+Check every skill in [`THIRD-PARTY.md`](./THIRD-PARTY.md) against the project's
+`skills-lock.json` and the global `~/.agents/.skill-lock.json`. Report it as this table,
+one row per skill, until every catalog entry has a row:
+
+| Source | Skill | Status |
+|---|---|---|
+| Ponytail | ponytail | ✅ installed |
+| | ponytail-review | ❌ missing |
+| nostics | — | ❌ missing |
+
+- Name the source on its first row only; the blank cells below group its skills.
+- A source the catalog lists without named skills takes one row with Skill `—`.
+- Status is one of `✅ installed`, `✅ installed (global)` or `❌ missing`.
+
+Below the table, recommend the missing skills that fit this project, each with its reason.
+Then name the skills a lock file installs from a catalog source that the catalog omits.
