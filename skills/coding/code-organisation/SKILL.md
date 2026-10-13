@@ -1,59 +1,127 @@
 ---
 name: code-organisation
-description: Decide where code lives — the directory tree, module and package boundaries, and the layout inside a file. Use when starting a new project or directory tree, placing a new file/class/function, grouping code into modules or packages, splitting an oversized file or module, naming directories/packages/files, separating source from generated build artifacts, or auditing an existing codebase's structure.
+description: Decide where code lives and what each module hides — the directory tree, module and package boundaries, a module's entry point, and when to split or merge a file. Use when starting a project or directory tree, placing a new file, class or function, grouping code into modules or packages, splitting or merging a module or file, naming directories or files, or auditing a codebase's structure.
 ---
 
 # Code organisation
 
-One principle sits under everything here: **what changes together lives together.** Co-locate code that changes for the same reason; separate code that changes for different reasons. Apply it at three **zoom levels** — *system → module → file* — each the same rule at a different scale.
+## The rule
 
-This skill is reference. Read the level you are working at.
+**Information hiding** (Parnas, 1972): every module owns one **secret**, a design decision
+likely to change, and hides it behind an interface smaller than the secret.
+
+A **module** is anything with an interface and an implementation, at any size: an app
+slice such as a Nuxt layer or a workspace package, a directory, a file, a class, a
+function. The rule is the same at every size; only the zoom changes. Its payoff is
+**locality**: a change, a bug, a test, and the context an agent must load all stay inside
+one module.
+
+To shape one module's interface (depth, seams, adapters), use `/codebase-design`.
+
+## The four checks
+
+Run them on every module you create, move or audit. A module is done when it passes all
+four.
+
+1. **One secret.** Finish "this changes when ___" in domain words, without naming a
+   technology. Two answers mean two modules. One answer spread across several modules
+   means they are one module.
+2. **Deep.** The interface is smaller than what it hides. Deletion test: delete the
+   module; if its complexity vanishes instead of reappearing in its callers, it was a
+   pass-through, so inline it.
+3. **Encapsulated.** Callers and tests reach the secret only through the interface. They
+   import the module's entry point, not a file behind it. Interfaces carry domain types,
+   so ORM rows, SDK objects and HTTP responses stay inside. No caller needs to know the
+   order of internal steps. A test that must reach past the interface means the seam is
+   in the wrong place.
+4. **Directed.** Dependencies between modules form an acyclic graph and point toward the
+   more stable module. Coupling is balanced: the closer two modules sit, the more they may
+   know of each other. Files in one module may share internals; separate slices share
+   only narrow interfaces.
+
+## Zoom levels
+
+### App: slices
+
+- Slice the app by business capability, one **bounded context** per slice: `auth`,
+  `billing`, `email`. Each slice owns its UI, logic, data access and tests. A Nuxt layer,
+  a workspace package and a top-level directory are the same move at different tooling
+  cost.
+- A slice publishes one entry point (layer exports, `index.ts`, a package `exports` map)
+  and other slices use only that. A slice owns its tables; other slices ask through its
+  interface.
+- Inside a slice, keep decisions pure and push I/O to the edge: **functional core,
+  imperative shell**. The core is tested without mocks. I/O sits behind **ports and
+  adapters** only where two adapters exist; production plus a test double counts.
+- One word can mean different things in two slices (`Account` in auth and in billing).
+  Give each slice its own model and translate at the interface.
+- A **shared kernel** holds only concepts every slice agrees on and that rarely change,
+  such as money and ids. Keep it tiny.
+
+### Directory: modules
+
+- Group by feature first, by technical role only inside a feature: the tree should
+  scream the domain, not the framework. A slice with its own `components/` and
+  `composables/`, as a Nuxt layer has, is this rule; one top-level `components/` holding
+  every feature's components breaks it.
+- A directory module's entry file is its interface. Every other file in it is private.
+- Split by knowledge, not by execution order. `fetch.ts`, `parse.ts` and `save.ts` that
+  all know the file format are one secret in three files (**temporal decomposition**).
+- When two slices grow similar code, duplicate until a third use shows the real concept
+  (**rule of three**). A wrong shared abstraction couples slices; duplication costs only
+  typing.
+
+### File, class, function
+
+- Split a file when it holds two secrets; merge files that share one. Size is a reason to
+  look, not to split: a long file with one secret behind a small interface is a deep
+  module.
+- A class exports the least it can. A getter and setter per field publishes its
+  representation; give callers the behaviour they need instead (**tell, don't ask**).
+- A function's parameters are its interface. A boolean flag that switches behaviour means
+  two functions. A parameter that only passes through to a callee leaks the callee's
+  secret upward.
+- Layout inside a file (newspaper order, stepdown) belongs to `/clean-code`.
+
+## Naming
+
+Name a module for its secret, in the domain's language: `billing/`, `invoice-pdf/`. A
+name that needs "and" marks two secrets.
 
 ## Placing new code
 
-A short procedure for the recurring question "where does this go?":
+1. **Name its secret.** Finish "this changes when ___". Done when the answer names a
+   domain concept, not a technology.
+2. **Find the module that owns that secret.** Check siblings at the slice, directory and
+   file zoom, not only the file you are in. Done when you have a home, or have shown none
+   exists.
+3. **Place it, or create a sibling module** named for the secret, with its entry point.
+   Done when its neighbours change on the same trigger as it.
+4. **Run the four checks** on every module you touched. Done when all four pass.
 
-1. **Name its reason to change** in domain language — the feature or concept it serves. *Done when you can finish "this changes when ___" without naming a technology.*
-2. **Find the home that shares that reason** — the module whose other code changes on the same trigger. *Done when you have checked siblings at the right zoom level, not only the file you are already in.*
-3. **Place it, or create a sibling.** If a home fits, add it there; if none fits, create a new sibling at that zoom level, named for the concept. *Done when the new code's neighbours are the things that change with it.*
-4. **Confirm the feature did not scatter** — one logical change should not force edits across many directories. *Done when a typical change to this feature stays inside one module.*
+## Enforcing boundaries
 
-## System level — the repository
+A boundary held only by discipline erodes. When a boundary matters, propose a **fitness
+function** that fails CI on a violation: an import-boundary lint rule
+(`eslint-plugin-boundaries`, `dependency-cruiser`, `import/no-cycle`), TypeScript project
+references, or a package `exports` map.
 
-- **Bounded context**: split the system into self-contained models, each with its own consistent language — one context's `Account` need not mean another's. Map the relationships between contexts explicitly instead of letting one model sprawl across the whole system.
-- **Layered architecture**: isolate the domain from UI, application, and infrastructure. Dependencies point *inward*; the domain layer holds the model and knows nothing of frameworks or persistence.
-- **Source tree is not the build tree**: version-control inputs — source, scripts, fixtures — and never commit outputs — object files, binaries, coverage, generated docs. Build out-of-source so generated artifacts never pollute the source tree.
-- **Grow by component, not by accretion**: a single source directory is fine until it isn't; as the project grows, divide into component directories rather than letting one directory swell.
+## Smells
 
-## Module / package / directory level
+Each smell is a failed check. Name the secret at stake before moving anything.
 
-- **Package by feature, not by layer.** Group by what code is *about* — the domain concept — not by technical role. Modules should tell the story of the domain, and module names belong in the shared language the team speaks. A top-level `controllers/ models/ services/` split is the opposite: it smears every feature across the tree.
-- **Avoid partitioning by technical type**: never split by `Entity`/`ValueObject`/`Service`, by persistent/transient, or by any technical distinction that ignores meaning.
-- **High cohesion, low coupling.** A module has one reason to exist; keep the dependencies crossing its boundary few and pointing one way.
-- **Aggregate = the consistency boundary**: cluster the objects that must stay valid together behind a single root, so a transaction touches one aggregate. Aggregate boundaries make natural module boundaries.
-- **Components for build scale**: break a monolith into components with explicit interfaces so each builds and tests on its own. Granularity trades encapsulation against build and coordination cost — avoid both one giant component and a thousand tiny ones.
-- **Directories mirror the module hierarchy.** The folder tree should match the package or namespace tree.
-
-## File level
-
-- **Newspaper layout**: a file reads top-down like an article — its name announces the subject, the highest-level concepts sit at the top, and detail deepens as you scroll.
-- **Stepdown rule**: order functions so each sits just above those one level of abstraction below it (caller above callee), and keep one level of abstraction per function.
-- **Vertical distance**: related things belong near each other — a variable by its first use, dependent functions adjacent, similar concepts grouped — with blank lines marking the seams between concepts.
-- **One file, one concept**: a file holds a single responsibility. When many fields are each touched by only a few methods, cohesion has dropped — split the file. An oversized file is usually several concepts asking to separate; small files (a couple hundred lines is roomy) beat large ones.
-
-## Naming — every level
-
-Names are structure. Make them intention-revealing, pronounceable, and searchable; pick one word per concept; and draw from the **problem domain** so file, directory, and package names echo the language the team and the model already use. A directory named for a technology hides what lives in it; a directory named for a domain concept advertises it.
-
-## Spotting trouble in existing code
-
-The same rules read backwards — each smell is the principle being violated. On a hit, name the change-reason at stake before moving anything.
-
-- **Shotgun surgery** — one logical change forces edits across many directories. The feature is scattered by a layer-first layout; regroup it by feature.
-- **Layer-first top level** — `controllers/`, `models/`, `services/`, or `interfaces/` vs `impl/`, as the top split. Repackage by domain concept.
-- **Type-partitioned modules** — packages named `entities/`, `valueobjects/`, `dtos/`. Merge by meaning.
-- **Generated files in the source tree** — build outputs, coverage, compiled assets committed beside source. Move to an out-of-source output tree; ignore them in version control.
-- **God file** — one file holding several unrelated concepts, or low cohesion where each field is used by only a handful of methods. Split by responsibility.
-- **Domain leaking infrastructure** — domain code importing the database, framework, or UI. Invert the dependency so the domain depends on nothing outward.
-- **Tech-named directories** — folder names describe mechanism, not domain. Rename to the problem-domain term.
-- **Cross-context model bleed** — one class shared between two bounded contexts where it means different things. Split it per context and map the relationship explicitly.
+| Smell | Failed check | Fix |
+| --- | --- | --- |
+| **Divergent change**: one module edited for unrelated reasons | One secret | Split by reason |
+| **Shotgun surgery**: one change edits many modules | One secret | Gather into one module |
+| Layer-first top level: `controllers/`, `services/`, `models/` | One secret | Repackage by feature |
+| Generic bucket: `utils/`, `common/`, `helpers/`, `manager` | One secret | Move each item to the module it serves |
+| **Feature envy**: code mostly uses another module's data | One secret | Move it to that module |
+| **Temporal decomposition** | One secret | Merge by shared knowledge |
+| One model shared by slices that mean different things by it | One secret | A model per slice, translated at the interface |
+| Pass-through module or wrapper | Deep | Inline it |
+| **Classitis**: many tiny modules, each with a wide interface | Deep | Merge into one deep module |
+| Deep import: `billing/internal/stripe` | Encapsulated | Import the entry point; widen it if it lacks something |
+| Infrastructure type in an interface | Encapsulated | Map to a domain type at the seam |
+| Domain code importing the framework, database or UI | Directed | The domain defines a port; infrastructure adapts to it |
+| Import cycle | Directed | Move the shared concept into one module or the kernel, or merge |
