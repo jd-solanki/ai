@@ -1,6 +1,6 @@
 ---
 name: clean-code
-description: 'Write readable, maintainable code through disciplined naming, small functions, and clean error handling. Use when the user mentions "code review", "naming conventions", "function too long", "code smells", "readable code", "boy scout rule", "single responsibility", or "unit test quality". Also trigger when reviewing pull requests for readability, refactoring messy functions, debating comment styles, or improving error handling patterns. Covers SRP, comment discipline, formatting, and unit testing. For refactoring techniques, see refactoring-patterns. For architecture, see clean-architecture.'
+description: 'Write readable, maintainable code through disciplined naming, focused functions, and clean error handling. Use when the user mentions "code review", "naming conventions", "function too long", "code smells", "readable code", "boy scout rule", "single responsibility", or "unit test quality". Also trigger when reviewing pull requests for readability, refactoring messy functions, debating comment styles, or improving error handling patterns. Covers SRP, comment discipline, formatting, and unit testing. For refactoring techniques, see refactoring-patterns. For architecture, see clean-architecture.'
 license: MIT
 metadata:
   author: wondelai
@@ -19,8 +19,8 @@ A disciplined approach to writing code that communicates intent, minimizes surpr
 
 **Goal: 10/10.** Rate any code 0-10 against the principles below. Report the current score and the specific improvements needed to reach 10/10.
 
-- **9-10:** Names reveal intent, functions are small and focused, error handling is consistent, tests are clean and comprehensive
-- **7-8:** Mostly clean with minor naming ambiguities or a few long functions; tests may lack edge cases
+- **9-10:** Names reveal intent, each function does one thing, error handling is consistent, tests are clean and comprehensive
+- **7-8:** Mostly clean with minor naming ambiguities or a few multi-purpose functions; tests may lack edge cases
 - **5-6:** Mixed — good patterns alongside unclear names, duplicated logic, or inconsistent error handling
 - **3-4:** Long multi-purpose functions, misleading names, poor or missing tests
 - **1-2:** Nearly unreadable — magic numbers, cryptic abbreviations, no structure, no tests
@@ -56,23 +56,23 @@ See: [references/naming-conventions.md](references/naming-conventions.md)
 
 ### 2. Functions
 
-**Core concept:** Functions should be small, do one thing, and do it well — ideally 4-6 lines, zero to two arguments, one level of abstraction.
+**Core concept:** A function does one thing at one level of abstraction, with zero to two arguments. Split it when it does two things, not when it passes a line count: a long function with one job behind a small signature is a deep module (see `/code-organisation`).
 
-**Why it works:** Small single-purpose functions are easy to name, understand, test, and reuse; long functions hide bugs, resist testing, and accumulate responsibilities.
+**Why it works:** Single-purpose functions are easy to name, understand, test, and reuse; multi-purpose functions hide bugs, resist testing, and accumulate responsibilities. Length is a reason to look for a second job, not proof of one.
 
 **Key insights:**
 - Step-Down Rule: code reads top-down, each function calling the next level of abstraction
 - Argument count: zero best, one fine, two acceptable, three+ requires justification
 - Flag arguments are a smell — the function does two things; split it
 - Command-Query Separation: change state or return a value, never both
-- Extract till you drop: if you can pull out a named function, do it
+- Extract a block when it has its own name and its own job; an extraction that only renames a few lines adds a hop, not a concept
 - No hidden side effects — the name must tell the whole truth
 
 **Code applications:**
 
 | Context | Pattern | Example |
 |---------|---------|---------|
-| **Long function** | Extract named steps | `validateInput(); transformData(); saveRecord();` |
+| **Multi-purpose function** | Extract each job as a named step | `validateInput(); transformData(); saveRecord();` |
 | **Flag argument** | Split into two functions | `renderForPrint()` / `renderForScreen()` not `render(isPrint)` |
 | **Error cases** | Guard clauses at top | Early return for errors, single happy path |
 | **Many arguments** | Introduce parameter object | `new DateRange(start, end)` not `report(start, end, format, locale)` |
@@ -198,7 +198,7 @@ See: [references/code-smells.md](references/code-smells.md)
 | Question | If No | Action |
 |----------|-------|--------|
 | Can you understand each function without reading its body? | Names don't reveal intent | Rename to describe what it does |
-| Are all functions under 20 lines? | Functions do too many things | Extract sub-operations into named helpers |
+| Does each function do one thing? | Functions do too many things | Extract each separate job into a named function |
 | Zero commented-out code blocks? | Dead code creating confusion | Delete — version control has history |
 | Is error handling separate from business logic? | Try-catch clutters the main flow | Extract handlers; exceptions over return codes |
 | Does every class have a single responsibility? | Classes accumulate unrelated duties | Split into focused, well-named classes |
@@ -211,7 +211,7 @@ See: [references/code-smells.md](references/code-smells.md)
 ## Reference Files
 
 - [naming-conventions.md](references/naming-conventions.md): Intention-revealing names, avoiding disinformation, class vs. method naming, before/after examples
-- [functions-and-methods.md](references/functions-and-methods.md): Small functions, argument counts, command-query separation, the step-down rule, side effects
+- [functions-and-methods.md](references/functions-and-methods.md): One job per function, argument counts, command-query separation, the step-down rule, side effects
 - [comments-formatting.md](references/comments-formatting.md): Good vs. bad comments, the newspaper metaphor, vertical formatting, team rules
 - [error-handling.md](references/error-handling.md): Exceptions over return codes, null handling, Special Case pattern, wrapping third-party APIs
 - [testing-principles.md](references/testing-principles.md): TDD laws, F.I.R.S.T. principles, clean test patterns, test readability

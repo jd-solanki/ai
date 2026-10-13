@@ -1,6 +1,6 @@
 # Functions and Methods
 
-Comprehensive guide to writing small, focused functions that do one thing well. Based on Robert C. Martin's *Clean Code*, Chapters 3 and 4.
+Comprehensive guide to writing focused functions that do one thing well. Based on Robert C. Martin's *Clean Code*, Chapters 3 and 4.
 
 
 ## Table of Contents
@@ -10,7 +10,7 @@ Comprehensive guide to writing small, focused functions that do one thing well. 
 4. [Flag Arguments](#flag-arguments)
 5. [Command-Query Separation](#command-query-separation)
 6. [Side Effects](#side-effects)
-7. [Extract Till You Drop](#extract-till-you-drop)
+7. [Extraction](#extraction)
 8. [Structured Programming](#structured-programming)
 9. [DRY: Don't Repeat Yourself](#dry-dont-repeat-yourself)
 10. [Function Organization Within a Class](#function-organization-within-a-class)
@@ -20,10 +20,9 @@ Comprehensive guide to writing small, focused functions that do one thing well. 
 
 ## The First Rule of Functions
 
-**Functions should be small.** The second rule of functions is that they should be smaller than that.
+**Functions should do one thing.** Size follows from that: length is a reason to look for a second job, not a limit to cut to. A long function with one job behind a small signature beats the same job scattered across helpers the reader must hop between.
 
 A well-written function:
-- Fits on one screen (ideally 4-10 lines)
 - Has a name that describes exactly what it does
 - Takes few arguments (zero is best, three is the maximum)
 - Has no side effects
@@ -201,9 +200,9 @@ A side effect is when a function promises to do one thing but also does other hi
 
 ---
 
-## Extract Till You Drop
+## Extraction
 
-If you can extract a named function from a block of code, you should. The extracted function's name adds documentation value, even if the function is only called from one place.
+Extract a block when it has its own name and its own job; the name then documents it, even if only one place calls it. An extraction that only renames a few lines, or whose callers must read its body to use it, adds a hop without hiding anything: leave it inline.
 
 ### When to Extract
 
@@ -211,7 +210,7 @@ If you can extract a named function from a block of code, you should. The extrac
 |--------|--------|
 | A block inside an `if`, `else`, `for`, or `while` | Extract to named function |
 | A comment explaining what the next lines do | Replace comment with named function |
-| A function longer than 10 lines | Look for extraction opportunities |
+| A function you must scroll to follow | Look for a second job to extract |
 | Nested indentation deeper than 2 levels | Extract inner blocks |
 | Code that you'd need to re-read to understand | Name it so you don't have to |
 

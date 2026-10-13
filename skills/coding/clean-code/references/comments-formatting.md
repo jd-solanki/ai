@@ -224,7 +224,7 @@ if (condition) {
 } // if
 ```
 
-If you need comments to track closing braces, your function is too long. Extract methods until the structure is obvious.
+If you need comments to track closing braces, your function is doing more than one thing. Extract each job until the structure is obvious.
 
 ### Attribution Comments
 
