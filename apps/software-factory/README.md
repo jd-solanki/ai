@@ -1,24 +1,26 @@
 # Claude Agent Factory
 
-Put a label on a GitHub issue or pull request. A Claude Code background session on your machine picks it up.
+Put a label on a GitHub issue or pull request. A Claude Code session on your machine picks it up, as a herdr agent you can watch.
 
 ```mermaid
 flowchart LR
   L["Label applied on GitHub"] -->|webhook| F["Tailscale Funnel"] --> S["src/server.ts"]
-  S -->|"claude --bg"| B["Background session<br/>in its own worktree"]
+  S -->|"herdr pane run"| B["claude in a herdr workspace,<br/>in its own worktree"]
   B -.->|"hands off: applies the next agent's label"| L
 ```
 
 `TRIGGERS` in `src/session.ts` lists each label, the skill it starts, the effort it runs at, and how its session hands off.
 
 Each session is named `<label> <repo>#<number>`, for example `agent:implement ai#1`.
+Its herdr workspace carries the same name.
 It works in its own git worktree, `.claude/worktrees/<skill>-<number>`, so two sessions never share a checkout.
 Applying the label again reuses that worktree.
 
 ## Requirements
 
 - Node, in the range `engines` in the root `package.json` sets. The server runs TypeScript directly, with no build step.
-- Claude Code with `claude --bg`, on an account that can run Opus.
+- Claude Code, on an account that can run Opus.
+- herdr, running on the factory machine. Each session starts in a new herdr workspace. With herdr down, a run fails to start and the server takes its `…ing` label off.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.
 - Tailscale, logged in. The first `tailscale funnel` run prints a link to allow Funnel on your tailnet.
 
@@ -27,7 +29,7 @@ Applying the label again reuses that worktree.
 The server finds everything by convention. Each repo it serves needs:
 
 1. A clone at `$REPOS_DIR/<owner>/<repo>`, matching GitHub's `owner/repo`. With `REPOS_DIR=~/Projects/github`, `acme/app` lives at `~/Projects/github/acme/app`. Sessions run there, not in the folder the server runs from.
-2. Claude Code trust. `claude --bg` refuses a folder you haven't trusted.
+2. Claude Code trust. In a folder you haven't trusted, a session stops at the trust prompt in its workspace and keeps its `…ing` label until you answer it.
 3. Every label in step 3 of [Add a project](#add-a-project).
 4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. Ours install from `jd-solanki/ai`; the root `skills-lock.json` lists where the rest come from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
@@ -136,15 +138,15 @@ When a run starts, the server swaps the trigger label for its `…ing` label, wh
 A turn that dies on an API error takes the `…ing` label off too, and says so in a comment on the work item.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
-Then, on the factory machine:
+Then, on the factory machine, each session shows in herdr's agent list, in a workspace named after it. Open it there to watch or answer.
 
 ```bash
-claude agents        # sessions and their state
-claude attach <id>   # open one in this terminal
-claude rm <id>       # delete it, and its worktree when that is safe
+herdr agent list   # sessions and their state
 ```
 
-Sessions run in auto mode, whatever your default permission mode is. A session waiting on an approval stays stuck until you attach to it.
+A session stays open after its last turn, so its workspace stays in herdr until you close it.
+
+Sessions run in auto mode, whatever your default permission mode is. A session waiting on an approval stays stuck until you answer it in herdr.
 
 To add a trigger, add a line to `TRIGGERS` in `src/session.ts`, create its label in each repo, and restart the server.
 

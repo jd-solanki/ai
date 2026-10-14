@@ -54,8 +54,9 @@ export interface WebhookPayload {
   pull_request?: Subject
 }
 
-interface Launch {
+export interface Launch {
   args: string[]
+  name: string
   claim: string[]
   release: string[]
 }
@@ -83,6 +84,7 @@ export function claudeArgs(
       unlabel: [...edit, '--remove-label', trigger.label],
     }
 
+  const name = `${trigger.label} ${payload.repository.name}#${subject.number}`
   const mention = `@${payload.sender.login}`
   const release = [...edit, '--remove-label', working]
   const failure = [
@@ -93,9 +95,8 @@ export function claudeArgs(
     `${mention} the ${trigger.label} run stopped on an API error before it finished. Apply ${trigger.label} again to retry.`,
   ]
   const args = [
-    '--bg',
     '--name',
-    `${trigger.label} ${payload.repository.name}#${subject.number}`,
+    name,
     // Concurrent sessions in one checkout clobber each other; a re-trigger reuses its worktree.
     '--worktree',
     `${trigger.skill}-${subject.number}`,
@@ -119,6 +120,7 @@ export function claudeArgs(
   ]
   return {
     args,
+    name,
     claim: [...edit, '--remove-label', trigger.label, '--add-label', working],
     release,
   }
@@ -143,15 +145,50 @@ const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\
 function run(file: string, args: string[], cwd?: string): Promise<{ ok: boolean; output: string }> {
   return new Promise((resolve) => {
     execFile(file, args, { cwd }, (error, stdout, stderr) =>
-      resolve({ ok: !error, output: stdout + stderr }),
+      // A missing binary prints nothing; its error is the output.
+      resolve({ ok: !error, output: stdout + stderr || (error?.message ?? '') }),
     )
   })
 }
 
 // `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
-export async function startSession(args: string[], cwd: string) {
+// A herdr agent puts the session in the owner's agent list, to watch and answer; herdr must be running.
+export async function startSession({ args, name }: Launch, cwd: string) {
   await run('git', ['fetch', 'origin'], cwd)
   await run('git', ['remote', 'set-head', 'origin', '--auto'], cwd)
-  return run('claude', args, cwd)
+  const created = await run('herdr', [
+    'workspace',
+    'create',
+    '--cwd',
+    cwd,
+    '--label',
+    name,
+    '--no-focus',
+  ])
+  let pane: { pane_id: string; workspace_id: string }
+  try {
+    pane = JSON.parse(created.output).result.root_pane
+  } catch {
+    // Thrown, it would crash the server with the claim held.
+    return { ok: false, output: `herdr workspace create: ${created.output}` }
+  }
+  // A command typed before the shell's prompt is up loses its Enter.
+  const prompt = await run('herdr', [
+    'pane',
+    'wait-output',
+    pane.pane_id,
+    '--regex',
+    '\\S',
+    '--timeout',
+    '10000',
+  ])
+  // `agent start` waits until claude is ready for input, which a session working on its prompt never is.
+  const started = prompt.ok
+    ? await run('herdr', ['pane', 'run', pane.pane_id, shell(['claude', ...args])])
+    : prompt
+  if (started.ok) return started
+  // The claim is released on failure, so a session that came up late must not run unclaimed.
+  await run('herdr', ['workspace', 'close', pane.workspace_id])
+  return { ok: false, output: `herdr pane ${prompt.ok ? 'run' : 'wait-output'}: ${started.output}` }
 }
 export const gh = (args: string[]) => run('gh', args)

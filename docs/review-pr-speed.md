@@ -60,7 +60,7 @@ Every agent runs the session's model at high effort. The carrier runs at medium.
 ## The gate
 
 That pull request's range, frozen at the commit first reviewed and reviewed as a branch so
-nothing is posted. Each run is a `claude --bg` session in a fresh worktree, the way the
+nothing is posted. Each run is a `claude` session in a fresh worktree, the way the
 pipeline starts one. Goldens, reports, raw results and timelines are kept outside any
 repository, in the review data folder `/improve-review-pr` names.
 

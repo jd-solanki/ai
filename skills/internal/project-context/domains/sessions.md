@@ -1,7 +1,6 @@
 # Sessions
 
-confidence: provisional — how a session is launched (`claude --bg`, or a one-shot
-`claude -p`) is still open.
+confidence: provisional — how a session is launched is still open, and so is when a run ends.
 
 ## Words
 
@@ -39,6 +38,8 @@ _Avoid_: sandbox
   rebuilds what `/implement-spec` already does.
 - The `claude` command is built and run in one module: settling how a session is launched
   changes that module alone.
+- A session runs as an interactive `claude` in a herdr workspace, not a background session,
+  so the owner sees every run in herdr's agent list beside their own agents, and can watch it.
 - Review runs at higher effort than implementation: review depth decides how many rounds
   a pull request takes, and implementation time is the factory's bottleneck.
 - Every session runs in auto mode, whatever the owner's default: each trigger's `allow` and
@@ -60,6 +61,13 @@ _Avoid_: sandbox
   appended system prompt, which the classifier does not count as a request, so it denied
   `gh pr ready` as unrequested. A trigger's `allow` grants what its hand-off needs.
   `apps/software-factory/src/session.ts:TRIGGERS`
+- **`herdr agent start` never returns for a working session.** It waits until the agent is
+  ready for input, and a session working on its prompt is not, so after 30 seconds it timed
+  out and the factory closed a healthy run. The factory types the command into the pane
+  instead, once the shell's prompt is up. `apps/software-factory/src/session.ts:startSession`
+- **herdr's `idle` is not the end of a run.** A turn that ends while the session's own
+  background shell runs shows `idle`, then `working` again when the session resumes by itself.
+  Ending a run on herdr's state needs that ruled out. `apps/software-factory/src/session.ts:hooks`
 
 ## Where it lives
 
