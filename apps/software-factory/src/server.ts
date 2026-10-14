@@ -7,7 +7,7 @@ const PORT = 3456
 
 const { GITHUB_WEBHOOK_SECRET: secret, REPOS_DIR: reposDir } = process.env
 if (!secret || !reposDir) throw new Error('Set GITHUB_WEBHOOK_SECRET and REPOS_DIR')
-// Every session inherits this env.
+// git, gh and herdr inherit this env.
 delete process.env.GITHUB_WEBHOOK_SECRET
 
 createServer(async (req, res) => {

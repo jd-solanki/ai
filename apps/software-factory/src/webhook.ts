@@ -44,7 +44,7 @@ export async function handleWebhook(
   const claim = await gh(launch.claim)
   if (!claim.ok) return reply(500, claim.output.trim())
 
-  const { ok, output } = await startSession(launch.args, cwd)
+  const { ok, output } = await startSession(launch, cwd)
   // The trigger label stays off: re-applying it sends `labeled`, which starts this run again.
   if (!ok) await gh(launch.release)
   return reply(ok ? 202 : 500, output.trim())

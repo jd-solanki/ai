@@ -24,14 +24,19 @@ const fix = () => launch('pull_request', 'agent:fix', { pull_request: subject() 
 const upgrade = () =>
   launch('pull_request', 'agent:upgrade', { pull_request: subject('⬆️ Renovate') })
 
-test('claudeArgs starts the trigger label skill in a background session of its own', () => {
+test('claudeArgs starts the trigger label skill in an interactive session of its own', () => {
   const { args } = implement()
-  assert.ok(args.includes('--bg'))
+  assert.ok(!args.includes('--bg'))
   assert.equal(flag(args, '--worktree'), 'implement-spec-12')
   assert.equal(flag(args, '--permission-mode'), 'auto')
   assert.equal(args.at(-1), '/implement-spec https://github.com/acme/app/issues/12')
   assert.equal(review().args.at(-1), '/review-pr https://github.com/acme/app/issues/12')
   assert.equal(fix().args.at(-1), '/implement https://github.com/acme/app/issues/12')
+})
+
+test('claudeArgs names the session for the trigger label and work item', () => {
+  assert.equal(review().name, 'agent:review app#12')
+  assert.equal(upgrade().name, 'agent:upgrade app#12')
 })
 
 test('claudeArgs starts nothing for a label event that is not a trigger', () => {

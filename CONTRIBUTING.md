@@ -20,7 +20,7 @@ outside it has been used on real work and settled.
 
 **Software factory.** What runs today: `TRIGGERS` in
 [`apps/software-factory/src/session.ts`](./apps/software-factory/src/session.ts). A trigger
-label starts one background session, and each session hands off by applying the next
+label starts one session in herdr, and each session hands off by applying the next
 agent's trigger label.
 
 The pipeline in `/project-context` is built but unproven: no spec with sub-issues, no HITL
@@ -35,6 +35,8 @@ Known gaps:
   the exception: it releases the label and says so on the work item.
 - A hand-off is the session's own act. A session that skips it leaves the pull request
   with no `agent:*` label, and a human applies the next one.
+- A session stays open in herdr after its last turn, and its workspace waits for a human
+  to close it.
 
 Deliberately unbuilt:
 

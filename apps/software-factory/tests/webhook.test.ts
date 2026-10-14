@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
+import type { Launch } from '../src/session.ts'
 import { handleWebhook } from '../src/webhook.ts'
 
 const secret = 'secret'
@@ -43,7 +44,7 @@ function factory(ok = true, claimed = true) {
     labelEdits,
     secret,
     reposDir,
-    startSession: async (_args: string[], cwd: string) => {
+    startSession: async (_launch: Launch, cwd: string) => {
       started.push(cwd)
       return { ok, output: 'claude output' }
     },

@@ -25,8 +25,8 @@ _Avoid_: lock, assignment
 
 - GitHub is the only state store: the factory keeps nothing between runs, so a restart
   loses only in-flight claims, and any teammate sees where a work item stands.
-- The team starts, watches and re-runs agents from the issue or pull request page, never
-  from the factory machine.
+- The team starts and re-runs agents from the issue or pull request page, never from the
+  factory machine. The owner also watches runs live in herdr there.
 - Applying a label needs the Triage role, so a label is authorization: an issue's author
   cannot start a run.
 - No outcome labels: GitHub already records a review, a merge and a closed issue, and a
