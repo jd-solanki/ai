@@ -64,6 +64,7 @@ The block:
 - **Git is the changelog.** Present tense only; no "used to" / "previously".
   - Exception - **Chesterton's Fence**: state the trap, not the timeline.
   - "`--no-folding` breaks `~/.agents`" = fence. "we tried it last week" = changelog.
+- **A commit body carries the why.** Its reader has the diff, not the conversation, and needs the reason to make the same change on paths the diff never touched.
 - Reference an issue or PR as `owner/repo#N` in commit messages and PR bodies: a commit can land in another repository, where `#N` names a different item.
 
 ## Core Engineering Principles
