@@ -132,8 +132,9 @@ test('an implement run hands its spec branch draft to the Reviewer', async () =>
   const run = factory({
     label: 'agent:implement',
     github: (args) =>
-      args.join(' ') === 'pr list -R acme/app --head spec/12 --state open --json url,isDraft'
-        ? JSON.stringify([{ url: draft, isDraft: true }])
+      args.join(' ') ===
+      'pr list -R acme/app --head spec/12 --state open --json url,isDraft,isCrossRepository'
+        ? JSON.stringify([{ url: draft, isDraft: true, isCrossRepository: false }])
         : undefined,
   })
   await run.end()
@@ -141,6 +142,34 @@ test('an implement run hands its spec branch draft to the Reviewer', async () =>
     `issue edit ${spec} --remove-label agent:implementing`,
     `pr edit ${draft} --add-label agent:review`,
   ])
+})
+
+const forked = {
+  url: 'https://github.com/acme/app/pull/41',
+  isDraft: true,
+  isCrossRepository: true,
+}
+
+test("an implement run skips a fork's draft from a branch of the same name", async () => {
+  const draft = 'https://github.com/acme/app/pull/40'
+  const run = factory({
+    label: 'agent:implement',
+    github: () => JSON.stringify([forked, { url: draft, isDraft: true, isCrossRepository: false }]),
+  })
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `issue edit ${spec} --remove-label agent:implementing`,
+    `pr edit ${draft} --add-label agent:review`,
+  ])
+})
+
+test("an implement run whose only draft is a fork's waits on whoever applied its label", async () => {
+  const run = factory({ label: 'agent:implement', github: () => JSON.stringify([forked]) })
+  await run.end()
+  assert.deepEqual(
+    run.writes,
+    waits(spec, 'issue', 'agent:implement', 'no open draft pull request from spec/12'),
+  )
 })
 
 test('an implement run that opened no draft waits on whoever applied its label', async () => {
