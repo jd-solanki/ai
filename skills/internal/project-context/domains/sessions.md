@@ -51,7 +51,7 @@ _Avoid_: failure
 - The `claude` command is built and run in one module: settling how a session is launched
   changes that module alone.
 - A session runs as an interactive `claude` in a herdr workspace, not a background session,
-  so the owner sees every run in herdr's agent list beside their own agents, and can watch it.
+  so the owner sees every run in herdr's agent list beside their own herdr agents, and can watch it.
 - Review runs at higher effort than implementation: review depth decides how many rounds
   a pull request takes, and implementation time is the factory's bottleneck.
 - Every session runs in auto mode, whatever the owner's default: each trigger's `allow` and
