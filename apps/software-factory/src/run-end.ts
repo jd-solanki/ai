@@ -41,7 +41,8 @@ export async function handleRunReport(
   // The run lasts as long as its session, so it is released only once the session is gone.
   runs.delete(token)
   const closed = await closeWorkspace(run.workspace)
-  if (!closed.ok) {
+  // A session that ended runs no more, so a close herdr refuses must not keep its claim.
+  if (!closed.ok && hook !== 'SessionEnd') {
     runs.set(token, run)
     return { status: 500, body: `${run.name}: ${closed.output.trim()}` }
   }
