@@ -6,12 +6,14 @@ const workspaces = [
   { workspace_id: 'w1', label: 'nuxtstart' },
   { workspace_id: 'w2', label: 'ai' },
 ]
+const tabs = [{ tab_id: 'w1:t1', label: 'PR #84 - Kiosk Pairing' }]
 function herdrAgent(pane_id: string, agent_status: string, more = {}) {
   return {
     pane_id,
     agent_status,
     agent: 'claude',
     workspace_id: 'w1',
+    tab_id: 'w1:t9',
     cwd: '/Users/jd/Projects/nuxtstart',
     terminal_title_stripped: 'Fix login',
     ...more,
@@ -21,6 +23,7 @@ function herdrAgent(pane_id: string, agent_status: string, more = {}) {
 test('toColumns puts each herdr agent in the column for its state', () => {
   const snapshot: Snapshot = {
     workspaces,
+    tabs,
     agents: [
       herdrAgent('w1:p1', 'working'),
       herdrAgent('w2:p1', 'blocked', {
@@ -49,9 +52,15 @@ test('toColumns puts each herdr agent in the column for its state', () => {
   ])
 })
 
+test('toColumns titles a card with its tab label, as the herdr sidebar does', () => {
+  const snapshot = { workspaces, tabs, agents: [herdrAgent('w1:p1', 'idle', { tab_id: 'w1:t1' })] }
+  assert.equal(toColumns(snapshot)[3].cards[0].title, 'PR #84 - Kiosk Pairing')
+})
+
 test('clampSelection keeps the selection on the board as cards come and go', () => {
   const columns = toColumns({
     workspaces,
+    tabs,
     agents: [herdrAgent('w1:p1', 'working'), herdrAgent('w1:p2', 'working')],
   })
   assert.deepEqual(clampSelection(columns, { column: 0, card: 5 }), { column: 0, card: 1 })
@@ -60,7 +69,7 @@ test('clampSelection keeps the selection on the board as cards come and go', () 
 })
 
 test('toColumns adds an unknown column only while a herdr agent is in it', () => {
-  const snapshot = { workspaces, agents: [herdrAgent('w1:p1', 'unknown')] }
+  const snapshot = { workspaces, tabs, agents: [herdrAgent('w1:p1', 'unknown')] }
   assert.deepEqual(
     toColumns(snapshot).map((column) => column.status),
     ['working', 'blocked', 'done', 'idle', 'unknown'],
@@ -68,7 +77,7 @@ test('toColumns adds an unknown column only while a herdr agent is in it', () =>
 })
 
 test('toColumns puts a herdr agent in a state it does not know under unknown', () => {
-  const snapshot = { workspaces, agents: [herdrAgent('w1:p1', 'paused')] }
+  const snapshot = { workspaces, tabs, agents: [herdrAgent('w1:p1', 'paused')] }
   assert.deepEqual(toColumns(snapshot).at(-1), {
     status: 'unknown',
     cards: [{ paneId: 'w1:p1', title: 'Fix login', provider: 'claude', workspace: 'nuxtstart' }],
@@ -78,6 +87,7 @@ test('toColumns puts a herdr agent in a state it does not know under unknown', (
 test('findCard follows a herdr agent to the column its new state puts it in', () => {
   const columns = toColumns({
     workspaces,
+    tabs,
     agents: [herdrAgent('w1:p1', 'blocked'), herdrAgent('w1:p2', 'done')],
   })
   assert.deepEqual(findCard(columns, 'w1:p2'), { column: 2, card: 0 })
