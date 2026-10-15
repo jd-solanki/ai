@@ -200,7 +200,7 @@ function run(file: string, args: string[], cwd?: string): Promise<Outcome & { st
 // `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
 // A herdr workspace puts the session in the owner's agent list; herdr must be running.
 export async function startSession(
-  { args, name }: Launch,
+  { args, name, token }: Launch,
   cwd: string,
 ): Promise<(Outcome & { ok: false }) | (Outcome & { ok: true; workspace: string })> {
   await run('git', ['fetch', 'origin'], cwd)
@@ -235,7 +235,13 @@ export async function startSession(
   ])
   // `agent start` waits until claude is ready for input, which a session working on its prompt never is.
   const started = prompt.ok
-    ? await run('herdr', ['pane', 'run', pane.pane_id, shell(['claude', ...args])])
+    ? await run('herdr', [
+        'pane',
+        'run',
+        pane.pane_id,
+        // A claude that exits before its hooks load reports nothing, so the shell reports its end.
+        `${shell(['claude', ...args])}; curl -sS -X POST http://localhost:${PORT}/runs/${token}/SessionEnd`,
+      ])
     : prompt
   if (started.ok) return { ...started, ok: true, workspace: pane.workspace_id }
   // The claim is released on failure, so a session that came up late must not run unclaimed.
