@@ -48,8 +48,8 @@ _Avoid_: the template, the preamble
 ## Software factory
 
 The software factory, `apps/software-factory`, starts an agent on a GitHub work item when a
-teammate applies a trigger label. It is one Node server on the owner's machine, running
-Claude Code in local clones of the served repos.
+teammate applies a trigger label. It is a Node server on the owner's machine, or one per
+machine, running Claude Code in local clones of the served repos.
 
 **Agent**:
 Software that does one kind of work on a work item, requested through its own trigger

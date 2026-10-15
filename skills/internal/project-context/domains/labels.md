@@ -6,6 +6,11 @@
 A run's hold on a work item, shown by the working label.
 _Avoid_: lock, assignment
 
+**Preferred factory**:
+A factory that another, its **fallback**, defers every delivery to while it is up. A
+fallback names its preferred factories in `DEFER_TO`.
+_Avoid_: primary, higher-priority factory
+
 ## Rules
 
 - A work item's `agent:*` label is its state. A trigger label means work is requested, a
@@ -37,6 +42,12 @@ _Avoid_: lock, assignment
 - **A trigger label left on a work item cannot be applied again.** GitHub sends `labeled`
   only when a label is added, so the claim removes the trigger: that is what lets a human
   re-apply it to resume or retry. `apps/software-factory/src/session.ts:claudeArgs`
+- **A claim is a label swap, not a lock.** Two factories that receive the same delivery
+  both claim it and both start a run, so a fallback defers to its preferred factory.
+  `apps/software-factory/src/webhook.ts:handleWebhook`
+- **A fallback defers by liveness, not by repo or claim.** It defers whenever a preferred
+  factory is up, so a repo that factory doesn't serve is lost, and so is a delivery it
+  drops before claiming. `apps/software-factory/src/webhook.ts:findFactoryUp`
 
 ## Where it lives
 
@@ -44,4 +55,4 @@ _Avoid_: lock, assignment
 GitHub event must pass to start a run), `apps/software-factory/src/run-end.ts` (`handleRunReport`: when
 a run's working label comes off), `apps/software-factory/src/hand-off.ts` (`handOff`: the
 trigger label a run's end applies), `apps/software-factory/README.md` (Add a project: the labels a served
-repo needs).
+repo needs; Run on more than one machine: a fallback's setup).

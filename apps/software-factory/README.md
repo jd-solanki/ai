@@ -143,6 +143,47 @@ gh api -X POST "repos/$REPO/hooks/$HOOK_ID/pings"
 gh api "repos/$REPO/hooks/$HOOK_ID/deliveries" --jq '.[0] | "\(.event) \(.status_code)"'
 ```
 
+## Run on more than one machine
+
+GitHub has no failover between webhooks: a repo can hold several, and each one receives every event.
+Give each factory machine its own webhook, and decide which one takes the work.
+
+Set up every machine as in [Start the factory](#start-the-factory), with its own `.env`.
+On each one, repeat steps 1, 2 and 6 of [Add a project](#add-a-project): its own clone, its own trust, and its own webhook, to its own Funnel URL with its own secret.
+The labels, the skills and `.gitignore` live in the repo, so they are done once.
+
+Never run two factories on one repo without one of the setups below: both would start a run on the same work item.
+
+### One machine at a time
+
+You work at home some days and at the office on others, and only the machine you're at is on.
+
+Run `pnpm factory` and Funnel only on the machine you're using.
+The other machine's webhook delivery fails and shows as failed in **Recent Deliveries**, and nothing else happens.
+To switch machines, stop the factory on one and start it on the other.
+
+### A preferred machine and a fallback
+
+Both machines stay on, and you want the office machine to take the work whenever it is up, with the home machine taking over when it isn't.
+
+In the fallback's `.env`, list the Funnel URLs of its preferred factories, highest first:
+
+```bash
+# Home machine's .env. The office machine sets no DEFER_TO, so it takes every delivery it gets.
+DEFER_TO=https://office.<tailnet>.ts.net/
+```
+
+On every delivery, the fallback asks each listed factory whether it is up, waiting up to 2 seconds each.
+If one answers, it replies `Deferred to <url>` and does nothing.
+If none answers, it takes the work.
+A third machine lists both URLs, office first.
+The check asks whether a factory is up, not which repos it serves, so set up every repo on every machine: a repo served only by the fallback is deferred and lost.
+
+To change the order, move `DEFER_TO` to the other machine's `.env` and restart both factories.
+
+A preferred factory that answers the check and then stops before claiming the work item drops that event.
+Apply the trigger label again to retry.
+
 ## Use it
 
 Apply a trigger label on GitHub:

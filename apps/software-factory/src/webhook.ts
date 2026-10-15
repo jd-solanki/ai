@@ -11,12 +11,13 @@ interface Factory {
   runs: Runs
   startSession: typeof startSession
   gh: typeof gh
+  findPreferredFactoryUp: () => Promise<string | undefined>
 }
 
 export async function handleWebhook(
   headers: IncomingHttpHeaders,
   body: Buffer,
-  { secret, reposDir, runs, startSession, gh }: Factory,
+  { secret, reposDir, runs, startSession, gh, findPreferredFactoryUp }: Factory,
 ): Promise<{ status: number; body?: string }> {
   const event = String(headers['x-github-event'] ?? '')
   if (!isSigned(body, headers['x-hub-signature-256'] as string | undefined, secret))
@@ -43,6 +44,10 @@ export async function handleWebhook(
   const cwd = join(reposDir, payload.repository.full_name)
   if (!existsSync(cwd)) return reply(404, `No checkout at ${cwd}`)
 
+  // Every factory gets every delivery, and two claims on one work item both succeed.
+  const preferredFactory = await findPreferredFactoryUp()
+  if (preferredFactory) return reply(200, `Deferred to ${preferredFactory}`)
+
   const claim = await gh(launch.claim)
   if (!claim.ok) return reply(500, claim.output.trim())
 
@@ -51,6 +56,21 @@ export async function handleWebhook(
   // The trigger label stays off: re-applying it sends `labeled`, which starts this run again.
   else await gh(launch.release)
   return reply(started.ok ? 202 : 500, started.output.trim())
+}
+
+const UP_CHECK_TIMEOUT_MS = 2000
+
+/** The first of `factoryUrls` whose factory is up. */
+export async function findFactoryUp(factoryUrls: string[]): Promise<string | undefined> {
+  // Only a factory's own HEAD answer counts: a Funnel URL whose server is down still answers 502.
+  const upChecks = factoryUrls.map((url) =>
+    fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(UP_CHECK_TIMEOUT_MS) }).then(
+      (res) => res.ok,
+      () => false,
+    ),
+  )
+  // Checked at once, so a fallback waits one timeout however many factories rank above it.
+  for (const [index, url] of factoryUrls.entries()) if (await upChecks[index]) return url
 }
 
 function received(

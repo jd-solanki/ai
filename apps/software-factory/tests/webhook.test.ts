@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
+import { createServer } from 'node:http'
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
 import type { Runs } from '../src/run-end.ts'
 import type { Launch } from '../src/session.ts'
-import { handleWebhook } from '../src/webhook.ts'
+import { findFactoryUp, handleWebhook } from '../src/webhook.ts'
 
 const secret = 'secret'
 const reposDir = mkdtempSync(join(tmpdir(), 'software-factory-'))
@@ -56,6 +57,7 @@ function factory(ok: boolean = true, claimed = true) {
       labelEdits.push(args.slice(3).join(' '))
       return { ok: claimed, stdout: '', output: 'gh output' }
     },
+    findPreferredFactoryUp: async (): Promise<string | undefined> => undefined,
   }
 }
 
@@ -159,4 +161,36 @@ test('handleWebhook tracks each run it starts', async () => {
   const unstarted = factory(false)
   await handleWebhook(signed(body), body, unstarted)
   assert.equal(unstarted.runs.size, 0)
+})
+
+test('handleWebhook leaves a delivery to a preferred factory that is up', async () => {
+  const body = reviewRequest('acme/app')
+  const served = {
+    ...factory(),
+    findPreferredFactoryUp: async () => 'https://office.example.ts.net/',
+  }
+  assert.deepEqual(await handleWebhook(signed(body), body, served), {
+    status: 200,
+    body: 'pull_request labeled agent:review acme/app#12: Deferred to https://office.example.ts.net/',
+  })
+  assert.deepEqual(served.labelEdits, [])
+  assert.deepEqual(served.started, [])
+})
+
+test('findFactoryUp returns the highest-ranked factory that answers its own HEAD', async () => {
+  // A down factory behind Funnel answers 502 from tailscaled.
+  const server = createServer((req, res) => res.writeHead(req.url === '/down' ? 502 : 200).end())
+  await new Promise<void>((resolve) => server.listen(0, resolve))
+  const { port } = server.address() as { port: number }
+  const factory = (path: string) => `http://localhost:${port}${path}`
+  try {
+    assert.equal(
+      await findFactoryUp([factory('/down'), factory('/up'), factory('/also-up')]),
+      factory('/up'),
+    )
+    assert.equal(await findFactoryUp([factory('/down'), 'http://localhost:1/']), undefined)
+    assert.equal(await findFactoryUp([]), undefined)
+  } finally {
+    server.close()
+  }
 })

@@ -9,8 +9,8 @@ Two things that change together:
   generalised once they have survived real work.
 - `apps/software-factory/`: the software factory those skills are written for. It runs
   agents on the owner's GitHub repositories: a teammate applies a trigger label, and the
-  matching agent works in a local clone and reports back on GitHub. It is one Node server
-  on the owner's machine, driving Claude Code.
+  matching agent works in a local clone and reports back on GitHub. It is a Node server
+  on the owner's machine, or one per machine, driving Claude Code.
 
 Beside them, `apps/herdr-kanban/` is a herdr plugin: a board of every herdr agent by state.
 
