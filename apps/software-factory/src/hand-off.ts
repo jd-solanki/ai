@@ -52,7 +52,9 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
 // The release is its own write, so a hand-off GitHub refuses still releases the claim.
 export async function handOff({ release, work }: Pick<Launch, 'release' | 'work'>, gh: Gh) {
   const released = await gh(release)
-  let step = await nextStep(work, gh)
+  let step: Step = released.ok
+    ? await nextStep(work, gh)
+    : { wait: `the factory could not remove its working label: ${released.output.trim()}` }
   if ('to' in step) {
     const handed = step.url
       ? await gh(['pr', 'edit', step.url, '--add-label', step.to])

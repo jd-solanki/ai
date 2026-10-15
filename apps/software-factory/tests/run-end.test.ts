@@ -231,6 +231,20 @@ test('a hand-off GitHub refuses waits on whoever applied the label', async () =>
   ])
 })
 
+test('a run whose working label cannot be removed hands nothing on', async () => {
+  const run = factory({ refuses: (args) => args.includes('--remove-label') })
+  assert.equal((await run.end()).status, 500)
+  assert.deepEqual(
+    run.writes,
+    waits(
+      pull,
+      'pr',
+      'agent:fix',
+      "the factory could not remove its working label: could not add label: 'agent:review' not found",
+    ),
+  )
+})
+
 test('a stop with background work left keeps the run', async () => {
   const run = factory()
   await run.report('Stop', { background_tasks: [{ type: 'shell', status: 'running' }] })
