@@ -46,8 +46,10 @@ export async function handleRunReport(
     runs.set(token, run)
     return { status: 500, body: `${run.name}: ${closed.output.trim()}` }
   }
+  // The API error behind a StopFailure goes to the server's log only, not to the work item.
+  const crashed = hook === 'StopFailure' ? `Crashed: ${body.toString().trim()}` : 'Crashed'
   const { outcomes, did } = why
-    ? { outcomes: [await gh(run.release), await gh(run.crash(why))], did: 'Crashed' }
+    ? { outcomes: [await gh(run.release), await gh(run.crash(why))], did: crashed }
     : await handOff(run, gh)
   const failed = outcomes.filter((outcome) => !outcome.ok)
   const outcome = failed.map(({ output }) => output.trim()).join('\n') || did

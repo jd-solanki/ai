@@ -271,7 +271,11 @@ test('a session that exits before a clean stop crashes the run', async () => {
 
 test('a turn that dies on an API error crashes the run', async () => {
   const run = factory()
-  await run.report('StopFailure')
+  const input = { error: 'rate_limit', last_assistant_message: 'API Error: Rate limit reached' }
+  assert.deepEqual(await run.report('StopFailure', input), {
+    status: 200,
+    body: `agent:fix app#12: Crashed: ${JSON.stringify(input)}`,
+  })
   assert.deepEqual(run.writes, [released, crashed('stopped on an API error')])
 })
 
