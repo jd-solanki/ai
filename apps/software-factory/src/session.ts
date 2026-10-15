@@ -42,6 +42,7 @@ const TRIGGERS = [
 
 interface Subject {
   number: number
+  title: string
   html_url: string
   labels: { name: string }[]
   head?: { sha: string }
@@ -72,6 +73,7 @@ export interface WorkItem {
 export interface Launch {
   args: string[]
   name: string
+  tabLabel: string
   // A session reports to the server under it; anyone who can reach the server could otherwise end a run.
   token: string
   work: WorkItem
@@ -133,6 +135,8 @@ export function claudeArgs(
   return {
     args,
     name,
+    // A title is anyone's text bound for the owner's terminal: control characters must not reach it.
+    tabLabel: `${kind === 'pr' ? 'PR' : 'Issue'} #${subject.number} - ${subject.title.replace(/\p{Cc}/gu, '')}`,
     token,
     work: {
       trigger: trigger.label,
@@ -200,7 +204,7 @@ function run(file: string, args: string[], cwd?: string): Promise<Outcome & { st
 // `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
 // A herdr workspace puts the session in the owner's agent list; herdr must be running.
 export async function startSession(
-  { args, name, token }: Launch,
+  { args, name, tabLabel, token }: Launch,
   cwd: string,
 ): Promise<(Outcome & { ok: false }) | (Outcome & { ok: true; workspace: string })> {
   await run('git', ['fetch', 'origin'], cwd)
@@ -214,7 +218,7 @@ export async function startSession(
     name,
     '--no-focus',
   ])
-  let pane: { pane_id: string; workspace_id: string }
+  let pane: { pane_id: string; tab_id: string; workspace_id: string }
   try {
     // A warning on stderr must not break the parse.
     pane = JSON.parse(created.stdout).result.root_pane
@@ -223,6 +227,8 @@ export async function startSession(
     // Thrown, it would crash the server with the claim held.
     return { ok: false, output: `herdr workspace create: ${created.output}` }
   }
+  // A new workspace's tab is labelled `1`; a rename herdr refuses only costs the label.
+  await run('herdr', ['tab', 'rename', pane.tab_id, tabLabel])
   // A command typed before the shell's prompt is up loses its Enter.
   const prompt = await run('herdr', [
     'pane',

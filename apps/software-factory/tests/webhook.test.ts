@@ -22,6 +22,7 @@ function reviewRequest(fullName: string, ...labels: string[]) {
       repository: { name: 'app', full_name: fullName },
       pull_request: {
         number: 12,
+        title: 'Kiosk pairing',
         html_url: 'https://github.com/acme/app/pull/12',
         labels: labels.map((name) => ({ name })),
       },

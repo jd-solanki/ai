@@ -7,7 +7,11 @@ const pull = 'https://github.com/acme/app/pull/12'
 const spec = 'https://github.com/acme/app/issues/12'
 
 function launch(label: string) {
-  const subject = { number: 12, labels: [{ name: 'issue:spec' }, { name: '⬆️ Renovate' }] }
+  const subject = {
+    number: 12,
+    title: 'Kiosk pairing',
+    labels: [{ name: 'issue:spec' }, { name: '⬆️ Renovate' }],
+  }
   const launched = claudeArgs(label === 'agent:implement' ? 'issues' : 'pull_request', {
     action: 'labeled',
     label: { name: label },

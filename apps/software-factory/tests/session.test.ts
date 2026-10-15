@@ -10,6 +10,7 @@ const labeled = { action: 'labeled', sender: { login: 'octocat' }, repository }
 function subject(...labels: string[]) {
   return {
     number: 12,
+    title: 'Kiosk pairing',
     html_url: 'https://github.com/acme/app/issues/12',
     labels: labels.map((name) => ({ name })),
   }
@@ -39,6 +40,16 @@ test('claudeArgs starts the trigger label skill in an interactive session of its
 test('claudeArgs names the session for the trigger label and work item', () => {
   assert.equal(review().name, 'agent:review app#12')
   assert.equal(upgrade().name, 'agent:upgrade app#12')
+})
+
+test('claudeArgs labels the run tab with the work item number and title', () => {
+  assert.equal(implement().tabLabel, 'Issue #12 - Kiosk pairing')
+  assert.equal(review().tabLabel, 'PR #12 - Kiosk pairing')
+  const pullRequest = { ...subject(), title: 'Kiosk\x1b[2J pairing\n' }
+  assert.equal(
+    launch('pull_request', 'agent:fix', { pull_request: pullRequest }).tabLabel,
+    'PR #12 - Kiosk[2J pairing',
+  )
 })
 
 test('claudeArgs starts nothing for a label event that is not a trigger', () => {
@@ -115,7 +126,8 @@ const stub = (name: string, body: string) => {
 stub(
   'herdr',
   `case "$1 $2" in
-  "workspace create") echo '{"result":{"root_pane":{"pane_id":"p1","workspace_id":"w1"}}}' ;;
+  "workspace create") echo '{"result":{"root_pane":{"pane_id":"p1","tab_id":"t1","workspace_id":"w1"}}}' ;;
+  "tab rename") echo "$3|$4" >> "${bin}/herdr.log"; exit "\${RENAME_EXIT:-0}" ;;
   "pane run") sh -c "$4"; exit "\${RUN_EXIT:-0}" ;;
   "workspace close") exit "\${CLOSE_EXIT:-0}" ;;
 esac`,
@@ -150,4 +162,12 @@ test('startSession keeps the claim of a failed launch whose workspace will not c
   assert.equal(kept.ok && kept.workspace, 'w1')
   process.env.CLOSE_EXIT = '0'
   assert.equal((await startSession(review(), bin)).ok, false)
+})
+
+test('startSession labels the run tab, and a rename herdr refuses still launches', async (t) => {
+  t.after(() => delete process.env.RENAME_EXIT)
+  process.env.RENAME_EXIT = '1'
+  writeFileSync(join(bin, 'herdr.log'), '')
+  assert.equal((await startSession(review(), bin)).ok, true)
+  assert.equal(readFileSync(join(bin, 'herdr.log'), 'utf8'), 't1|PR #12 - Kiosk pairing\n')
 })
