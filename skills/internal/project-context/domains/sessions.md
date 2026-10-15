@@ -18,6 +18,8 @@ _Avoid_: failure
 
 - The session boundary is a direction: a session changes code, and static code runs git
   and writes to GitHub.
+- A step static code can decide from GitHub or the run's own facts is static code's; a
+  session gets only what needs a model.
 - The pipeline's skills run as written and the factory adapts to them:
   `/implement-spec` merges onto the spec branch and opens the draft pull request through
   `/create-pr`, and `/review-pr` checks out the pull request and posts its own review.
