@@ -1,0 +1,14 @@
+id = "jd-solanki.herdr-kanban"
+name = "herdr kanban"
+version = "0.1.0"
+min_herdr_version = "0.9.5"
+description = "Every herdr agent on the server, in a column for its state"
+platforms = ["linux", "macos"]
+
+[[panes]]
+id = "board"
+title = "Kanban"
+placement = "popup"
+width = "90%"
+height = "80%"
+command = ["node", "src/main.ts"]

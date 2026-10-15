@@ -15,6 +15,8 @@
   `/link-skills` makes them.
 - An app lives at `apps/<name>/`, a package of the Vite+ workspace. Shared code goes in
   `packages/<name>/` once a second app needs it.
+- A herdr plugin is an app, `apps/herdr-<name>/`: TypeScript that Node runs straight from
+  `src/`, with no runtime dependencies and no build step.
 - `skills/` stays at the root and outside the workspace. A skill is not a package.
 - One `.agents/` and one `.claude/`, at the root. An app holds no agent directory of its own.
 
@@ -30,6 +32,9 @@
   skill is launched or run lands in both, and one project context answers a question
   about either. The library stays public: a repository that runs no factory installs from
   `skills/` and never sees the app.
+- A herdr plugin lives here, not in a repo of its own, because `herdr plugin install`
+  takes `jd-solanki/ai/apps/<name>`. With no dependencies and no build step, the install
+  runs no build commands, so it never has to resolve this pnpm workspace.
 - `skills/` stays at the root because the skills CLI finds published skills there and
   `/link-skills` builds its relative links from it.
 - One set of agent directories because an agent works on this repository from its root,

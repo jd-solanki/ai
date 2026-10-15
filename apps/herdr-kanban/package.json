@@ -1,0 +1,11 @@
+{
+  "name": "herdr-kanban",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}
