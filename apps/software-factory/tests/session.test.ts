@@ -70,18 +70,20 @@ test('claudeArgs runs review at higher effort than implementation', () => {
   assert.ok(effort(review()) > effort(implement()))
 })
 
-test('claudeArgs tells each session who to mention and which agent it hands off to', () => {
+test('claudeArgs tells each session who to mention and leaves the hand-off to the factory', () => {
   const prompt = ({ args }: { args: string[] }) => flag(args, '--append-system-prompt') ?? ''
   assert.match(prompt(implement()), /@octocat applied agent:implement/)
   assert.match(
     prompt(implement()),
-    /goes on https:\/\/github.com\/acme\/app\/issues\/12, mentioning them/,
+    /goes on https:\/\/github.com\/acme\/app\/issues\/12, mentioning them\.$/,
   )
-  assert.match(prompt(implement()), /apply the agent:review label/)
-  assert.match(prompt(review()), /apply the agent:fix label/)
-  assert.match(prompt(fix()), /apply the agent:review label/)
-  assert.match(prompt(upgrade()), /With commits, .*apply the agent:review label/)
-  assert.match(prompt(upgrade()), /With none, .*mark the pull request ready for review/)
+  assert.match(prompt(review()), /keeping every Closes line/)
+  for (const launched of [implement(), review(), fix(), upgrade()])
+    assert.doesNotMatch(prompt(launched), /label|ready for review/)
+  const allowed = ({ args }: { args: string[] }) =>
+    JSON.parse(flag(args, '--settings') ?? '').permissions.allow
+  assert.deepEqual(allowed(review()), ['Bash(gh pr edit:*)'])
+  assert.deepEqual(allowed(upgrade()), [])
 })
 
 test('claudeArgs claims a work item with the working label of its trigger', () => {

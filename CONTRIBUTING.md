@@ -22,8 +22,8 @@ outside it has been used on real work and settled.
 
 **Software factory.** What runs today: `TRIGGERS` in
 [`apps/software-factory/src/session.ts`](./apps/software-factory/src/session.ts). A trigger
-label starts one session in herdr, and each session hands off by applying the next
-agent's trigger label.
+label starts one session in herdr, and when a run ends, the server reads GitHub and
+applies the next agent's trigger label.
 
 The pipeline in `/project-context` is built but unproven: no spec with sub-issues, no HITL
 stop and no Fixer run has gone end to end on a served repo.
@@ -33,8 +33,6 @@ Known gaps:
 - A run keeps its working label, and its trigger label is ignored, until a human removes
   the working label, when its session ends while the factory server is down or after it
   restarted, or is killed without ending: `kill -9`, a power loss.
-- A hand-off is the session's own act. A session that skips it leaves the pull request
-  with no `agent:*` label, and a human applies the next one.
 - After a herdr restart, a crashed run's workspace comes back with no session in it, and
   waits for a human to close it.
 
