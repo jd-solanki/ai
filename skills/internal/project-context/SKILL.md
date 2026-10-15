@@ -44,7 +44,7 @@ governs.
 | Reference | Load when |
 | --- | --- |
 | `glossary.md` | always |
-| `domains/layout.md` | adding, moving, renaming or linking a skill |
+| `domains/layout.md` | adding, moving, renaming or linking a skill or an app |
 | `domains/authoring.md` | writing or editing the text inside a skill, and committing it |
 | `domains/pipeline.md` | writing a spec, or changing how agents pick up, pause, resume or hand off work |
 | `domains/labels.md` | adding or changing a trigger label, a working label, or how a GitHub event starts a run |
