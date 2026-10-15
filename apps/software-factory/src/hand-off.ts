@@ -6,7 +6,7 @@ type Step = { to: string; url?: string } | { ready: true } | { wait: string }
 
 const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   'agent:implement': async (work, gh) => {
-    const pulls: { url: string; isDraft: boolean }[] = JSON.parse(
+    const pulls: { url: string; isDraft: boolean; isCrossRepository: boolean }[] = JSON.parse(
       await read(gh, [
         'pr',
         'list',
@@ -17,10 +17,10 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
         '--state',
         'open',
         '--json',
-        'url,isDraft',
+        'url,isDraft,isCrossRepository',
       ]),
     )
-    const draft = pulls.find((pull) => pull.isDraft)
+    const draft = pulls.find((pull) => pull.isDraft && !pull.isCrossRepository)
     return draft
       ? { to: 'agent:review', url: draft.url }
       : { wait: `no open draft pull request from spec/${work.number}` }
