@@ -18,13 +18,13 @@ While working on it, link the folder instead: `herdr plugin link apps/herdr-kanb
 ## Use it
 
 ```bash
-ws=$(herdr workspace create --label Kanban --no-focus)
-herdr plugin pane open --plugin jd-solanki.herdr-kanban --entrypoint board \
+ws=$(herdr workspace create --label Kanban)
+herdr plugin pane open --plugin jd-solanki.herdr-kanban --entrypoint board --focus \
   --workspace "$(jq -r .result.workspace.workspace_id <<<"$ws")"
 herdr tab close "$(jq -r .result.tab.tab_id <<<"$ws")"
 ```
 
-It opens in its own workspace, Kanban, so it sits in the sidebar one click away while you work in other workspaces. The last line closes the empty shell tab the new workspace starts with. The script needs `jq`.
+It opens in its own workspace, Kanban, so it sits in the sidebar one click away while you work in other workspaces, and switches you to it. herdr only addresses a workspace and a tab by ID, so `ws` keeps the IDs the new workspace reports. The last line closes the empty shell tab the new workspace starts with. The script needs `jq`.
 
 To open it as a tab in the current workspace instead, run only `herdr plugin pane open --plugin jd-solanki.herdr-kanban --entrypoint board`.
 
