@@ -125,9 +125,11 @@ const stub = (name: string, body: string) => {
 }
 stub(
   'herdr',
-  `case "$1 $2" in
+  `echo "$1 $2" >> "${bin}/calls.log"
+case "$1 $2" in
   "workspace create") echo '{"result":{"root_pane":{"pane_id":"p1","tab_id":"t1","workspace_id":"w1"}}}' ;;
   "tab rename") echo "$3|$4" >> "${bin}/herdr.log"; exit "\${RENAME_EXIT:-0}" ;;
+  "pane wait-output") exit "\${WAIT_EXIT:-0}" ;;
   "pane run") sh -c "$4"; exit "\${RUN_EXIT:-0}" ;;
   "workspace close") exit "\${CLOSE_EXIT:-0}" ;;
 esac`,
@@ -170,4 +172,32 @@ test('startSession labels the run tab, and a rename herdr refuses still launches
   writeFileSync(join(bin, 'herdr.log'), '')
   assert.equal((await startSession(review(), bin)).ok, true)
   assert.equal(readFileSync(join(bin, 'herdr.log'), 'utf8'), 't1|PR #12 - Kiosk pairing\n')
+})
+
+test('startSession types the command only once the new pane shows its prompt', async () => {
+  writeFileSync(join(bin, 'calls.log'), '')
+  assert.equal((await startSession(review(), bin)).ok, true)
+  assert.deepEqual(readFileSync(join(bin, 'calls.log'), 'utf8').split('\n'), [
+    'workspace create',
+    'tab rename',
+    'pane wait-output',
+    'pane run',
+    '',
+  ])
+})
+
+test('startSession closes the workspace of a pane whose prompt never shows', async (t) => {
+  t.after(() => delete process.env.WAIT_EXIT)
+  process.env.WAIT_EXIT = '1'
+  writeFileSync(join(bin, 'calls.log'), '')
+  const failed = await startSession(review(), bin)
+  assert.equal(failed.ok, false)
+  assert.match(failed.output, /^herdr pane wait-output: /)
+  assert.deepEqual(readFileSync(join(bin, 'calls.log'), 'utf8').split('\n'), [
+    'workspace create',
+    'tab rename',
+    'pane wait-output',
+    'workspace close',
+    '',
+  ])
 })

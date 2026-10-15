@@ -36,7 +36,8 @@ function factory({
   const runs: Runs = new Map([[run.token, { ...run, workspace: 'w7' }]])
   const writes: string[] = []
   const closed: string[] = []
-  const report = (hook: string, input: object | string = {}) =>
+  const echoes: { status: number; body?: string }[] = []
+  const report = (hook: string, input: object | string = {}): ReturnType<typeof handleRunReport> =>
     handleRunReport(
       `/runs/${run.token}/${hook}`,
       Buffer.from(typeof input === 'string' ? input : JSON.stringify(input)),
@@ -53,13 +54,22 @@ function factory({
             ? { ok: false, stdout: '', output: "could not add label: 'agent:review' not found" }
             : { ok: true, stdout: '', output: '' }
         },
+        // herdr's close ends the session, which reports SessionEnd before the close returns.
         closeWorkspace: async (workspace) => {
           closed.push(workspace)
+          echoes.push(await report('SessionEnd', { reason: 'other' }))
           return { ok: closes, output: closes ? '' : 'herdr is down' }
         },
       },
     )
-  return { runs, writes, closed, report, end: () => report('Stop', { background_tasks: [] }) }
+  return {
+    runs,
+    writes,
+    closed,
+    echoes,
+    report,
+    end: () => report('Stop', { background_tasks: [] }),
+  }
 }
 
 const summary = (updated_at: string, verdict: string, login = 'factory') =>
@@ -72,7 +82,11 @@ const review = (...comments: string[]) =>
   factory({
     label: 'agent:review',
     github: (args) =>
-      args.join(' ') === 'api user --jq .login' ? 'factory\n' : comments.join('\n'),
+      ({
+        'api user --jq .login': 'factory\n',
+        'api repos/acme/app/issues/12/comments --paginate --jq .[] | {login: .user.login, updated_at, body} | tojson':
+          comments.join('\n'),
+      })[args.join(' ')],
   })
 const fresh = '2999-01-01T00:00:00Z'
 const waits = (url: string, kind: string, label: string, why: string) => [
@@ -198,15 +212,22 @@ test('an implement run that opened no draft waits on whoever applied its label',
   )
 })
 
+const upgrade = (head: string) =>
+  factory({
+    label: 'agent:upgrade',
+    github: (args) =>
+      args.join(' ') === `pr view ${pull} --json headRefOid --jq .headRefOid` ? head : undefined,
+  })
+
 test('an upgrade run hands new commits to the Reviewer and marks an untouched update ready', async () => {
-  const moved = factory({ label: 'agent:upgrade', github: () => 'def\n' })
+  const moved = upgrade('def\n')
   await moved.end()
   assert.deepEqual(moved.writes, [
     `pr edit ${pull} --remove-label agent:upgrading`,
     `pr edit ${pull} --add-label agent:review`,
   ])
 
-  const untouched = factory({ label: 'agent:upgrade', github: () => 'abc\n' })
+  const untouched = upgrade('abc\n')
   await untouched.end()
   assert.deepEqual(untouched.writes, [
     `pr edit ${pull} --remove-label agent:upgrading`,
@@ -282,10 +303,7 @@ test('a turn that dies on an API error crashes the run', async () => {
 test('the session end that closing a run fires is ignored', async () => {
   const run = factory()
   await run.end()
-  assert.deepEqual(await run.report('SessionEnd', { reason: 'other' }), {
-    status: 404,
-    body: 'No run in progress for this report',
-  })
+  assert.deepEqual(run.echoes, [{ status: 404, body: 'No run in progress for this report' }])
   assert.equal(run.writes.length, 2)
   assert.deepEqual(run.closed, ['w7'])
 })

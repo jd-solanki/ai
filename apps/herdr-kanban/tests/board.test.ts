@@ -4,6 +4,7 @@ import {
   cardAt,
   clampSelection,
   findCard,
+  render,
   rowsFrom,
   toColumns,
   type Snapshot,
@@ -95,6 +96,29 @@ test('cardAt finds the card under a click on an 80-column board', () => {
   assert.equal(cardAt(columns, 80, 1, 5), undefined, 'the gap between cards is not a card')
   assert.equal(cardAt(columns, 80, 1, 9), undefined, 'below the last card')
   assert.equal(cardAt(columns, 80, 21, 3), undefined, 'an empty column')
+})
+
+test('cardAt finds the card render draws under the click', () => {
+  const agents = [
+    herdrAgent('w1:p1', 'working'),
+    herdrAgent('w1:p2', 'working'),
+    herdrAgent('w1:p3', 'done'),
+  ]
+  const columns = toColumns({ workspaces, tabs, agents })
+  for (const selected of [
+    { column: 0, card: 0 },
+    { column: 0, card: 1 },
+    { column: 2, card: 0 },
+  ]) {
+    // The selection bar marks the rows render draws the selected card on, its title first.
+    const rows = render(columns, selected, 80, 24)
+      .replace(/\x1b\[[\d;]*m/g, '')
+      .split('\n')
+    const x = selected.column * 20 + 1
+    const drawn = rows.flatMap((row, i) => (row[x - 1] === '▌' ? [i + 1] : []))
+    assert.equal(drawn.length, 2)
+    for (const y of drawn) assert.deepEqual(cardAt(columns, 80, x, y), selected)
+  }
 })
 
 test('cardAt finds the card under a click when each card is one row tall', () => {
