@@ -176,7 +176,7 @@ function hooks(token: string) {
   }
 }
 
-// A hook command runs in a shell; a comment body must reach gh as one argument.
+// herdr pane run types its command into the pane's shell; the system prompt and settings must each reach claude as one argument.
 const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`).join(' ')
 
 interface Outcome {
