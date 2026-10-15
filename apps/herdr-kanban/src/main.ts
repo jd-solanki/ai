@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { clampSelection, findCard, render, toColumns, type Selection } from './board.ts'
+import { splitKeys } from './keys.ts'
 
 const herdr = process.env.HERDR_BIN_PATH ?? 'herdr'
 // shortcut: polls the snapshot because the herdr CLI has no event stream; move to the socket's events.subscribe if polling ever lags.
@@ -65,12 +66,7 @@ function focusSelected() {
   process.exit(0)
 }
 
-process.stdout.write(ENTER_FULL_SCREEN)
-// On 'exit' so a crash still gives the terminal back and its stack trace stays readable.
-process.on('exit', () => process.stdout.write(LEAVE_FULL_SCREEN))
-process.stdin.setRawMode(true)
-process.stdin.setEncoding('utf8')
-process.stdin.on('data', (key: string) => {
+function press(key: string) {
   if (QUIT_KEYS.includes(key)) process.exit(0)
   if (key === '\r') return focusSelected()
   const step = KEY_STEPS[key]
@@ -80,7 +76,14 @@ process.stdin.on('data', (key: string) => {
     card: selected.card + step.card,
   })
   draw()
-})
+}
+
+process.stdout.write(ENTER_FULL_SCREEN)
+// On 'exit' so a crash still gives the terminal back and its stack trace stays readable.
+process.on('exit', () => process.stdout.write(LEAVE_FULL_SCREEN))
+process.stdin.setRawMode(true)
+process.stdin.setEncoding('utf8')
+process.stdin.on('data', (chunk: string) => splitKeys(chunk).forEach(press))
 process.stdout.on('resize', draw)
 setInterval(refresh, REFRESH_MS)
 draw()
