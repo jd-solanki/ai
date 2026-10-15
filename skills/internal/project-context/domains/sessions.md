@@ -67,6 +67,9 @@ _Avoid_: failure
 - A crash is caught by SessionEnd, not by watching herdr. SessionEnd fires when herdr closes
   the workspace or stops, so only `kill -9`, a power loss or a stopped factory server leave
   the working label on, and a human removes it.
+- The pane's shell reports SessionEnd too, once claude exits: a claude that exits before its
+  hooks load, such as in an untrusted folder, reports nothing. After a normal end that second
+  report finds no run.
 - A run workspace herdr restores after a restart is left alone: its run already crashed on
   shutdown, and it comes back as a shell with no session and no claim.
 - Each run reports under a random token because the server's port is public, behind
