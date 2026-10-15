@@ -64,7 +64,9 @@ For the first few minutes after you enable Funnel, webhooks can time out before 
 
 ## Add a project
 
-Run this from `apps/software-factory` so `.env` loads. The numbers match the conventions above.
+Run these from `apps/software-factory` so `.env` loads. The numbers match the conventions above.
+
+Steps 1 to 3 need write access to the repo:
 
 ```bash
 set -a; . ./.env; set +a
@@ -90,13 +92,40 @@ gh label create agent:fix -R "$REPO" --force -d "Factory: fix this PR's review f
 gh label create agent:fixing -R "$REPO" --force -d "Factory: a Fixer run holds this PR"
 gh label create agent:upgrade -R "$REPO" --force -d "Factory: upgrade the code for this Renovate PR (needs ⬆️ Renovate)"
 gh label create agent:upgrading -R "$REPO" --force -d "Factory: an Upgrader run holds this PR"
+```
 
+Step 6 needs admin access to the repo, in the same shell:
+
+```bash
 # 6. Webhook
 HOOK_ID=$(gh api "repos/$REPO/hooks" \
   -f "config[url]=$FUNNEL_URL" -f 'config[content_type]=json' \
   -f "config[secret]=${GITHUB_WEBHOOK_SECRET:?run from apps/software-factory so .env loads}" \
   -f 'events[]=issues' -f 'events[]=pull_request' --jq .id)
 ```
+
+<details>
+<summary>Step 6 without <code>gh</code>, for a repo admin who isn't you</summary>
+
+Send the admin the two values below. The secret signs webhooks for every served repo, so send it privately.
+
+```bash
+echo "$FUNNEL_URL"
+echo "$GITHUB_WEBHOOK_SECRET"
+```
+
+The admin then, on GitHub:
+
+1. Opens the repo's **Settings → Webhooks → Add webhook**.
+2. Sets **Payload URL** to the Funnel URL.
+3. Sets **Content type** to `application/json`.
+4. Sets **Secret** to the secret.
+5. Picks **Let me select individual events**, ticks **Issues** and **Pull requests**, and unticks **Pushes**.
+6. Leaves **Active** ticked and clicks **Add webhook**.
+
+GitHub sends a ping when the webhook is created. In the webhook's **Recent Deliveries** tab, a ping that reached the server shows response `200`.
+
+</details>
 
 Steps 4 and 5 change the project itself, so commit them there:
 
@@ -107,7 +136,7 @@ echo '.claude/worktrees/' >> .gitignore
 git add -A && git commit -m "chore: set up agent factory" && git push
 ```
 
-Check that GitHub reaches the server, in the shell that ran step 6. A ping answers `200`:
+If you ran step 6 with `gh`, check that GitHub reaches the server, in the same shell. A ping answers `200`:
 
 ```bash
 gh api -X POST "repos/$REPO/hooks/$HOOK_ID/pings"
