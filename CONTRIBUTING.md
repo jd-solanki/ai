@@ -35,6 +35,8 @@ Known gaps:
   restarted, or is killed without ending: `kill -9`, a power loss.
 - After a herdr restart, a crashed run's workspace comes back with no session in it, and
   waits for a human to close it.
+- A run whose launch failed and whose workspace would not close keeps its claim until a
+  human removes the working label.
 
 Deliberately unbuilt:
 
