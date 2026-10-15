@@ -8,7 +8,5 @@ platforms = ["linux", "macos"]
 [[panes]]
 id = "board"
 title = "Kanban"
-placement = "popup"
-width = "90%"
-height = "80%"
+placement = "tab"
 command = ["node", "src/main.ts"]

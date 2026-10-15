@@ -62,7 +62,7 @@ export function clampSelection(columns: Column[], { column, card }: Selection): 
   return { column: clampedColumn, card: clamp(card, columns[clampedColumn].cards.length - 1) }
 }
 
-// shortcut: no scrolling and titles are cut by code unit, so wide emoji can shift a column; scroll once a column outgrows the popup.
+// shortcut: no scrolling and titles are cut by code unit, so wide emoji can shift a column; scroll once a column outgrows the pane.
 export function render(columns: Column[], selected: Selection, width: number, height: number) {
   const columnWidth = Math.floor(width / columns.length)
   const cell = (text: string) => text.slice(0, columnWidth - 1).padEnd(columnWidth)

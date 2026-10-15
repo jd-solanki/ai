@@ -18,7 +18,7 @@ const KEY_STEPS: Record<string, { column: number; card: number }> = {
   '\x1b[D': { column: -1, card: 0 },
   h: { column: -1, card: 0 },
 }
-const QUIT_KEYS = ['q', '\x1b', '\x03']
+const QUIT_KEYS = ['q', '\x03']
 // Piped, so herdr's stderr lands in the error message instead of on the board.
 const CAPTURED = { encoding: 'utf8', stdio: 'pipe' } as const
 
@@ -61,9 +61,8 @@ function focusSelected() {
     execFileSync(herdr, ['agent', 'focus', card.paneId], CAPTURED)
   } catch (error) {
     failure = `Could not focus ${card.title}: ${(error as Error).message.split('\n')[0]}`
-    return draw()
+    draw()
   }
-  process.exit(0)
 }
 
 function press(key: string) {
