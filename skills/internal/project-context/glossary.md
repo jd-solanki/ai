@@ -72,6 +72,11 @@ _Avoid_: job, execution
 One fresh Claude Code conversation inside a run.
 _Avoid_: agent (for the model's part), conversation
 
+**herdr agent**:
+A coding-agent process herdr detects in a pane, with a state such as working or blocked. A
+session shows up as one; it is not an agent.
+_Avoid_: agent (unqualified), pane agent
+
 **Static code**:
 The factory's own deterministic code, as opposed to a session.
 _Avoid_: orchestrator, harness
