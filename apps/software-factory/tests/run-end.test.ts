@@ -275,6 +275,13 @@ test('a run whose workspace fails to close keeps its claim', async () => {
   assert.equal(run.runs.size, 1)
 })
 
+test('a session that ended releases its run even when its workspace fails to close', async () => {
+  const run = factory({ closes: false })
+  await run.report('SessionEnd', { reason: 'other' })
+  assert.deepEqual(run.writes, [released, crashed('exited')])
+  assert.equal(run.runs.size, 0)
+})
+
 test('a stop that does not say whether background work is left keeps the run', async () => {
   const run = factory()
   await run.report('Stop', {})
