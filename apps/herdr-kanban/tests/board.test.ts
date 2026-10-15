@@ -98,7 +98,7 @@ test('cardAt finds the card under a click on an 80-column board', () => {
   assert.equal(cardAt(columns, 80, 21, 3), undefined, 'an empty column')
 })
 
-test('cardAt finds the card render draws under the click', () => {
+test('cardAt finds the card on every row render draws it on', () => {
   const agents = [
     herdrAgent('w1:p1', 'working'),
     herdrAgent('w1:p2', 'working'),
@@ -110,7 +110,7 @@ test('cardAt finds the card render draws under the click', () => {
     { column: 0, card: 1 },
     { column: 2, card: 0 },
   ]) {
-    // The selection bar marks the rows render draws the selected card on, its title first.
+    // The selection bar marks every row render draws the selected card on.
     const rows = render(columns, selected, 80, 24)
       .replace(/\x1b\[[\d;]*m/g, '')
       .split('\n')
