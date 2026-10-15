@@ -23,7 +23,7 @@ herdr plugin pane open --plugin jd-solanki.herdr-kanban --entrypoint board
 
 It opens as a tab, so you can keep it open and move to other tabs and workspaces.
 
-Arrow keys or `hjkl` move between cards. Enter focuses the selected herdr agent and leaves the board open. `q` closes it. The board refreshes every second.
+Arrow keys or `hjkl` move between cards. Enter, or a click on a card, focuses that herdr agent and leaves the board open. Each column takes the colour herdr's sidebar gives its state, from your terminal's palette. `q` closes it. The board refreshes every second.
 
 To keep it on a second monitor, run `herdr` in a terminal window there. Each attached client views its own workspace and tab, so that window can stay on the board while you work in the other.
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { clampSelection, findCard, toColumns, type Snapshot } from '../src/board.ts'
+import { cardAt, clampSelection, findCard, toColumns, type Snapshot } from '../src/board.ts'
 
 const workspaces = [
   { workspace_id: 'w1', label: 'nuxtstart' },
@@ -55,6 +55,20 @@ test('toColumns puts each herdr agent in the column for its state', () => {
 test('toColumns titles a card with its tab label, as the herdr sidebar does', () => {
   const snapshot = { workspaces, tabs, agents: [herdrAgent('w1:p1', 'idle', { tab_id: 'w1:t1' })] }
   assert.equal(toColumns(snapshot)[3].cards[0].title, 'PR #84 - Kiosk Pairing')
+})
+
+test('cardAt finds the card under a click on an 80-column board', () => {
+  const columns = toColumns({
+    workspaces,
+    tabs,
+    agents: [herdrAgent('w1:p1', 'working'), herdrAgent('w1:p2', 'working')],
+  })
+  assert.deepEqual(cardAt(columns, 80, 1, 3), { column: 0, card: 0 })
+  assert.deepEqual(cardAt(columns, 80, 20, 7), { column: 0, card: 1 })
+  assert.equal(cardAt(columns, 80, 1, 1), undefined, 'the header is not a card')
+  assert.equal(cardAt(columns, 80, 1, 5), undefined, 'the gap between cards is not a card')
+  assert.equal(cardAt(columns, 80, 1, 9), undefined, 'below the last card')
+  assert.equal(cardAt(columns, 80, 21, 3), undefined, 'an empty column')
 })
 
 test('clampSelection keeps the selection on the board as cards come and go', () => {
