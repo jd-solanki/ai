@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
-import { test } from 'node:test'
-import { claudeArgs, type WebhookPayload } from '../src/session.ts'
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { after, test } from 'node:test'
+import { claudeArgs, startSession, type WebhookPayload } from '../src/session.ts'
 
 const repository = { name: 'app', full_name: 'acme/app' }
 const labeled = { action: 'labeled', sender: { login: 'octocat' }, repository }
@@ -100,4 +103,37 @@ test('claudeArgs has each run-ending hook report to the factory server under the
       `curl -sS --data-binary @- http://localhost:3456/runs/${launched.token}/${hook}`,
     )
   assert.notEqual(review().token, launched.token)
+})
+
+// Stubs on PATH: herdr runs the typed command through sh, claude exits before its hooks load, curl logs its report.
+const bin = mkdtempSync(join(tmpdir(), 'software-factory-bin-'))
+after(() => rmSync(bin, { recursive: true }))
+const stub = (name: string, body: string) => {
+  writeFileSync(join(bin, name), `#!/bin/sh\n${body}\n`)
+  chmodSync(join(bin, name), 0o755)
+}
+stub(
+  'herdr',
+  `case "$1 $2" in
+  "workspace create") echo '{"result":{"root_pane":{"pane_id":"p1","workspace_id":"w1"}}}' ;;
+  "pane run") sh -c "$4"; exit "\${RUN_EXIT:-0}" ;;
+  "workspace close") exit "\${CLOSE_EXIT:-0}" ;;
+esac`,
+)
+stub('claude', 'exit 1')
+stub('curl', `echo "$@" >> "${bin}/curl.log"`)
+process.env.PATH = `${bin}:${process.env.PATH}`
+
+test('startSession has the shell report the end of a claude that exits before its hooks load', async () => {
+  const launched = review()
+  assert.deepEqual(await startSession(launched, bin), {
+    ok: true,
+    stdout: '',
+    output: '',
+    workspace: 'w1',
+  })
+  assert.equal(
+    readFileSync(join(bin, 'curl.log'), 'utf8'),
+    `-sS -X POST http://localhost:3456/runs/${launched.token}/SessionEnd\n`,
+  )
 })

@@ -30,7 +30,7 @@ Applying the label again reuses that worktree.
 The server finds everything by convention. Each repo it serves needs:
 
 1. A clone at `$REPOS_DIR/<owner>/<repo>`, matching GitHub's `owner/repo`. With `REPOS_DIR=~/Projects/github`, `acme/app` lives at `~/Projects/github/acme/app`. Sessions run there, not in the folder the server runs from.
-2. Claude Code trust. In a folder you haven't trusted, a session stops at the trust prompt in its workspace and keeps its `…ing` label until you answer it.
+2. Claude Code trust. In a folder you haven't trusted, `claude --worktree` exits at once, and the run crashes and asks for the trigger label again.
 3. Every label in step 3 of [Add a project](#add-a-project).
 4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. Ours install from `jd-solanki/ai`; the root `skills-lock.json` lists where the rest come from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
