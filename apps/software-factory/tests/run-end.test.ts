@@ -77,14 +77,14 @@ const untouched = JSON.stringify({
 const required = 'pull_request\nrequired_status_checks\n'
 // Answers each read a hand-off makes of a pull request whose head is still `abc`.
 const pullRequest =
-  ({ comments = [] as string[], rules = required, specs = '' } = {}) =>
+  ({ comments = [] as string[], rules = required, author = 'app/renovate' } = {}) =>
   (args: string[]) => {
     const command = args.join(' ')
     if (command === 'api user --jq .login') return 'factory\n'
     if (command.includes('headRefOid')) return 'abc\n'
     if (command.includes('baseRefName')) return 'main\n'
     if (command.includes('/rules/branches/')) return rules
-    if (command.includes('graphql')) return specs
+    if (command.includes('author')) return `${author}\n`
     return comments.join('\n')
   }
 const review = (...comments: string[]) =>
@@ -146,14 +146,10 @@ test('a dry review below 10/10 leaves the merge to a human', async () => {
   assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
 })
 
-test('a 10/10 review waits for the Owner steps its spec lists before merge', async () => {
+test('a 10/10 review of a pull request Renovate did not open leaves the merge to a human', async () => {
   const run = factory({
     label: 'agent:review',
-    github: pullRequest({
-      comments: [summary(fresh, 'dry', { score: 10 })],
-      specs:
-        '## Owner steps\n\n- [x] After merge: tell support\n- [ ] Before merge: rotate the key\n',
-    }),
+    github: pullRequest({ comments: [summary(fresh, 'dry', { score: 10 })], author: 'octocat' }),
   })
   assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
 })

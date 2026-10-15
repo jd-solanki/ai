@@ -41,9 +41,8 @@ _Avoid_: result, review status
      Fixer runs alternate until a review comes back dry, which is the approval: `/review-pr`
      defines dry, and files what the review leaves for later as one issue. The Reviewer then rewrites the pull
      request body with `/create-pr`, keeping every `Closes` line, and static code marks the pull
-     request ready for review. When that dry review scored 10/10 and the spec it closes has no
-     unticked `Before merge:` Owner step, static code also sets it to merge once the required
-     checks pass.
+     request ready for review. When that dry review scored 10/10 on a pull request Renovate
+     opened, static code also sets it to merge once the required checks pass.
   6. A human merges, unless static code set it to merge, then does the Owner steps.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
@@ -51,7 +50,7 @@ _Avoid_: result, review status
   ends as it would read had it been written against the new versions. With commits, it pushes
   them onto the update's branch, static code hands it to the Reviewer, and stage 5 follows.
   With none, static code marks the pull request ready for review, and sets it to merge once the
-  required checks pass when the Upgrader's comment opens with the marker `session.ts:UNTOUCHED`: the work is done and
+  required checks pass when Renovate opened it and the Upgrader's comment opens with the marker `session.ts:UNTOUCHED`: the work is done and
   the code needed nothing. Renovate's body stays: it carries the Upgrader's spec.
 - The Upgrader matches the upstream issues and pull requests the release notes name against the
   repository's open issues and pull requests, and comments on each match. A commit that does an
@@ -134,8 +133,13 @@ _Avoid_: result, review status
   change of the code, and a list misses the next kind.
 - `/create-spec` never triggers: a human reads a spec before an unattended run spends
   budget, and the skill stays usable in repos the factory does not serve.
-- Static code merges only the absolute successes, a dry review scored 10/10 and an update the
-  Upgrader left untouched; every other pull request waits on a human.
+- Static code merges only the absolute successes of a dependency update, a dry review scored
+  10/10 and an update the Upgrader left untouched; every other pull request waits on a human.
+- Only a dependency update merges unattended: its risk is the release itself, which a human
+  skimming a version bump rarely catches either, while a spec's code is the agents' own, written from issues anyone
+  may comment on, and an LLM review is its only reader.
+- Renovate is known by the pull request's author, `app/renovate`, not by `⬆️ Renovate`: anyone
+  with Triage applies a label, and nobody can take an app's login.
 - An untouched update needs the Upgrader's word, not only an unmoved head: an Upgrader that
   stopped short pushes nothing either.
 - A merge is GitHub's auto-merge, squashed and pinned to the head the run started from: GitHub

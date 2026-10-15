@@ -30,7 +30,7 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
     const summary = await readOwnComment(work, gh, '<!-- review-pr:summary -->')
     const verdict = /<!-- review-pr:verdict (\w+) -->/.exec(summary)?.[1]
     if (verdict === 'dry')
-      return /^## .*Review: 10\/10/m.test(summary) && !(await awaitsOwnerStep(work, gh))
+      return /^## .*Review: 10\/10/m.test(summary) && (await fromRenovate(work, gh))
         ? { merge: true }
         : { ready: true }
     if (verdict === 'tasks') return { to: 'agent:fix' }
@@ -51,7 +51,9 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
     ])
     if (head.trim() !== work.head) return { to: 'agent:review' }
     // A blocked Upgrader pushes nothing either, so only its word that nothing needed to change merges.
-    return (await readOwnComment(work, gh, UNTOUCHED)) ? { merge: true } : { ready: true }
+    return (await readOwnComment(work, gh, UNTOUCHED)) && (await fromRenovate(work, gh))
+      ? { merge: true }
+      : { ready: true }
   },
 }
 
@@ -118,19 +120,18 @@ async function mergeOnceChecksPass(work: WorkItem, gh: Gh) {
   return gh(['pr', 'merge', work.url, '--auto', '--squash', '--match-head-commit', work.head])
 }
 
-// An Owner step blocks merge until a human ticks it in the spec the pull request closes.
-async function awaitsOwnerStep(work: WorkItem, gh: Gh) {
-  const specs = await read(gh, [
-    'api',
-    'graphql',
-    '-f',
-    'query=query($url: URI!) { resource(url: $url) { ... on PullRequest { closingIssuesReferences(first: 50) { nodes { body } } } } }',
-    '-f',
-    `url=${work.url}`,
+// Only Renovate's own pull requests merge unattended: anyone with Triage can apply a label, nobody can take an app's login.
+async function fromRenovate(work: WorkItem, gh: Gh) {
+  const author = await read(gh, [
+    'pr',
+    'view',
+    work.url,
+    '--json',
+    'author',
     '--jq',
-    '.data.resource.closingIssuesReferences.nodes[].body',
+    '.author.login',
   ])
-  return /^- \[ \] Before merge:/m.test(specs)
+  return author.trim() === 'app/renovate'
 }
 
 async function nextStep(work: WorkItem, gh: Gh): Promise<Step> {

@@ -35,7 +35,7 @@ The server finds everything by convention. Each repo it serves needs:
 4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. Ours install from `jd-solanki/ai`; the root `skills-lock.json` lists where the rest come from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
 6. A webhook to this server, using the JSON content type, the `issues` and `pull_request` events, and the secret from `.env`.
-7. Auto-merge allowed, squash merging allowed, and a ruleset requiring the CI checks on the default branch. The factory squash-merges a 10/10 dry review and a dependency update the Upgrader left untouched with GitHub's auto-merge, which waits only on required checks, so without such a ruleset it leaves the merge to you.
+7. Auto-merge allowed, squash merging allowed, and a ruleset requiring the CI checks on the default branch. The factory squash-merges a Renovate pull request, once a review scores it 10/10 or the Upgrader leaves it untouched, with GitHub's auto-merge, which waits only on required checks, so without such a ruleset it leaves the merge to you.
 
 ## Start the factory
 
