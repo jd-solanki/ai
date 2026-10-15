@@ -43,6 +43,9 @@ Deliberately unbuilt:
 - Hosted resources. The factory is local only to keep the cost zero, because remote
   resources cost money: it runs on the owner's machine, with no hosted compute or storage
   such as Cloudflare.
+- Auto-merge. A human merges every pull request, Renovate's included, because an unattended
+  merge lands a compromised release or a prompt-injected change unread. `/project-context`'s
+  pipeline domain holds the reasons.
 
 ## Conventions
 
