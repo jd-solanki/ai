@@ -7,10 +7,12 @@ export interface Snapshot {
     agent: string
     display_agent?: string
     workspace_id: string
+    tab_id: string
     cwd: string
     terminal_title_stripped: string
   }[]
   workspaces: { workspace_id: string; label: string }[]
+  tabs: { tab_id: string; label: string }[]
 }
 
 export interface Card {
@@ -34,6 +36,7 @@ const STATUSES = ['working', 'blocked', 'done', 'idle']
 
 export function toColumns(snapshot: Snapshot): Column[] {
   const labels = new Map(snapshot.workspaces.map((w) => [w.workspace_id, w.label]))
+  const tabLabels = new Map(snapshot.tabs.map((tab) => [tab.tab_id, tab.label]))
   const columnOf = (status: string) => (STATUSES.includes(status) ? status : 'unknown')
   const columns = [...STATUSES, 'unknown'].map((status) => ({
     status,
@@ -41,7 +44,7 @@ export function toColumns(snapshot: Snapshot): Column[] {
       .filter((agent) => columnOf(agent.agent_status) === status)
       .map((agent) => ({
         paneId: agent.pane_id,
-        title: agent.terminal_title_stripped || basename(agent.cwd),
+        title: tabLabels.get(agent.tab_id) || agent.terminal_title_stripped || basename(agent.cwd),
         provider: agent.display_agent ?? agent.agent,
         workspace: labels.get(agent.workspace_id) ?? agent.workspace_id,
       })),
