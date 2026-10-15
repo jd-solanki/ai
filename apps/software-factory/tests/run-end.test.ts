@@ -36,7 +36,7 @@ function factory({
   const runs: Runs = new Map([[run.token, { ...run, workspace: 'w7' }]])
   const writes: string[] = []
   const closed: string[] = []
-  const echoes: { status: number; body?: string }[] = []
+  const sessionEnds: { status: number; body?: string }[] = []
   const report = (hook: string, input: object | string = {}): ReturnType<typeof handleRunReport> =>
     handleRunReport(
       `/runs/${run.token}/${hook}`,
@@ -57,7 +57,7 @@ function factory({
         // herdr's close ends the session, which reports SessionEnd before the close returns.
         closeWorkspace: async (workspace) => {
           closed.push(workspace)
-          echoes.push(await report('SessionEnd', { reason: 'other' }))
+          sessionEnds.push(await report('SessionEnd', { reason: 'other' }))
           return { ok: closes, output: closes ? '' : 'herdr is down' }
         },
       },
@@ -66,7 +66,7 @@ function factory({
     runs,
     writes,
     closed,
-    echoes,
+    sessionEnds,
     report,
     end: () => report('Stop', { background_tasks: [] }),
   }
@@ -88,6 +88,13 @@ const review = (...comments: string[]) =>
           comments.join('\n'),
       })[args.join(' ')],
   })
+const upgrade = (head: string) =>
+  factory({
+    label: 'agent:upgrade',
+    github: (args) =>
+      args.join(' ') === `pr view ${pull} --json headRefOid --jq .headRefOid` ? head : undefined,
+  })
+
 const fresh = '2999-01-01T00:00:00Z'
 const waits = (url: string, kind: string, label: string, why: string) => [
   `${kind} edit ${url} --remove-label ${label.replace(/e?$/, 'ing')}`,
@@ -212,13 +219,6 @@ test('an implement run that opened no draft waits on whoever applied its label',
   )
 })
 
-const upgrade = (head: string) =>
-  factory({
-    label: 'agent:upgrade',
-    github: (args) =>
-      args.join(' ') === `pr view ${pull} --json headRefOid --jq .headRefOid` ? head : undefined,
-  })
-
 test('an upgrade run hands new commits to the Reviewer and marks an untouched update ready', async () => {
   const moved = upgrade('def\n')
   await moved.end()
@@ -299,7 +299,7 @@ test('a turn that dies on an API error crashes the run', async () => {
 test('the session end that closing a run fires is ignored', async () => {
   const run = factory()
   await run.end()
-  assert.deepEqual(run.echoes, [{ status: 404, body: 'No run in progress for this report' }])
+  assert.deepEqual(run.sessionEnds, [{ status: 404, body: 'No run in progress for this report' }])
   assert.equal(run.writes.length, 2)
   assert.deepEqual(run.closed, ['w7'])
 })

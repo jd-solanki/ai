@@ -116,7 +116,7 @@ test('claudeArgs has each run-ending hook report to the factory server under the
   assert.notEqual(review().token, launched.token)
 })
 
-// Stubs on PATH: herdr runs the typed command through sh, claude exits before its hooks load, curl logs its report.
+// Stubs on PATH: herdr logs each call and runs the typed command through sh, claude exits before its hooks load, curl logs its report.
 const bin = mkdtempSync(join(tmpdir(), 'software-factory-bin-'))
 after(() => rmSync(bin, { recursive: true }))
 const stub = (name: string, body: string) => {
@@ -174,7 +174,7 @@ test('startSession labels the run tab, and a rename herdr refuses still launches
   assert.equal(readFileSync(join(bin, 'herdr.log'), 'utf8'), 't1|PR #12 - Kiosk pairing\n')
 })
 
-test('startSession types the command only once the new pane shows its prompt', async () => {
+test("startSession types the command only once the shell's prompt is up", async () => {
   writeFileSync(join(bin, 'calls.log'), '')
   assert.equal((await startSession(review(), bin)).ok, true)
   assert.deepEqual(readFileSync(join(bin, 'calls.log'), 'utf8').split('\n'), [
@@ -186,7 +186,7 @@ test('startSession types the command only once the new pane shows its prompt', a
   ])
 })
 
-test('startSession closes the workspace of a pane whose prompt never shows', async (t) => {
+test("startSession closes the workspace when the shell's prompt never comes up", async (t) => {
   t.after(() => delete process.env.WAIT_EXIT)
   process.env.WAIT_EXIT = '1'
   writeFileSync(join(bin, 'calls.log'), '')
