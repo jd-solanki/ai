@@ -82,6 +82,10 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
 - **One summary comment, edited in place every round.** It opens with `<!-- review-pr:summary -->`,
   which is how the next round finds it, and carries the score and the rest of the report in the
   shape below. A second summary comment splits the record.
+- **The summary's second line is the round's verdict**, read by the software factory to pick
+  who acts next: `dry` when the round is dry, a first round included; `tasks` when it leaves
+  tasks for an implementer; `ended` when what is left goes to a human, because the review has
+  ended or nothing is left but Unproven findings.
 - **The round is read off the pull request.** No summary comment means a first round. One means a
   later round, and the threads of the last review are its task list.
 - **A thread's state is the implementer's report.** Resolved claims `done`. Unresolved with a
@@ -105,6 +109,7 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 
 ```markdown
 <!-- review-pr:summary -->
+<!-- review-pr:verdict <dry, tasks or ended> -->
 ## 🔍 Review: <N>/10 — <the score table's Action>
 
 <the score's one line of reason>
