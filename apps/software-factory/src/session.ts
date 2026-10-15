@@ -142,18 +142,27 @@ function hooks(release: string[], failure: string[]) {
 // A hook command runs in a shell; a comment body must reach gh as one argument.
 const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`).join(' ')
 
-function run(file: string, args: string[], cwd?: string): Promise<{ ok: boolean; output: string }> {
+interface Outcome {
+  ok: boolean
+  output: string
+}
+
+function run(file: string, args: string[], cwd?: string): Promise<Outcome & { stdout: string }> {
   return new Promise((resolve) => {
     execFile(file, args, { cwd }, (error, stdout, stderr) =>
-      // A missing binary prints nothing; its error is the output.
-      resolve({ ok: !error, output: stdout + stderr || (error?.message ?? '') }),
+      // A missing binary prints nothing. Its code says why; its message would repeat the whole command line.
+      resolve({
+        ok: !error,
+        stdout,
+        output: stdout + stderr || (error ? `${file} failed: ${error.code ?? error.signal}` : ''),
+      }),
     )
   })
 }
 
 // `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
-// A herdr agent puts the session in the owner's agent list, to watch and answer; herdr must be running.
-export async function startSession({ args, name }: Launch, cwd: string) {
+// A herdr workspace puts the session in the owner's agent list; herdr must be running.
+export async function startSession({ args, name }: Launch, cwd: string): Promise<Outcome> {
   await run('git', ['fetch', 'origin'], cwd)
   await run('git', ['remote', 'set-head', 'origin', '--auto'], cwd)
   const created = await run('herdr', [
@@ -167,7 +176,9 @@ export async function startSession({ args, name }: Launch, cwd: string) {
   ])
   let pane: { pane_id: string; workspace_id: string }
   try {
-    pane = JSON.parse(created.output).result.root_pane
+    // A warning on stderr must not break the parse.
+    pane = JSON.parse(created.stdout).result.root_pane
+    if (!pane.pane_id) throw new Error('no root pane')
   } catch {
     // Thrown, it would crash the server with the claim held.
     return { ok: false, output: `herdr workspace create: ${created.output}` }
@@ -191,4 +202,4 @@ export async function startSession({ args, name }: Launch, cwd: string) {
   await run('herdr', ['workspace', 'close', pane.workspace_id])
   return { ok: false, output: `herdr pane ${prompt.ok ? 'run' : 'wait-output'}: ${started.output}` }
 }
-export const gh = (args: string[]) => run('gh', args)
+export const gh = (args: string[]): Promise<Outcome> => run('gh', args)
