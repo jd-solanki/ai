@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
+import type { Runs } from '../src/run-end.ts'
 import type { Launch } from '../src/session.ts'
 import { handleWebhook } from '../src/webhook.ts'
 
@@ -36,17 +37,19 @@ function signed(body: Buffer, key = secret) {
   }
 }
 
-function factory(ok = true, claimed = true) {
+function factory(ok: boolean = true, claimed = true) {
   const started: string[] = []
   const labelEdits: string[] = []
+  const runs: Runs = new Map()
   return {
     started,
     labelEdits,
+    runs,
     secret,
     reposDir,
     startSession: async (_launch: Launch, cwd: string) => {
       started.push(cwd)
-      return { ok, output: 'claude output' }
+      return ok ? { ok, output: 'claude output', workspace: 'w7' } : { ok, output: 'claude output' }
     },
     gh: async (args: string[]) => {
       labelEdits.push(args.slice(3).join(' '))
@@ -141,4 +144,18 @@ test('handleWebhook ignores a trigger label on a claimed work item and removes i
   })
   assert.deepEqual(served.labelEdits, ['--remove-label agent:review'])
   assert.deepEqual(served.started, [])
+})
+
+test('handleWebhook tracks each run it starts', async () => {
+  const body = reviewRequest('acme/app')
+  const served = factory()
+  await handleWebhook(signed(body), body, served)
+  assert.deepEqual(
+    [...served.runs.values()].map((run) => [run.workspace, run.release.join(' ')]),
+    [['w7', 'pr edit https://github.com/acme/app/pull/12 --remove-label agent:reviewing']],
+  )
+
+  const unstarted = factory(false)
+  await handleWebhook(signed(body), body, unstarted)
+  assert.equal(unstarted.runs.size, 0)
 })

@@ -41,5 +41,6 @@ _Avoid_: lock, assignment
 ## Where it lives
 
 `apps/software-factory/src/session.ts` (`TRIGGERS`, `claudeArgs`), `apps/software-factory/src/webhook.ts` (`handleWebhook`: what a
-GitHub event must pass to start a run), `apps/software-factory/README.md` (Add a project: the labels a served
+GitHub event must pass to start a run), `apps/software-factory/src/run-end.ts` (`handleRunReport`: when
+a run's working label comes off), `apps/software-factory/README.md` (Add a project: the labels a served
 repo needs).

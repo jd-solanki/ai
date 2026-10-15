@@ -1,4 +1,8 @@
 import { execFile } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
+
+// Where the factory server listens, for GitHub and for a session's run reports.
+export const PORT = 3456
 
 const TRIGGERS = [
   {
@@ -57,8 +61,11 @@ export interface WebhookPayload {
 export interface Launch {
   args: string[]
   name: string
+  // A session reports to the server under it; anyone who can reach the server could otherwise end a run.
+  token: string
   claim: string[]
   release: string[]
+  crash: (why: string) => string[]
 }
 
 export function claudeArgs(
@@ -86,14 +93,7 @@ export function claudeArgs(
 
   const name = `${trigger.label} ${payload.repository.name}#${subject.number}`
   const mention = `@${payload.sender.login}`
-  const release = [...edit, '--remove-label', working]
-  const failure = [
-    kind,
-    'comment',
-    url,
-    '--body',
-    `${mention} the ${trigger.label} run stopped on an API error before it finished. Apply ${trigger.label} again to retry.`,
-  ]
+  const token = randomUUID()
   const args = [
     '--name',
     name,
@@ -111,7 +111,7 @@ export function claudeArgs(
     `You run unattended for the software factory: nobody reads this terminal or answers a question asked in it. ${mention} applied ${trigger.label}: anything they must do or decide goes on ${url}, mentioning them. ${trigger.handOff}`,
     '--settings',
     JSON.stringify({
-      hooks: hooks(release, failure),
+      hooks: hooks(token),
       permissions: { allow: trigger.allow ?? [] },
       // The owner's `baseRef: head` would branch from whatever the clone has checked out, skills and all.
       worktree: { baseRef: 'fresh' },
@@ -121,21 +121,36 @@ export function claudeArgs(
   return {
     args,
     name,
+    token,
     claim: [...edit, '--remove-label', trigger.label, '--add-label', working],
-    release,
+    release: [...edit, '--remove-label', working],
+    crash: (why) => [
+      kind,
+      'comment',
+      url,
+      '--body',
+      `${mention} the ${trigger.label} run ${why} before it finished. Apply ${trigger.label} again to retry.`,
+    ],
   }
 }
 
-// Stop fires after every turn, and a turn that ends while subagents run is not the end of the run.
-// ponytail: a turn that ends on a question with nothing running still releases the claim while the session is open.
-// Sessions are told nobody answers; gate on a done signal if a re-trigger ever doubles a run.
-// A turn that dies on an API error never reaches Stop, so StopFailure releases the claim and says so.
-function hooks(release: string[], failure: string[]) {
-  const idle = `node -e 'process.exit(JSON.parse(require("fs").readFileSync(0)).background_tasks.length ? 1 : 0)'`
-  const hook = (command: string) => [{ hooks: [{ type: 'command', command, timeout: 60 }] }]
+// The server decides how a run ends: each hook only hands it the hook's input.
+function hooks(token: string) {
+  const report = (hook: string) => [
+    {
+      hooks: [
+        {
+          type: 'command',
+          command: `curl -sS --data-binary @- http://localhost:${PORT}/runs/${token}/${hook}`,
+          timeout: 60,
+        },
+      ],
+    },
+  ]
   return {
-    Stop: hook(`${idle} && ${shell(['gh', ...release])}`),
-    StopFailure: hook(`${shell(['gh', ...release])}; ${shell(['gh', ...failure])}`),
+    Stop: report('Stop'),
+    StopFailure: report('StopFailure'),
+    SessionEnd: report('SessionEnd'),
   }
 }
 
@@ -162,7 +177,10 @@ function run(file: string, args: string[], cwd?: string): Promise<Outcome & { st
 
 // `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
 // A herdr workspace puts the session in the owner's agent list; herdr must be running.
-export async function startSession({ args, name }: Launch, cwd: string): Promise<Outcome> {
+export async function startSession(
+  { args, name }: Launch,
+  cwd: string,
+): Promise<(Outcome & { ok: false }) | (Outcome & { ok: true; workspace: string })> {
   await run('git', ['fetch', 'origin'], cwd)
   await run('git', ['remote', 'set-head', 'origin', '--auto'], cwd)
   const created = await run('herdr', [
@@ -197,9 +215,14 @@ export async function startSession({ args, name }: Launch, cwd: string): Promise
   const started = prompt.ok
     ? await run('herdr', ['pane', 'run', pane.pane_id, shell(['claude', ...args])])
     : prompt
-  if (started.ok) return started
+  if (started.ok) return { ...started, ok: true, workspace: pane.workspace_id }
   // The claim is released on failure, so a session that came up late must not run unclaimed.
-  await run('herdr', ['workspace', 'close', pane.workspace_id])
+  await closeWorkspace(pane.workspace_id)
   return { ok: false, output: `herdr pane ${prompt.ok ? 'run' : 'wait-output'}: ${started.output}` }
+}
+export async function closeWorkspace(workspace: string): Promise<Outcome> {
+  const closed = await run('herdr', ['workspace', 'close', workspace])
+  // A workspace a human closed first is closed all the same.
+  return { ...closed, ok: closed.ok || closed.output.includes('workspace_not_found') }
 }
 export const gh = (args: string[]): Promise<Outcome> => run('gh', args)
