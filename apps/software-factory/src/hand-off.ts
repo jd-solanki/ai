@@ -93,20 +93,22 @@ async function nextStep(work: WorkItem, gh: Gh): Promise<Step> {
 }
 
 // A verdict counts only from a summary this run edited: an older one belongs to an earlier round.
+// It counts only from the factory's own login too: an HTML comment does not render, so anyone could plant one.
 // shortcut: compares this machine's clock with GitHub's, so a clock seconds off misreads a review that ends within seconds of its claim, compare the reviewed head instead if that happens.
 async function readVerdict(work: WorkItem, gh: Gh) {
+  const me = (await read(gh, ['api', 'user', '--jq', '.login'])).trim()
   const comments = await read(gh, [
     'api',
     `repos/${work.repo}/issues/${work.number}/comments`,
     '--paginate',
     '--jq',
-    '.[] | {updated_at, body} | tojson',
+    '.[] | {login: .user.login, updated_at, body} | tojson',
   ])
   const summary = comments
     .split('\n')
     .filter(Boolean)
-    .map((line): { updated_at: string; body: string } => JSON.parse(line))
-    .find(({ body }) => body.includes('<!-- review-pr:summary -->'))
+    .map((line): { login: string; updated_at: string; body: string } => JSON.parse(line))
+    .find(({ login, body }) => login === me && body.startsWith('<!-- review-pr:summary -->'))
   if (!summary || Date.parse(summary.updated_at) < Date.parse(work.claimedAt)) return undefined
   return /<!-- review-pr:verdict (\w+) -->/.exec(summary.body)?.[1]
 }
