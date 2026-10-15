@@ -1,12 +1,13 @@
 import { execFileSync } from 'node:child_process'
-import { clampSelection, findCard, render, toColumns, type Selection } from './board.ts'
+import { cardAt, clampSelection, findCard, render, toColumns, type Selection } from './board.ts'
 import { splitKeys } from './keys.ts'
 
 const herdr = process.env.HERDR_BIN_PATH ?? 'herdr'
 // shortcut: polls the snapshot because the herdr CLI has no event stream; move to the socket's events.subscribe if polling ever lags.
 const REFRESH_MS = 1000
-const ENTER_FULL_SCREEN = '\x1b[?1049h\x1b[?25l' // alternate screen, cursor hidden
-const LEAVE_FULL_SCREEN = '\x1b[?25h\x1b[?1049l'
+const ENTER_FULL_SCREEN = '\x1b[?1049h\x1b[?25l\x1b[?1000h\x1b[?1006h' // alternate screen, cursor hidden, SGR mouse clicks
+const LEAVE_FULL_SCREEN = '\x1b[?1006l\x1b[?1000l\x1b[?25h\x1b[?1049l'
+const LEFT_CLICK = /^\x1b\[<0;(\d+);(\d+)M$/
 const CLEAR_SCREEN = '\x1b[H\x1b[2J'
 const KEY_STEPS: Record<string, { column: number; card: number }> = {
   '\x1b[A': { column: 0, card: -1 },
@@ -38,7 +39,7 @@ function selectedCard() {
 function draw() {
   const { columns: width, rows: height } = process.stdout
   const board = render(columns, selected, width, failure ? height - 1 : height)
-  process.stdout.write(`${CLEAR_SCREEN}${board}${failure ? `\n${failure}` : ''}`)
+  process.stdout.write(`${CLEAR_SCREEN}${board}${failure ? `\n\x1b[31m${failure}\x1b[0m` : ''}`)
 }
 
 function refresh() {
@@ -65,9 +66,19 @@ function focusSelected() {
   }
 }
 
+function click(x: number, y: number) {
+  const card = cardAt(columns, process.stdout.columns, x, y)
+  if (!card) return
+  selected = card
+  draw()
+  focusSelected()
+}
+
 function press(key: string) {
   if (QUIT_KEYS.includes(key)) process.exit(0)
   if (key === '\r') return focusSelected()
+  const leftClick = key.match(LEFT_CLICK)
+  if (leftClick) return click(Number(leftClick[1]), Number(leftClick[2]))
   const step = KEY_STEPS[key]
   if (!step) return
   selected = clampSelection(columns, {

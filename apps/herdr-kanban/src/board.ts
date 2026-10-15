@@ -65,22 +65,56 @@ export function clampSelection(columns: Column[], { column, card }: Selection): 
   return { column: clampedColumn, card: clamp(card, columns[clampedColumn].cards.length - 1) }
 }
 
+// A column is a header row and a blank row, then each card: title, provider line, blank row.
+const HEADER_ROWS = 2
+const CARD_ROWS = 3
+// herdr's sidebar colours each state from its theme; these are the same colours from the terminal's palette.
+const STATE_COLORS: Record<string, string> = {
+  working: '33',
+  blocked: '31',
+  done: '36',
+  idle: '32',
+  unknown: '90',
+}
+
+const style = (codes: string, text: string) => `\x1b[${codes}m${text}\x1b[0m`
+const fit = (text: string, size: number) => text.slice(0, Math.max(size - 1, 0)).padEnd(size)
+
 // shortcut: no scrolling and titles are cut by code unit, so wide emoji can shift a column; scroll once a column outgrows the pane.
 export function render(columns: Column[], selected: Selection, width: number, height: number) {
   const columnWidth = Math.floor(width / columns.length)
-  const cell = (text: string) => text.slice(0, columnWidth - 1).padEnd(columnWidth)
-  const highlight = (line: string) => `\x1b[7m${line}\x1b[27m`
-  const blocks = columns.map((column, columnIndex) => [
-    cell(`${column.status.toUpperCase()} (${column.cards.length})`),
-    cell(''),
-    ...column.cards.flatMap((card, cardIndex) => {
-      const lines = [cell(card.title), cell(`${card.provider} · ${card.workspace}`)]
-      const isSelected = columnIndex === selected.column && cardIndex === selected.card
-      return [...(isSelected ? lines.map(highlight) : lines), cell('')]
-    }),
-  ])
+  const blank = fit('', columnWidth)
+  const blocks = columns.map((column, columnIndex) => {
+    const color = STATE_COLORS[column.status]
+    const header = `● ${column.status.toUpperCase()} ${column.cards.length}`
+    return [
+      style(`1;${color}`, fit(header, columnWidth)),
+      blank,
+      ...column.cards.flatMap((card, cardIndex) => {
+        const isSelected = columnIndex === selected.column && cardIndex === selected.card
+        const bar = isSelected ? style(color, '▌') : ' '
+        const titleStyle = isSelected ? `1;${color}` : '1'
+        return [
+          `${bar} ${style(titleStyle, fit(card.title, columnWidth - 2))}`,
+          `${bar} ${style('2', fit(`${card.provider} · ${card.workspace}`, columnWidth - 2))}`,
+          blank,
+        ]
+      }),
+    ]
+  })
   const rowCount = Math.min(height, Math.max(...blocks.map((block) => block.length)))
   return Array.from({ length: rowCount }, (_, row) =>
-    blocks.map((block) => block[row] ?? cell('')).join(''),
+    blocks.map((block) => block[row] ?? blank).join(''),
   ).join('\n')
+}
+
+// x and y are 1-based terminal cells, as a mouse report gives them.
+export function cardAt(columns: Column[], width: number, x: number, y: number) {
+  const column = Math.floor((x - 1) / Math.floor(width / columns.length))
+  const cardRow = y - 1 - HEADER_ROWS
+  const card = Math.floor(cardRow / CARD_ROWS)
+  const isOnCard = cardRow >= 0 && cardRow % CARD_ROWS < CARD_ROWS - 1
+  if (column < columns.length && isOnCard && card < columns[column].cards.length) {
+    return { column, card }
+  }
 }
