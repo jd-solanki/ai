@@ -18,10 +18,15 @@ While working on it, link the folder instead: `herdr plugin link apps/herdr-kanb
 ## Use it
 
 ```bash
-herdr plugin pane open --plugin jd-solanki.herdr-kanban --entrypoint board
+ws=$(herdr workspace create --label Kanban --no-focus)
+herdr plugin pane open --plugin jd-solanki.herdr-kanban --entrypoint board \
+  --workspace "$(jq -r .result.workspace.workspace_id <<<"$ws")"
+herdr tab close "$(jq -r .result.tab.tab_id <<<"$ws")"
 ```
 
-It opens as a tab, so you can keep it open and move to other tabs and workspaces.
+It opens in its own workspace, Kanban, so it sits in the sidebar one click away while you work in other workspaces. The last line closes the empty shell tab the new workspace starts with. The script needs `jq`.
+
+To open it as a tab in the current workspace instead, run only `herdr plugin pane open --plugin jd-solanki.herdr-kanban --entrypoint board`.
 
 Arrow keys or `hjkl` move between cards. Enter, or a click on a card, focuses that herdr agent and leaves the board open. Each column takes the colour herdr's sidebar gives its state, from your terminal's palette. `q` closes it. The board refreshes every second.
 
