@@ -245,8 +245,15 @@ export async function startSession(
     : prompt
   if (started.ok) return { ...started, ok: true, workspace: pane.workspace_id }
   // The claim is released on failure, so a session that came up late must not run unclaimed.
-  await closeWorkspace(pane.workspace_id)
-  return { ok: false, output: `herdr pane ${prompt.ok ? 'run' : 'wait-output'}: ${started.output}` }
+  const failed = `herdr pane ${prompt.ok ? 'run' : 'wait-output'}: ${started.output}`
+  const closed = await closeWorkspace(pane.workspace_id)
+  if (closed.ok) return { ok: false, output: failed }
+  // The workspace may hold a session: its run keeps the claim until its end is reported.
+  return {
+    ok: true,
+    workspace: pane.workspace_id,
+    output: `${failed}\nherdr workspace close: ${closed.output}`,
+  }
 }
 export async function closeWorkspace(workspace: string): Promise<Outcome> {
   const closed = await run('herdr', ['workspace', 'close', workspace])

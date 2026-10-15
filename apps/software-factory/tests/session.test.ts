@@ -137,3 +137,17 @@ test('startSession has the shell report the end of a claude that exits before it
     `-sS -X POST http://localhost:3456/runs/${launched.token}/SessionEnd\n`,
   )
 })
+
+test('startSession keeps the claim of a failed launch whose workspace will not close', async (t) => {
+  t.after(() => {
+    delete process.env.RUN_EXIT
+    delete process.env.CLOSE_EXIT
+  })
+  process.env.RUN_EXIT = '1'
+  process.env.CLOSE_EXIT = '1'
+  const kept = await startSession(review(), bin)
+  assert.equal(kept.ok, true)
+  assert.equal(kept.ok && kept.workspace, 'w1')
+  process.env.CLOSE_EXIT = '0'
+  assert.equal((await startSession(review(), bin)).ok, false)
+})
