@@ -20,6 +20,10 @@ The agents that `agent:implement`, `agent:review`, `agent:fix` and `agent:upgrad
 A pull request that bumps dependency versions and carries their release notes in its body,
 as Renovate opens one.
 
+**Verdict**:
+How a review round ended: `dry`, `tasks` or `ended`.
+_Avoid_: result, review status
+
 ## Rules
 
 - The stages, in order:
@@ -33,17 +37,18 @@ as Renovate opens one.
      is done, leaving one commit per AFK issue on the spec branch. It then reviews the
      branch with `/code-review`, fixes what that finds, and opens a draft pull request
      with `/create-pr`.
-  5. The Implementer hands the draft over with `agent:review` and exits. Review runs and
+  5. The Implementer exits, and static code hands the draft to the Reviewer. Review runs and
      Fixer runs alternate until a review comes back dry, which is the approval: `/review-pr`
-     defines dry, and files what the review leaves for later as one issue. The pull request body is then rewritten with `/create-pr`, keeping every
-     `Closes` line, and the pull request is marked ready for review.
+     defines dry, and files what the review leaves for later as one issue. The Reviewer then rewrites the pull
+     request body with `/create-pr`, keeping every `Closes` line, and static code marks the pull
+     request ready for review.
   6. A human merges, then does the Owner steps.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
   runs `/implement` with instructions appended: the release notes are the spec, and the code
   ends as it would read had it been written against the new versions. With commits, it pushes
-  them onto the update's branch and hands it to the Reviewer, and stage 5 follows. With none,
-  it marks the pull request ready for review. Renovate's body stays: it carries the
+  them onto the update's branch, static code hands it to the Reviewer, and stage 5 follows.
+  With none, static code marks the pull request ready for review. Renovate's body stays: it carries the
   Upgrader's spec.
 - The Upgrader matches the upstream issues and pull requests the release notes name against the
   repository's open issues and pull requests, and comments on each match. A commit that does an
@@ -88,6 +93,10 @@ as Renovate opens one.
 - `/review-pr` caps the review runs a pull request gets and counts them in the summary
   comment. A last review that leaves findings open ends the alternation: the pull
   request stays a draft, and a human decides what happens to the open findings.
+- Static code hands a work item on at its run's clean stop, from what GitHub shows then; a
+  crash hands nothing on. A run with no next step on GitHub waits on whoever applied its
+  trigger label.
+- A review run's verdict is the one `/review-pr` writes into its summary comment.
 
 ## Reasons
 
@@ -123,6 +132,16 @@ as Renovate opens one.
 - `/create-spec` never triggers: a human reads a spec before an unattended run spends
   budget, and the skill stays usable in repos the factory does not serve.
 - Merge stays human: the Reviewer has no track record yet.
+- The hand-off is static code's because a session told to hand off as its last action, at the
+  end of a long run, forgets, and auto mode refused one it never saw requested. A session
+  writes only what needs a model: code, findings, a pull request body, a HITL issue.
+- The verdict is a marker written for static code, not read off the summary's prose or the
+  threads: the Tasks heading's mark ignores Unproven findings and failed checks, and a thread
+  the Reviewer accepts after a Fixer's `blocked` reply stays unresolved.
+- A Fixer run with no commits still goes to the Reviewer: its `blocked` replies need judging.
+- Waiting on a human is an assignment, which queues the work item under the human's assigned
+  items: every factory write runs as the factory owner, so the factory's mention never
+  notifies the owner.
 - A changed decision or a wrong spec line goes to a human because the owner holds the
   one-way doors; by the pull request, the code already rests on the agent's call.
 - This file is the only definition of the pipeline, so served repos carry no copy.
@@ -131,7 +150,7 @@ as Renovate opens one.
 
 - **A review cannot approve the pull request natively.** Every run acts as the factory
   owner's GitHub login, and GitHub refuses an author's approval of their own pull request,
-  so a review with no findings is the approval. `apps/software-factory/src/session.ts:TRIGGERS`
+  so a review with no findings is the approval. `apps/software-factory/src/hand-off.ts:NEXT_STEPS`
 
 - **Renovate's rebase checkbox drops the Upgrader's commits.** Renovate stops rebasing a
   branch once another author commits to it, and the checkbox recreates the branch from
@@ -139,5 +158,6 @@ as Renovate opens one.
 
 ## Where it lives
 
-`apps/software-factory/src/session.ts` (`TRIGGERS`: the skill each trigger label starts), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
+`apps/software-factory/src/session.ts` (`TRIGGERS`: the skill each trigger label starts),
+`apps/software-factory/src/hand-off.ts` (`NEXT_STEPS`: where each run hands its work item), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
 `create-pr`), `.agents/skills/` (`grill-with-docs`, `implement`), `apps/software-factory/README.md` (Add a project: the labels a served repo needs).

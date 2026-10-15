@@ -1,6 +1,10 @@
+import { handOff } from './hand-off.ts'
 import type { closeWorkspace, gh, Launch } from './session.ts'
 
-export type Runs = Map<string, Pick<Launch, 'name' | 'release' | 'crash'> & { workspace: string }>
+export type Runs = Map<
+  string,
+  Pick<Launch, 'name' | 'work' | 'release' | 'crash'> & { workspace: string }
+>
 
 interface Factory {
   runs: Runs
@@ -8,7 +12,7 @@ interface Factory {
   closeWorkspace: typeof closeWorkspace
 }
 
-// A run ends at its clean stop, or crashes when its session ends any other way.
+// A run ends at its clean stop, handing its work item on, or crashes when its session ends any other way.
 // shortcut: a report sent while the server is down, or a session killed with no SessionEnd, leaves the claim held, poll herdr for run workspaces if that happens.
 export async function handleRunReport(
   path: string,
@@ -41,10 +45,10 @@ export async function handleRunReport(
     runs.set(token, run)
     return { status: 500, body: `${run.name}: ${closed.output.trim()}` }
   }
-  const outcomes = [await gh(run.release)]
-  if (why) outcomes.push(await gh(run.crash(why)))
+  const { outcomes, did } = why
+    ? { outcomes: [await gh(run.release), await gh(run.crash(why))], did: 'Crashed' }
+    : await handOff(run, gh)
   const failed = outcomes.filter((outcome) => !outcome.ok)
-  const outcome =
-    failed.map(({ output }) => output.trim()).join('\n') || (why ? 'Crashed' : 'Ended')
+  const outcome = failed.map(({ output }) => output.trim()).join('\n') || did
   return { status: failed.length ? 500 : 200, body: `${run.name}: ${outcome}` }
 }

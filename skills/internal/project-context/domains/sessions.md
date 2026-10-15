@@ -1,7 +1,5 @@
 # Sessions
 
-confidence: provisional — who hands a work item off is still open.
-
 ## Words
 
 **Session boundary**:
@@ -28,8 +26,8 @@ _Avoid_: failure
 - Where static code takes over a git or GitHub write, it derives the text from GitHub: a
   sub-issue's title is the commit subject, and the spec's title is the pull request
   title. A session writes no meta file for static code to read.
-- A run ends at its clean stop: static code releases the claim and closes the run's
-  workspace. A turn that ends on a question in the terminal is a clean stop too.
+- A run ends at its clean stop: static code closes the run's workspace, releases the claim
+  and hands the work item on. A turn that ends on a question in the terminal is a clean stop too.
 - The factory server alone decides how a run ends. A session's hooks only report Stop,
   StopFailure and SessionEnd to it.
 - A crash releases the claim and asks whoever applied the trigger label to apply it again.
@@ -43,9 +41,8 @@ _Avoid_: failure
   - A session that only edits code spends its context on the code.
 - The boundary gives way to the skills: they already run git and `gh`, so the factory
   starts from them.
-- A hand-off is the session's, and so is telling a human what is left for them: only it
-  knows the outcome that picks the next agent or the human step. A skipped hand-off stalls
-  in plain sight, as a pull request with no `agent:*` label.
+- The hand-off follows the boundary: static code picks the next step from GitHub, as
+  `pipeline.md` says.
 - The walk stays in the session because its inputs live on GitHub and the spec branch: a
   re-trigger recomputes it, so a mis-step costs one re-run, and a walk in static code
   rebuilds what `/implement-spec` already does.
@@ -56,7 +53,7 @@ _Avoid_: failure
 - Review runs at higher effort than implementation: review depth decides how many rounds
   a pull request takes, and implementation time is the factory's bottleneck.
 - Every session runs in auto mode, whatever the owner's default: each trigger's `allow` and
-  hand-off assume it, and under a manual default a run stops at its first approval prompt.
+  instructions assume it, and under a manual default a run stops at its first approval prompt.
 - Closing the workspace makes a run last as long as its process, so a released run cannot
   wake up again without a claim. herdr's state cannot mark the end instead: herdr itself
   says `idle` and `done` do not prove completion.
@@ -89,9 +86,9 @@ _Avoid_: failure
   pins `fresh`. `fresh` reads the clone's `origin/HEAD`, which moves only on a fetch and keeps
   the default branch it was cloned with, so `startSession` fetches and runs `set-head` first.
   `apps/software-factory/src/session.ts:claudeArgs`
-- **Auto mode refuses a hand-off it never saw requested.** The hand-off arrives in the
+- **Auto mode refuses a command it never saw requested.** Instructions arrive in the
   appended system prompt, which the classifier does not count as a request, so it denied
-  `gh pr ready` as unrequested. A trigger's `allow` grants what its hand-off needs.
+  `gh pr ready` as unrequested. A trigger's `allow` grants what its instructions need.
   `apps/software-factory/src/session.ts:TRIGGERS`
 - **`herdr agent start` never returns for a working session.** It waits until the agent is
   ready for input, and a session working on its prompt is not, so after 30 seconds it timed

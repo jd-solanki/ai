@@ -11,25 +11,23 @@ const TRIGGERS = [
     requires: 'issue:spec',
     skill: 'implement-spec',
     effort: 'medium',
-    handOff:
-      'Once the draft pull request is open, hand it to the Reviewer: apply the agent:review label to the pull request as your last action.',
   },
   {
     event: 'pull_request',
     label: 'agent:review',
     skill: 'review-pr',
     effort: 'high',
-    allow: ['Bash(gh pr ready:*)', 'Bash(gh pr edit:*)'],
-    handOff:
-      "Once the round is saved: a dry round is the approval, so rewrite the pull request body in the shape /create-pr gives one, keeping every Closes line, and mark the pull request ready for review. A body Renovate wrote stays as it is: its release notes are the Upgrader's spec. A round that left tasks, in a review that has not ended, goes to the Fixer: apply the agent:fix label to the pull request as your last action.",
+    allow: ['Bash(gh pr edit:*)'],
+    instructions:
+      "Once the round is saved: a dry round is the approval, so rewrite the pull request body in the shape /create-pr gives one, keeping every Closes line. A body Renovate wrote stays as it is: its release notes are the Upgrader's spec.",
   },
   {
     event: 'pull_request',
     label: 'agent:fix',
     skill: 'implement',
     effort: 'medium',
-    handOff:
-      "The work is the unresolved threads of the pull request's last review. Check the pull request out detached: its branch may be checked out in another worktree. Before fixing a thread, confirm its problem still holds in the current code: one that no longer does gets a reply saying why and stays unresolved. Each fix is its own commit, with a Conventional Commit subject naming the fix and no Closes footer. Push to the pull request's branch and resolve each thread you fixed, then hand back to the Reviewer: apply the agent:review label to the pull request as your last action.",
+    instructions:
+      "The work is the unresolved threads of the pull request's last review. Check the pull request out detached: its branch may be checked out in another worktree. Before fixing a thread, confirm its problem still holds in the current code: one that no longer does gets a reply saying why and stays unresolved. Each fix is its own commit, with a Conventional Commit subject naming the fix and no Closes footer. Push to the pull request's branch and resolve each thread you fixed.",
   },
   {
     event: 'pull_request',
@@ -37,9 +35,8 @@ const TRIGGERS = [
     requires: '⬆️ Renovate',
     skill: 'implement',
     effort: 'medium',
-    allow: ['Bash(gh pr ready:*)'],
-    handOff:
-      "The work is upgrading the code for the dependency update this pull request makes: leave the code as it would read had it been written against the new versions. The release notes in the pull request body are the spec; follow their links where they defer to a migration guide. Check the pull request out detached: its branch may be checked out in another worktree. Each change is its own commit, with a Conventional Commit subject; an update the code needs nothing from gets no commit. Search this repository's open issues and pull requests for the upstream issues and pull requests the release notes name. Comment on each match, not on this pull request, linking this pull request and saying what the release changes for it. A commit that does an open issue's work ends with Closes <owner>/<repo>#<n>, so the merge closes it; never close one yourself, and an issue the release does not make doable gets a comment at most. Say on this pull request what you changed or why nothing needed to. With commits, push to the pull request's branch and hand it to the Reviewer: apply the agent:review label to the pull request as your last action. With none, there is no code to review: mark the pull request ready for review as your last action.",
+    instructions:
+      "The work is upgrading the code for the dependency update this pull request makes: leave the code as it would read had it been written against the new versions. The release notes in the pull request body are the spec; follow their links where they defer to a migration guide. Check the pull request out detached: its branch may be checked out in another worktree. Each change is its own commit, with a Conventional Commit subject; an update the code needs nothing from gets no commit. Search this repository's open issues and pull requests for the upstream issues and pull requests the release notes name. Comment on each match, not on this pull request, linking this pull request and saying what the release changes for it. A commit that does an open issue's work ends with Closes <owner>/<repo>#<n>, so the merge closes it; never close one yourself, and an issue the release does not make doable gets a comment at most. Say on this pull request what you changed or why nothing needed to, and push your commits to the pull request's branch.",
   },
 ]
 
@@ -47,6 +44,7 @@ interface Subject {
   number: number
   html_url: string
   labels: { name: string }[]
+  head?: { sha: string }
 }
 
 export interface WebhookPayload {
@@ -58,11 +56,25 @@ export interface WebhookPayload {
   pull_request?: Subject
 }
 
+// What a run's hand-off reads GitHub for.
+export interface WorkItem {
+  trigger: string
+  kind: 'issue' | 'pr'
+  url: string
+  repo: string
+  number: number
+  sender: string
+  // The upgrade's head before the run, so its end can tell whether it pushed.
+  head?: string
+  claimedAt: string
+}
+
 export interface Launch {
   args: string[]
   name: string
   // A session reports to the server under it; anyone who can reach the server could otherwise end a run.
   token: string
+  work: WorkItem
   claim: string[]
   release: string[]
   crash: (why: string) => string[]
@@ -104,11 +116,11 @@ export function claudeArgs(
     'opus',
     '--effort',
     trigger.effort,
-    // Every trigger's `allow` and hand-off assume auto mode, whatever the owner's default is.
+    // Every trigger's `allow` and instructions assume auto mode, whatever the owner's default is.
     '--permission-mode',
     'auto',
     '--append-system-prompt',
-    `You run unattended for the software factory: nobody reads this terminal or answers a question asked in it. ${mention} applied ${trigger.label}: anything they must do or decide goes on ${url}, mentioning them. ${trigger.handOff}`,
+    `You run unattended for the software factory: nobody reads this terminal or answers a question asked in it. ${mention} applied ${trigger.label}: anything they must do or decide goes on ${url}, mentioning them. ${trigger.instructions ?? ''}`.trimEnd(),
     '--settings',
     JSON.stringify({
       hooks: hooks(token),
@@ -122,6 +134,16 @@ export function claudeArgs(
     args,
     name,
     token,
+    work: {
+      trigger: trigger.label,
+      kind,
+      url,
+      repo: payload.repository.full_name,
+      number: subject.number,
+      sender: payload.sender.login,
+      head: subject.head?.sha,
+      claimedAt: new Date().toISOString(),
+    },
     claim: [...edit, '--remove-label', trigger.label, '--add-label', working],
     release: [...edit, '--remove-label', working],
     crash: (why) => [
@@ -225,4 +247,4 @@ export async function closeWorkspace(workspace: string): Promise<Outcome> {
   // A workspace a human closed first is closed all the same.
   return { ...closed, ok: closed.ok || closed.output.includes('workspace_not_found') }
 }
-export const gh = (args: string[]): Promise<Outcome> => run('gh', args)
+export const gh = (args: string[]) => run('gh', args)

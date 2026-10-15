@@ -53,7 +53,7 @@ function factory(ok: boolean = true, claimed = true) {
     },
     gh: async (args: string[]) => {
       labelEdits.push(args.slice(3).join(' '))
-      return { ok: claimed, output: 'gh output' }
+      return { ok: claimed, stdout: '', output: 'gh output' }
     },
   }
 }

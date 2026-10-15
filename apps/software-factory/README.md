@@ -6,10 +6,11 @@ Put a label on a GitHub issue or pull request. A Claude Code session on your mac
 flowchart LR
   L["Label applied on GitHub"] -->|webhook| F["Tailscale Funnel"] --> S["src/server.ts"]
   S -->|"herdr pane run"| B["claude in a herdr workspace,<br/>in its own worktree"]
-  B -.->|"hands off: applies the next agent's label"| L
+  B -.->|"ends: the server applies the next agent's label"| L
 ```
 
-`TRIGGERS` in `src/session.ts` lists each label, the skill it starts, the effort it runs at, and how its session hands off.
+`TRIGGERS` in `src/session.ts` lists each label, the skill it starts, the effort it runs at, and what its session is told.
+`NEXT_STEPS` in `src/hand-off.ts` says where each run hands its work item when it ends.
 
 Each session is named `<label> <repo>#<number>`, for example `agent:implement ai#1`.
 Its herdr workspace carries the same name.
@@ -117,25 +118,29 @@ gh api "repos/$REPO/hooks/$HOOK_ID/deliveries" --jq '.[0] | "\(.event) \(.status
 
 Apply a trigger label on GitHub:
 
-- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session builds the spec's sub-issues, in parallel where none blocks another, opens a draft PR and hands it to the review.
+- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session builds the spec's sub-issues, in parallel where none blocks another, and opens a draft PR.
 - `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score.
-- `agent:fix` on a pull request. The session fixes the review's threads and hands the PR back to the review.
-- `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, brings the code in line with the new versions, and hands the PR to the review. With nothing to change, it marks the PR ready instead.
+- `agent:fix` on a pull request. The session fixes the review's threads.
+- `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, and brings the code in line with the new versions.
 
-You apply the first label. Each session applies the next one:
+You apply the first label. When a run ends, the server reads GitHub and applies the next one:
 
 ```mermaid
 flowchart LR
   I["agent:implement<br/>on a spec"] -->|"draft PR"| R["agent:review"]
   A["agent:upgrade<br/>on a Renovate PR"] -->|"commits on its branch"| R
   A -->|"nothing to change"| D
-  R -->|"findings"| X["agent:fix"] --> R
-  R -->|"no findings"| D["PR ready for review"]
-  R -->|"third review, findings open"| H["A human decides"]
+  R -->|"tasks"| X["agent:fix"] --> R
+  R -->|"dry"| D["PR ready for review"]
+  R -->|"ended"| H["Assigned to you"]
+  I -->|"no draft PR"| H
 ```
 
+The review's verdict is a marker in its summary comment, written by `/review-pr`, so each served repo needs a `/review-pr` that writes it.
+A run whose next step GitHub doesn't show, such as a review with no verdict of its own, waits on you: the work item is assigned to whoever applied the label, with a comment saying what was missing.
+
 When a run starts, the server swaps the trigger label for its `…ing` label.
-The run ends when its session stops with no background work left: the server takes the `…ing` label off and closes the run's herdr workspace.
+The run ends when its session stops with no background work left: the server closes the run's herdr workspace, takes the `…ing` label off and hands the work item on.
 A run whose session ends any other way, such as an API error, a closed workspace or herdr stopping, crashes: the label comes off too, and a comment on the work item asks for a retry.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
@@ -147,7 +152,7 @@ herdr agent list   # sessions and their state
 
 Sessions run in auto mode, whatever your default permission mode is. A session waiting on an approval stays stuck until you answer it in herdr.
 
-To add a trigger, add a line to `TRIGGERS` in `src/session.ts`, create its label in each repo, and restart the server.
+To add a trigger, add a line to `TRIGGERS` in `src/session.ts` and its next step to `NEXT_STEPS` in `src/hand-off.ts`, create its label in each repo, and restart the server.
 
 ## More
 
