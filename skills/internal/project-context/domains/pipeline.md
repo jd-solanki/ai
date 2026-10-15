@@ -131,7 +131,18 @@ _Avoid_: result, review status
   change of the code, and a list misses the next kind.
 - `/create-spec` never triggers: a human reads a spec before an unattended run spends
   budget, and the skill stays usable in repos the factory does not serve.
-- Merge stays human: the Reviewer has no track record yet.
+- Merge stays human for every pull request, Renovate's included: auto-merge was built and
+  dropped for security. jd-solanki/ai#24 holds the design.
+  - It gated on a dry review scored 10/10, or an untouched update the Upgrader said needed
+    nothing, then on Renovate's author `app/renovate`, a ruleset requiring checks and a pinned
+    head. None of those gates closes what follows.
+  - A 10/10 is an LLM's reading of code agents wrote from text anyone can write into: issues,
+    comments, upstream release notes. A prompt injected there steers the code and its score.
+  - Narrowed to Renovate's pull requests, it still merges a compromised release unread: a
+    hijacked package builds and passes CI.
+  - GitHub's auto-merge waits only on required checks, and may check the pinned head only when
+    it is enabled, so a later push from any account with write access merges unread.
+  - The Reviewer has no track record yet.
 - The hand-off is static code's because a session told to hand off as its last action, at the
   end of a long run, forgets, and auto mode refused one it never saw requested. A session
   writes only what needs a model: code, findings, a pull request body, a HITL issue.
