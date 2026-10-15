@@ -1,12 +1,20 @@
 # Sessions
 
-confidence: provisional — how a session is launched is still open, and so is when a run ends.
+confidence: provisional — who hands a work item off is still open.
 
 ## Words
 
 **Session boundary**:
 The line between what a session may do and what static code does.
 _Avoid_: sandbox
+
+**Clean stop**:
+A Stop with no background work left in the session.
+_Avoid_: done, finished
+
+**Crash**:
+A run whose session exits before a clean stop.
+_Avoid_: failure
 
 ## Rules
 
@@ -20,6 +28,11 @@ _Avoid_: sandbox
 - Where static code takes over a git or GitHub write, it derives the text from GitHub: a
   sub-issue's title is the commit subject, and the spec's title is the pull request
   title. A session writes no meta file for static code to read.
+- A run ends at its clean stop: static code releases the claim and closes the run's
+  workspace. A turn that ends on a question in the terminal is a clean stop too.
+- The factory server alone decides how a run ends. A session's hooks only report Stop,
+  StopFailure and SessionEnd to it.
+- A crash releases the claim and asks whoever applied the trigger label to apply it again.
 
 ## Reasons
 
@@ -44,13 +57,32 @@ _Avoid_: sandbox
   a pull request takes, and implementation time is the factory's bottleneck.
 - Every session runs in auto mode, whatever the owner's default: each trigger's `allow` and
   hand-off assume it, and under a manual default a run stops at its first approval prompt.
+- Closing the workspace makes a run last as long as its process, so a released run cannot
+  wake up again without a claim. herdr's state cannot mark the end instead: herdr itself
+  says `idle` and `done` do not prove completion.
+- `blocked` keeps the claim with no code: herdr shows it only while a dialog is up, inside a
+  turn, and Stop fires only after a turn ends.
+- A terminal question ends the run because a session is told nobody answers there: what it
+  needs goes on the work item, and a re-trigger resumes from the worktree.
+- The server owns a run's end so one place picks the release and the crash in tested code.
+  The cost: an end reported while the server is down, or after it restarted, leaves the claim
+  held, because the server keeps its runs in memory.
+- A crash is caught by SessionEnd, not by watching herdr. SessionEnd fires when herdr closes
+  the workspace or stops, so only `kill -9`, a power loss or a stopped factory server leave
+  the working label on, and a human removes it.
+- A run workspace herdr restores after a restart is left alone: its run already crashed on
+  shutdown, and it comes back as a shell with no session and no claim.
+- Each run reports under a random token because the server's port is public, behind
+  Tailscale Funnel: the token is what stops anyone else ending a run.
 
 ## Fences
 
-- **A Stop hook is not a done edge.** Stop fires after every turn, so a turn that ends on
-  a question, or on a wait for subagents, looks like a finished session. A turn that dies on
-  an API error never reaches Stop at all.
-  `apps/software-factory/src/session.ts:hooks`
+- **Stop alone is not a clean stop.** Stop fires after every turn, so a turn that ends on a
+  wait for subagents or a background shell looks like the end of the run. A turn that dies
+  on an API error never reaches Stop at all. `apps/software-factory/src/run-end.ts:handleRunReport`
+- **Closing a run's workspace fires its SessionEnd.** herdr's close ends the session with
+  reason `other`, the same as a crash, so the server ignores an end from a run it already
+  released. `apps/software-factory/src/run-end.ts:handleRunReport`
 - **A worktree holds only the default branch.** A skill a session needs must be pushed to the
   served repo's default branch, or the session starts without it. Claude Code branches a
   worktree from the clone's checkout under the owner's `worktree.baseRef: head`, so the factory
@@ -67,10 +99,11 @@ _Avoid_: sandbox
   instead, once the shell's prompt is up. `apps/software-factory/src/session.ts:startSession`
 - **herdr's `idle` is not the end of a run.** A turn that ends while the session's own
   background shell runs shows `idle`, then `working` again when the session resumes by itself.
-  Ending a run on herdr's state needs that ruled out. `apps/software-factory/src/session.ts:hooks`
+  A run never ends on herdr's state. `apps/software-factory/src/run-end.ts:handleRunReport`
 
 ## Where it lives
 
 `apps/software-factory/src/session.ts` (`TRIGGERS`: each agent's skill and effort; `claudeArgs` and
-`startSession`: how a session is launched), `apps/software-factory/README.md` (Conventions for every project:
+`startSession`: how a session is launched), `apps/software-factory/src/run-end.ts` (`handleRunReport`:
+how a run ends), `apps/software-factory/README.md` (Conventions for every project:
 what a served repo must hold).

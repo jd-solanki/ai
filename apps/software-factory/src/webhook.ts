@@ -2,11 +2,13 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import type { IncomingHttpHeaders } from 'node:http'
 import { join } from 'node:path'
+import type { Runs } from './run-end.ts'
 import { claudeArgs, type gh, type startSession, type WebhookPayload } from './session.ts'
 
 interface Factory {
   secret: string
   reposDir: string
+  runs: Runs
   startSession: typeof startSession
   gh: typeof gh
 }
@@ -14,7 +16,7 @@ interface Factory {
 export async function handleWebhook(
   headers: IncomingHttpHeaders,
   body: Buffer,
-  { secret, reposDir, startSession, gh }: Factory,
+  { secret, reposDir, runs, startSession, gh }: Factory,
 ): Promise<{ status: number; body?: string }> {
   const event = String(headers['x-github-event'] ?? '')
   if (!isSigned(body, headers['x-hub-signature-256'] as string | undefined, secret))
@@ -44,10 +46,11 @@ export async function handleWebhook(
   const claim = await gh(launch.claim)
   if (!claim.ok) return reply(500, claim.output.trim())
 
-  const { ok, output } = await startSession(launch, cwd)
+  const started = await startSession(launch, cwd)
+  if (started.ok) runs.set(launch.token, { ...launch, workspace: started.workspace })
   // The trigger label stays off: re-applying it sends `labeled`, which starts this run again.
-  if (!ok) await gh(launch.release)
-  return reply(ok ? 202 : 500, output.trim())
+  else await gh(launch.release)
+  return reply(started.ok ? 202 : 500, started.output.trim())
 }
 
 function received(

@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 import { claudeArgs, type WebhookPayload } from '../src/session.ts'
 
@@ -90,22 +89,13 @@ test('claudeArgs claims a work item with the working label of its trigger', () =
   assert.equal(upgrade().claim.at(-1), 'agent:upgrading')
 })
 
-test('claudeArgs releases the claim once the session is idle, or on an API error with a comment', () => {
-  const hook = (event: 'Stop' | 'StopFailure') =>
-    JSON.parse(flag(review().args, '--settings') ?? '').hooks[event][0].hooks[0].command as string
-  const released =
-    "'gh' 'pr' 'edit' 'https://github.com/acme/app/issues/12' '--remove-label' 'agent:reviewing'"
-  const [idle, stopReleased] = hook('Stop').split(' && ')
-  assert.equal(stopReleased, released)
-  const stop = (background_tasks: object[]) =>
-    spawnSync('sh', ['-c', `${idle} && echo released`], {
-      input: JSON.stringify({ background_tasks }),
-      encoding: 'utf8',
-    }).stdout
-  assert.equal(stop([]), 'released\n')
-  assert.equal(stop([{ type: 'shell', status: 'running' }]), '')
-  assert.equal(
-    hook('StopFailure'),
-    `${released}; 'gh' 'pr' 'comment' 'https://github.com/acme/app/issues/12' '--body' '@octocat the agent:review run stopped on an API error before it finished. Apply agent:review again to retry.'`,
-  )
+test('claudeArgs has each run-ending hook report to the factory server under the run token', () => {
+  const launched = review()
+  const hooks = JSON.parse(flag(launched.args, '--settings') ?? '').hooks
+  for (const hook of ['Stop', 'StopFailure', 'SessionEnd'])
+    assert.equal(
+      hooks[hook][0].hooks[0].command,
+      `curl -sS --data-binary @- http://localhost:3456/runs/${launched.token}/${hook}`,
+    )
+  assert.notEqual(review().token, launched.token)
 })

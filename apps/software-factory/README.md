@@ -53,7 +53,7 @@ pnpm factory
 In a second terminal:
 
 ```bash
-tailscale funnel --bg 3456   # the PORT in src/server.ts
+tailscale funnel --bg 3456   # the PORT in src/session.ts
 tailscale funnel status      # prints the public URL
 ```
 
@@ -134,8 +134,9 @@ flowchart LR
   R -->|"third review, findings open"| H["A human decides"]
 ```
 
-When a run starts, the server swaps the trigger label for its `…ing` label, which comes off when the session stops with no subagent still running.
-A turn that dies on an API error takes the `…ing` label off too, and says so in a comment on the work item.
+When a run starts, the server swaps the trigger label for its `…ing` label.
+The run ends when its session stops with no background work left: the server takes the `…ing` label off and closes the run's herdr workspace.
+A run whose session ends any other way, such as an API error, a closed workspace or herdr stopping, crashes: the label comes off too, and a comment on the work item asks for a retry.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
 Then, on the factory machine, each session shows in herdr's agent list, in a workspace named after it. Open it there to watch or answer.
@@ -143,8 +144,6 @@ Then, on the factory machine, each session shows in herdr's agent list, in a wor
 ```bash
 herdr agent list   # sessions and their state
 ```
-
-A session stays open after its last turn, so its workspace stays in herdr until you close it.
 
 Sessions run in auto mode, whatever your default permission mode is. A session waiting on an approval stays stuck until you answer it in herdr.
 
