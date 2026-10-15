@@ -35,6 +35,7 @@ The server finds everything by convention. Each repo it serves needs:
 4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. Ours install from `jd-solanki/ai`; the root `skills-lock.json` lists where the rest come from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
 6. A webhook to this server, using the JSON content type, the `issues` and `pull_request` events, and the secret from `.env`.
+7. Auto-merge allowed, squash merging allowed, and a ruleset requiring the CI checks on the default branch. The factory squash-merges a 10/10 dry review and a dependency update the Upgrader left untouched with GitHub's auto-merge, which waits only on required checks, so without such a ruleset it leaves the merge to you.
 
 ## Start the factory
 
@@ -94,7 +95,7 @@ gh label create agent:upgrade -R "$REPO" --force -d "Factory: upgrade the code f
 gh label create agent:upgrading -R "$REPO" --force -d "Factory: an Upgrader run holds this PR"
 ```
 
-Step 6 needs admin access to the repo, in the same shell:
+Steps 6 and 7 need admin access to the repo, in the same shell:
 
 ```bash
 # 6. Webhook
@@ -102,6 +103,9 @@ HOOK_ID=$(gh api "repos/$REPO/hooks" \
   -f "config[url]=$FUNNEL_URL" -f 'config[content_type]=json' \
   -f "config[secret]=${GITHUB_WEBHOOK_SECRET:?run from apps/software-factory so .env loads}" \
   -f 'events[]=issues' -f 'events[]=pull_request' --jq .id)
+
+# 7. Merge: then require the CI checks, as below
+gh repo edit "$REPO" --enable-auto-merge --enable-squash-merge
 ```
 
 <details>
@@ -124,6 +128,20 @@ The admin then, on GitHub:
 6. Leaves **Active** ticked and clicks **Add webhook**.
 
 GitHub sends a ping when the webhook is created. In the webhook's **Recent Deliveries** tab, a ping that reached the server shows response `200`.
+
+</details>
+
+<details>
+<summary>Step 7 on GitHub, and the ruleset that names the repo's CI checks</summary>
+
+Required checks name the jobs of the repo's own CI, so a repo admin sets them on GitHub:
+
+1. Opens the repo's **Settings → General → Pull Requests**, ticks **Allow squash merging** and **Allow auto-merge**.
+2. Opens **Settings → Rules → Rulesets → New ruleset → New branch ruleset**.
+3. Names it, sets **Enforcement status** to **Active**, and under **Target branches** adds **Include default branch**.
+4. Ticks **Require status checks to pass**, adds each CI job that must pass, and clicks **Create**.
+
+A check appears in the picker only after it has run once in the repo.
 
 </details>
 

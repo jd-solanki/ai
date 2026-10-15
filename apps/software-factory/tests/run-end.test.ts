@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { handleRunReport, type Runs } from '../src/run-end.ts'
-import { claudeArgs } from '../src/session.ts'
+import { claudeArgs, UNTOUCHED } from '../src/session.ts'
 
 const pull = 'https://github.com/acme/app/pull/12'
 const spec = 'https://github.com/acme/app/issues/12'
@@ -62,19 +62,38 @@ function factory({
   return { runs, writes, closed, report, end: () => report('Stop', { background_tasks: [] }) }
 }
 
-const summary = (updated_at: string, verdict: string, login = 'factory') =>
+const summary = (updated_at: string, verdict: string, { login = 'factory', score = 7 } = {}) =>
   JSON.stringify({
     login,
     updated_at,
-    body: `<!-- review-pr:summary -->\n<!-- review-pr:verdict ${verdict} -->\n## 🔍 Review: 7/10`,
-  })
-const review = (...comments: string[]) =>
-  factory({
-    label: 'agent:review',
-    github: (args) =>
-      args.join(' ') === 'api user --jq .login' ? 'factory\n' : comments.join('\n'),
+    body: `<!-- review-pr:summary -->\n<!-- review-pr:verdict ${verdict} -->\n## 🔍 Review: ${score}/10 — Merge`,
   })
 const fresh = '2999-01-01T00:00:00Z'
+const untouched = JSON.stringify({
+  login: 'factory',
+  updated_at: fresh,
+  body: `${UNTOUCHED}\nThe code needed nothing from this update.`,
+})
+const required = 'pull_request\nrequired_status_checks\n'
+// Answers each read a hand-off makes of a pull request whose head is still `abc`.
+const pullRequest =
+  ({ comments = [] as string[], rules = required, specs = '' } = {}) =>
+  (args: string[]) => {
+    const command = args.join(' ')
+    if (command === 'api user --jq .login') return 'factory\n'
+    if (command.includes('headRefOid')) return 'abc\n'
+    if (command.includes('baseRefName')) return 'main\n'
+    if (command.includes('/rules/branches/')) return rules
+    if (command.includes('graphql')) return specs
+    return comments.join('\n')
+  }
+const review = (...comments: string[]) =>
+  factory({ label: 'agent:review', github: pullRequest({ comments }) })
+const untouchedUpgrade = ({
+  comments = [untouched],
+  rules = required,
+  refuses = (_args: string[]): boolean => false,
+} = {}) => factory({ label: 'agent:upgrade', github: pullRequest({ comments, rules }), refuses })
 const waits = (url: string, kind: string, label: string, why: string) => [
   `${kind} edit ${url} --remove-label ${label.replace(/e?$/, 'ing')}`,
   `${kind} edit ${url} --add-assignee octocat`,
@@ -112,8 +131,66 @@ test('a dry review marks the pull request ready', async () => {
   ])
 })
 
+test('a dry review scored 10/10 merges once checks pass', async () => {
+  const run = review(summary(fresh, 'dry', { score: 10 }))
+  assert.equal((await run.end()).body, 'agent:review app#12: Set to merge once checks pass')
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:reviewing`,
+    `pr ready ${pull}`,
+    `pr merge ${pull} --auto --squash --match-head-commit abc`,
+  ])
+})
+
+test('a dry review below 10/10 leaves the merge to a human', async () => {
+  const run = review(summary(fresh, 'dry', { score: 9 }))
+  assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
+})
+
+test('a 10/10 review waits for the Owner steps its spec lists before merge', async () => {
+  const run = factory({
+    label: 'agent:review',
+    github: pullRequest({
+      comments: [summary(fresh, 'dry', { score: 10 })],
+      specs:
+        '## Owner steps\n\n- [x] After merge: tell support\n- [ ] Before merge: rotate the key\n',
+    }),
+  })
+  assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
+})
+
+test('a merge GitHub refuses waits on whoever applied the label', async () => {
+  const run = untouchedUpgrade({ refuses: (args) => args.includes('merge') })
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:upgrading`,
+    `pr ready ${pull}`,
+    `pr merge ${pull} --auto --squash --match-head-commit abc`,
+    ...waits(
+      pull,
+      'pr',
+      'agent:upgrade',
+      "the factory did not set it to merge: could not add label: 'agent:review' not found",
+    ).slice(1),
+  ])
+})
+
+test('a base branch that requires no checks keeps the merge human', async () => {
+  const run = untouchedUpgrade({ rules: 'pull_request\n' })
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:upgrading`,
+    `pr ready ${pull}`,
+    ...waits(
+      pull,
+      'pr',
+      'agent:upgrade',
+      'the factory did not set it to merge: no ruleset on main requires status checks',
+    ).slice(1),
+  ])
+})
+
 test("a verdict planted in someone else's comment is ignored", async () => {
-  const run = review(summary(fresh, 'tasks', 'mallory'), summary(fresh, 'dry'))
+  const run = review(summary(fresh, 'tasks', { login: 'mallory' }), summary(fresh, 'dry'))
   assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
 })
 
@@ -198,7 +275,7 @@ test('an implement run that opened no draft waits on whoever applied its label',
   )
 })
 
-test('an upgrade run hands new commits to the Reviewer and marks an untouched update ready', async () => {
+test('an upgrade run hands new commits to the Reviewer and merges an untouched update', async () => {
   const moved = factory({ label: 'agent:upgrade', github: () => 'def\n' })
   await moved.end()
   assert.deepEqual(moved.writes, [
@@ -206,12 +283,18 @@ test('an upgrade run hands new commits to the Reviewer and marks an untouched up
     `pr edit ${pull} --add-label agent:review`,
   ])
 
-  const untouched = factory({ label: 'agent:upgrade', github: () => 'abc\n' })
-  await untouched.end()
-  assert.deepEqual(untouched.writes, [
+  const unchanged = untouchedUpgrade()
+  await unchanged.end()
+  assert.deepEqual(unchanged.writes, [
     `pr edit ${pull} --remove-label agent:upgrading`,
     `pr ready ${pull}`,
+    `pr merge ${pull} --auto --squash --match-head-commit abc`,
   ])
+})
+
+test('an upgrade that pushed nothing and did not say the code needed nothing leaves the merge to a human', async () => {
+  const run = untouchedUpgrade({ comments: [] })
+  assert.equal((await run.end()).body, 'agent:upgrade app#12: Marked ready')
 })
 
 test('a run whose next step cannot be read waits on whoever applied its label', async () => {

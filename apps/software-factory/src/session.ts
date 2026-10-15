@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto'
 
 // Where the factory server listens, for GitHub and for a session's run reports.
 export const PORT = 3456
+// Opens the Upgrader's comment when the update needed nothing from the code, so static code may merge it.
+export const UNTOUCHED = '<!-- factory:upgrade-untouched -->'
 
 const TRIGGERS = [
   {
@@ -35,8 +37,7 @@ const TRIGGERS = [
     requires: '⬆️ Renovate',
     skill: 'implement',
     effort: 'medium',
-    instructions:
-      "The work is upgrading the code for the dependency update this pull request makes: leave the code as it would read had it been written against the new versions. The release notes in the pull request body are the spec; follow their links where they defer to a migration guide. Check the pull request out detached: its branch may be checked out in another worktree. Each change is its own commit, with a Conventional Commit subject; an update the code needs nothing from gets no commit. Search this repository's open issues and pull requests for the upstream issues and pull requests the release notes name. Comment on each match, not on this pull request, linking this pull request and saying what the release changes for it. A commit that does an open issue's work ends with Closes <owner>/<repo>#<n>, so the merge closes it; never close one yourself, and an issue the release does not make doable gets a comment at most. Say on this pull request what you changed or why nothing needed to, and push your commits to the pull request's branch.",
+    instructions: `The work is upgrading the code for the dependency update this pull request makes: leave the code as it would read had it been written against the new versions. The release notes in the pull request body are the spec; follow their links where they defer to a migration guide. Check the pull request out detached: its branch may be checked out in another worktree. Each change is its own commit, with a Conventional Commit subject; an update the code needs nothing from gets no commit. Search this repository's open issues and pull requests for the upstream issues and pull requests the release notes name. Comment on each match, not on this pull request, linking this pull request and saying what the release changes for it. A commit that does an open issue's work ends with Closes <owner>/<repo>#<n>, so the merge closes it; never close one yourself, and an issue the release does not make doable gets a comment at most. Say on this pull request what you changed or why nothing needed to, and push your commits to the pull request's branch. When you finished the work and it needed no change, open that comment with ${UNTOUCHED}; never when you stopped short of it.`,
   },
 ]
 
@@ -65,7 +66,7 @@ export interface WorkItem {
   repo: string
   number: number
   sender: string
-  // The upgrade's head before the run, so its end can tell whether it pushed.
+  // A pull request's head before the run: an upgrade's end tells from it whether it pushed, and a merge pins it.
   head?: string
   claimedAt: string
 }

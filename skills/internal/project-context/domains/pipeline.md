@@ -41,15 +41,18 @@ _Avoid_: result, review status
      Fixer runs alternate until a review comes back dry, which is the approval: `/review-pr`
      defines dry, and files what the review leaves for later as one issue. The Reviewer then rewrites the pull
      request body with `/create-pr`, keeping every `Closes` line, and static code marks the pull
-     request ready for review.
-  6. A human merges, then does the Owner steps.
+     request ready for review. When that dry review scored 10/10 and the spec it closes has no
+     unticked `Before merge:` Owner step, static code also sets it to merge once the required
+     checks pass.
+  6. A human merges, unless static code set it to merge, then does the Owner steps.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
   runs `/implement` with instructions appended: the release notes are the spec, and the code
   ends as it would read had it been written against the new versions. With commits, it pushes
   them onto the update's branch, static code hands it to the Reviewer, and stage 5 follows.
-  With none, static code marks the pull request ready for review. Renovate's body stays: it carries the
-  Upgrader's spec.
+  With none, static code marks the pull request ready for review, and sets it to merge once the
+  required checks pass when the Upgrader's comment opens with the marker `session.ts:UNTOUCHED`: the work is done and
+  the code needed nothing. Renovate's body stays: it carries the Upgrader's spec.
 - The Upgrader matches the upstream issues and pull requests the release notes name against the
   repository's open issues and pull requests, and comments on each match. A commit that does an
   open issue's work carries `Closes <owner>/<repo>#<n>`; an issue the release does not make
@@ -88,8 +91,8 @@ _Avoid_: result, review status
 - A Fixer run runs `/implement` with instructions appended: work the review's threads,
   each checked against the current code first, and resolve each one it fixes.
 - Every review run updates one summary comment on the pull request, carrying a score for
-  how ready it is to merge. `/review-pr` defines the scale. The score informs; only open
-  findings block.
+  how ready it is to merge. `/review-pr` defines the scale. The score informs, and only a
+  10/10 lets static code merge; only open findings block.
 - `/review-pr` caps the review runs a pull request gets and counts them in the summary
   comment. A last review that leaves findings open ends the alternation: the pull
   request stays a draft, and a human decides what happens to the open findings.
@@ -131,7 +134,12 @@ _Avoid_: result, review status
   change of the code, and a list misses the next kind.
 - `/create-spec` never triggers: a human reads a spec before an unattended run spends
   budget, and the skill stays usable in repos the factory does not serve.
-- Merge stays human: the Reviewer has no track record yet.
+- Static code merges only the absolute successes, a dry review scored 10/10 and an update the
+  Upgrader left untouched; every other pull request waits on a human.
+- An untouched update needs the Upgrader's word, not only an unmoved head: an Upgrader that
+  stopped short pushes nothing either.
+- A merge is GitHub's auto-merge, squashed and pinned to the head the run started from: GitHub
+  waits on the checks, and a push after the review cannot merge unreviewed.
 - The hand-off is static code's because a session told to hand off as its last action, at the
   end of a long run, forgets, and auto mode refused one it never saw requested. A session
   writes only what needs a model: code, findings, a pull request body, a HITL issue.
@@ -147,6 +155,15 @@ _Avoid_: result, review status
 - This file is the only definition of the pipeline, so served repos carry no copy.
 
 ## Fences
+
+- **The score is read off the summary's heading.** `/review-pr` writes it only into
+  `## 🔍 Review: <N>/10`, so a change to that heading's shape stops every auto-merge.
+  `apps/software-factory/src/hand-off.ts:NEXT_STEPS`
+
+- **Auto-merge waits only on required checks.** With none required, `gh pr merge --auto` merges
+  at once, failing checks included, so static code sets a merge only when a ruleset on the base
+  branch requires status checks. Classic branch protection does not count.
+  `apps/software-factory/src/hand-off.ts:mergeOnceChecksPass`
 
 - **A review cannot approve the pull request natively.** Every run acts as the factory
   owner's GitHub login, and GitHub refuses an author's approval of their own pull request,
