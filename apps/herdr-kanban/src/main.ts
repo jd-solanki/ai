@@ -21,7 +21,8 @@ const KEY_STEPS: Record<string, { column: number; card: number }> = {
 }
 const QUIT_KEYS = ['q', '\x03']
 // Piped, so herdr's stderr lands in the error message instead of on the board.
-const CAPTURED = { encoding: 'utf8', stdio: 'pipe' } as const
+// Timed out, because a blocked call freezes the quit keys.
+const CAPTURED = { encoding: 'utf8', stdio: 'pipe', timeout: 3000 } as const
 
 let columns = readColumns()
 let selected: Selection = { column: 0, card: 0 }
