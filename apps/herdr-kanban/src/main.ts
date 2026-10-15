@@ -1,5 +1,14 @@
 import { execFileSync } from 'node:child_process'
-import { cardAt, clampSelection, findCard, render, toColumns, type Selection } from './board.ts'
+import { readFileSync } from 'node:fs'
+import {
+  cardAt,
+  clampSelection,
+  findCard,
+  render,
+  rowsFrom,
+  toColumns,
+  type Selection,
+} from './board.ts'
 import { splitKeys } from './keys.ts'
 
 const herdr = process.env.HERDR_BIN_PATH ?? 'herdr'
@@ -24,13 +33,25 @@ const QUIT_KEYS = ['q', '\x03']
 // Timed out, because a blocked call freezes the quit keys.
 const CAPTURED = { encoding: 'utf8', stdio: 'pipe', timeout: 3000 } as const
 
+const rows = rowsFrom(readHerdrConfig())
 let columns = readColumns()
 let selected: Selection = { column: 0, card: 0 }
 let failure = ''
 
+// herdr gives a plugin none of its config, but its help names the file it reads, on any platform.
+function readHerdrConfig() {
+  try {
+    const path = execFileSync(herdr, ['--help'], CAPTURED).match(/^Config: (.+)$/m)?.[1]
+    return path ? readFileSync(path, 'utf8') : ''
+  } catch {
+    // No config file means herdr's defaults.
+    return ''
+  }
+}
+
 function readColumns() {
   const output = execFileSync(herdr, ['api', 'snapshot'], CAPTURED)
-  return toColumns(JSON.parse(output).result.snapshot)
+  return toColumns(JSON.parse(output).result.snapshot, rows)
 }
 
 function selectedCard() {
@@ -62,7 +83,7 @@ function focusSelected() {
   try {
     execFileSync(herdr, ['agent', 'focus', card.paneId], CAPTURED)
   } catch (error) {
-    failure = `Could not focus ${card.title}: ${(error as Error).message.split('\n')[0]}`
+    failure = `Could not focus ${card.lines.join(' ')}: ${(error as Error).message.split('\n')[0]}`
     draw()
   }
 }

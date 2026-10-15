@@ -30,6 +30,8 @@ To open it as a tab in the current workspace instead, run only `herdr plugin pan
 
 Arrow keys or `hjkl` move between cards. Enter, or a click on a card, focuses that herdr agent and leaves the board open. Each column takes the colour herdr's sidebar gives its state, from your terminal's palette. `q` closes it. The board refreshes every second.
 
+A card shows the same fields, in the same order, as that herdr agent's row in herdr's sidebar: it reads `rows` under `[ui.sidebar.agents]` from your herdr config when it opens, so reopen it after changing them. `rows_by_agent` and a style table's colours are not read, and `machine`, `pane` and `$name` fields stay empty.
+
 To keep it on a second monitor, run `herdr` in a terminal window there. Each attached client views its own workspace and tab, so that window can stay on the board while you work in the other.
 
 To reach another machine, open herdr on it with `herdr --remote` and open the board there.
