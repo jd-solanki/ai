@@ -45,16 +45,16 @@ test('toColumns puts each herdr agent in the column for its state', () => {
   assert.deepEqual(toColumns(snapshot), [
     {
       status: 'working',
-      cards: [{ paneId: 'w1:p1', lines: ['● nuxtstart', 'claude'] }],
+      cards: [{ paneId: 'w1:p1', lines: ['nuxtstart', 'claude'] }],
     },
     {
       status: 'blocked',
-      cards: [{ paneId: 'w2:p1', lines: ['● ai', 'Codex: api'] }],
+      cards: [{ paneId: 'w2:p1', lines: ['ai', 'Codex: api'] }],
     },
     { status: 'done', cards: [] },
     {
       status: 'idle',
-      cards: [{ paneId: 'w1:p2', lines: ['● nuxtstart', 'pi'] }],
+      cards: [{ paneId: 'w1:p2', lines: ['nuxtstart', 'pi'] }],
     },
   ])
 })
@@ -70,8 +70,8 @@ test("toColumns lays out a card like the herdr agent's row in the sidebar", () =
   }
   const lines = (rows: string[][]) => toColumns(snapshot, rows)[3].cards.map((card) => card.lines)
   assert.deepEqual(lines([['state_icon', 'workspace'], ['tab']]), [
-    ['● nuxtstart', 'PR #84 - Kiosk Pairing'],
-    ['● nuxtstart', ''],
+    ['nuxtstart', 'PR #84 - Kiosk Pairing'],
+    ['nuxtstart', ''],
   ])
   assert.deepEqual(
     lines([
@@ -79,8 +79,8 @@ test("toColumns lays out a card like the herdr agent's row in the sidebar", () =
       ['terminal_title', 'pane'],
     ]),
     [
-      ['nuxtstart · ● idle · claude', ''],
-      ['nuxtstart · ● idle · claude', '◐ Fix login'],
+      ['nuxtstart · idle · claude', ''],
+      ['nuxtstart · idle · claude', '◐ Fix login'],
     ],
   )
 })
@@ -111,12 +111,11 @@ test('cardAt finds the card on every row render draws it on', () => {
     { column: 0, card: 1 },
     { column: 2, card: 0 },
   ]) {
-    // The selection bar marks every row render draws the selected card on.
-    const rows = render(columns, selected, 80, 24)
-      .replace(/\x1b\[[\d;]*m/g, '')
-      .split('\n')
+    // The highlight changes every row render draws the selected card on, and only those.
+    const rows = render(columns, selected, 80, 24).split('\n')
+    const unselected = render(columns, { column: -1, card: 0 }, 80, 24).split('\n')
     const x = selected.column * 20 + 1
-    const drawn = rows.flatMap((row, i) => (row[x - 1] === '▌' ? [i + 1] : []))
+    const drawn = rows.flatMap((row, i) => (row === unselected[i] ? [] : [i + 1]))
     assert.equal(drawn.length, 2)
     for (const y of drawn) assert.deepEqual(cardAt(columns, 80, x, y), selected)
   }
@@ -152,11 +151,11 @@ test('render wraps a long line at a space, or mid-word when no space fits', () =
     .split('\n')
     .map((line) => line.slice(0, 20).trimEnd())
   assert.deepEqual(lines.slice(2, 7), [
-    '▌ PR #84 - Kiosk',
-    '▌ Pairing',
+    ' PR #84 - Kiosk',
+    ' Pairing',
     '',
-    '  Supercalifragilis',
-    '  tic',
+    ' Supercalifragilis',
+    ' tic',
   ])
 })
 
@@ -183,7 +182,7 @@ test('toColumns puts a herdr agent in a state it does not know under unknown', (
   const snapshot = { workspaces, tabs, agents: [herdrAgent('w1:p1', 'paused')] }
   assert.deepEqual(toColumns(snapshot).at(-1), {
     status: 'unknown',
-    cards: [{ paneId: 'w1:p1', lines: ['● nuxtstart', 'claude'] }],
+    cards: [{ paneId: 'w1:p1', lines: ['nuxtstart', 'claude'] }],
   })
 })
 

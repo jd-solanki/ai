@@ -67,8 +67,6 @@ export function rowsFrom(config: string): Rows {
   return isRows ? rows : DEFAULT_ROWS
 }
 
-const STATE_ICON = '●'
-
 export function toColumns(snapshot: Snapshot, rows: Rows = DEFAULT_ROWS): Column[] {
   const labels = new Map(snapshot.workspaces.map((w) => [w.workspace_id, w.label]))
   const tabLabels = new Map(snapshot.tabs.map((tab) => [tab.tab_id, tab.label]))
@@ -79,8 +77,8 @@ export function toColumns(snapshot: Snapshot, rows: Rows = DEFAULT_ROWS): Column
       .filter((agent) => columnOf(agent.agent_status) === status)
       .map((agent) => {
         // shortcut: the snapshot has no machine, pane name or $metadata, so those tokens stay empty, read them from herdr once it reports them.
+        // state_icon stays empty: the column already shows the state's colour.
         const values: Record<string, string | undefined> = {
-          state_icon: STATE_ICON,
           state_text: agent.agent_status,
           workspace: labels.get(agent.workspace_id) ?? agent.workspace_id,
           tab: tabLabels.get(agent.tab_id),
@@ -94,12 +92,12 @@ export function toColumns(snapshot: Snapshot, rows: Rows = DEFAULT_ROWS): Column
   return columns.filter((column) => STATUSES.includes(column.status) || column.cards.length)
 }
 
-// herdr drops an empty value with its separator, and puts one space after the state icon.
+// herdr drops an empty value with its separator.
 function line(row: string[], values: Record<string, string | undefined>) {
-  const kept = row.filter((token) => values[token])
-  return kept
-    .map((token, i) => (i === 0 ? '' : kept[i - 1] === 'state_icon' ? ' ' : ' · ') + values[token])
-    .join('')
+  return row
+    .map((token) => values[token])
+    .filter(Boolean)
+    .join(' · ')
 }
 
 export function findCard(columns: Column[], paneId: string): Selection | undefined {
@@ -122,6 +120,15 @@ const STATE_COLORS: Record<string, string> = {
   done: '36',
   idle: '32',
   unknown: '90',
+}
+
+// A selected card fills with its state's colour; a fixed dark or light text keeps it readable on light and dark themes alike.
+const SELECTED_COLORS: Record<string, string> = {
+  working: '30;43',
+  blocked: '97;41',
+  done: '30;46',
+  idle: '30;42',
+  unknown: '97;100',
 }
 
 const style = (codes: string, text: string) => `\x1b[${codes}m${text}\x1b[0m`
@@ -149,10 +156,10 @@ interface ColumnLine {
 }
 
 // A column top to bottom: its header and a blank line, then each card's rows wrapped to the
-// text width left by the bar, its space and the column gap, then a blank line.
+// text width left by the highlight's padding on each side and the column gap, then a blank line.
 function layoutColumn(column: Column, columnWidth: number): ColumnLine[] {
   return [
-    { text: `● ${column.status.toUpperCase()} ${column.cards.length}` },
+    { text: `${column.status.toUpperCase()} ${column.cards.length}` },
     { text: '' },
     ...column.cards.flatMap((card, cardIndex) => [
       ...card.lines.flatMap((text, row) =>
@@ -169,17 +176,13 @@ export function render(columns: Column[], selected: Selection, width: number, he
   const blank = fit('', columnWidth)
   const blocks = columns.map((column, columnIndex) => {
     const color = STATE_COLORS[column.status]
-    // 39 resets only the colour, so the icon keeps its line's bold or dim.
-    // shortcut: colours the first ● on a line, so a value before the icon that holds one takes its colour, track the icon's position if a layout needs that.
-    const icon = `\x1b[${color}m${STATE_ICON}\x1b[39m`
     return layoutColumn(column, columnWidth).map(({ text, card, row }, line) => {
-      if (line === 0) return style(`1;${color}`, fit(text, columnWidth))
+      if (line === 0) return ` ${style(`1;${color}`, fit(text, columnWidth - 1))}`
       if (card === undefined) return blank
       const isSelected = columnIndex === selected.column && card === selected.card
-      const bar = isSelected ? style(color, '▌') : ' '
-      const firstStyle = isSelected ? `1;${color}` : '1'
-      const padded = text.padEnd(columnWidth - 2).replace(STATE_ICON, icon)
-      return `${bar} ${style(row === 0 ? firstStyle : '2', padded)}`
+      const firstStyle = isSelected ? `1;${SELECTED_COLORS[column.status]}` : '1'
+      const restStyle = isSelected ? SELECTED_COLORS[column.status] : '2'
+      return `${style(row === 0 ? firstStyle : restStyle, ` ${text}`.padEnd(columnWidth - 1))} `
     })
   })
   const rowCount = Math.min(height, Math.max(...blocks.map((block) => block.length)))
