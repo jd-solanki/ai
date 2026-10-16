@@ -266,4 +266,5 @@ export async function closeWorkspace(workspace: string): Promise<Outcome> {
   // A workspace a human closed first is closed all the same.
   return { ...closed, ok: closed.ok || closed.output.includes('workspace_not_found') }
 }
-export const gh = (args: string[]) => run('gh', args)
+// The owner's gh picks its account from the directory's git user.name, so a served repo's gh runs in its clone.
+export const gh = (args: string[], cwd?: string) => run('gh', args, cwd)

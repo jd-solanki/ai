@@ -102,6 +102,10 @@ _Avoid_: failure
 - **herdr's `idle` is not the end of a run.** A turn that ends while the session's own
   background shell runs shows `idle`, then `working` again when the session resumes by itself.
   A run never ends on herdr's state. `apps/software-factory/src/run-end.ts:handleRunReport`
+- **Static code's `gh` acts as whichever account its directory names.** The owner's `gh`
+  picks the account matching the directory's git `user.name`, so a call from the server's own
+  directory acted as the wrong account and could not see a private served repo. Every `gh`
+  call for a run passes the served repo's clone as its `cwd`. `apps/software-factory/src/session.ts:gh`
 
 ## Where it lives
 

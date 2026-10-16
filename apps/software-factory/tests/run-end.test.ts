@@ -33,8 +33,9 @@ function factory({
   refuses = (_args: string[]): boolean => false,
 } = {}) {
   const run = launch(label)
-  const runs: Runs = new Map([[run.token, { ...run, workspace: 'w7' }]])
+  const runs: Runs = new Map([[run.token, { ...run, workspace: 'w7', cwd: '/repos/acme/app' }]])
   const writes: string[] = []
+  const ghDirs = new Set<string | undefined>()
   const closed: string[] = []
   const sessionEnds: { status: number; body?: string }[] = []
   const report = (hook: string, input: object | string = {}): ReturnType<typeof handleRunReport> =>
@@ -43,7 +44,8 @@ function factory({
       Buffer.from(typeof input === 'string' ? input : JSON.stringify(input)),
       {
         runs,
-        gh: async (args) => {
+        gh: async (args, cwd) => {
+          ghDirs.add(cwd)
           const read = github(args)
           if (['list', 'view', 'api'].some((verb) => args.includes(verb)))
             return read === undefined
@@ -65,6 +67,7 @@ function factory({
   return {
     runs,
     writes,
+    ghDirs,
     closed,
     sessionEnds,
     report,
@@ -113,6 +116,16 @@ test('a clean stop hands a fixed pull request back to the Reviewer and closes th
     `pr edit ${pull} --add-label agent:review`,
   ])
   assert.deepEqual(run.closed, ['w7'])
+})
+
+test("a run's end reads and writes GitHub from the served repo's clone", async () => {
+  const handedOn = review(summary(fresh, 'dry'))
+  await handedOn.end()
+  assert.deepEqual([...handedOn.ghDirs], ['/repos/acme/app'])
+
+  const crashed = factory()
+  await crashed.report('SessionEnd', { reason: 'other' })
+  assert.deepEqual([...crashed.ghDirs], ['/repos/acme/app'])
 })
 
 test('a review that leaves tasks hands the pull request to the Fixer', async () => {

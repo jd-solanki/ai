@@ -42,10 +42,12 @@ function signed(body: Buffer, key = secret) {
 function factory(ok: boolean = true, claimed = true) {
   const started: string[] = []
   const labelEdits: string[] = []
+  const ghDirs: (string | undefined)[] = []
   const runs: Runs = new Map()
   return {
     started,
     labelEdits,
+    ghDirs,
     runs,
     secret,
     reposDir,
@@ -53,7 +55,8 @@ function factory(ok: boolean = true, claimed = true) {
       started.push(cwd)
       return ok ? { ok, output: 'claude output', workspace: 'w7' } : { ok, output: 'claude output' }
     },
-    gh: async (args: string[]) => {
+    gh: async (args: string[], cwd?: string) => {
+      ghDirs.push(cwd)
       labelEdits.push(args.slice(3).join(' '))
       return { ok: claimed, stdout: '', output: 'gh output' }
     },
@@ -149,13 +152,32 @@ test('handleWebhook ignores a trigger label on a claimed work item and removes i
   assert.deepEqual(served.started, [])
 })
 
+test("handleWebhook runs gh in the served repo's clone", async () => {
+  const clone = join(reposDir, 'acme/app')
+  const unstarted = factory(false)
+  const body = reviewRequest('acme/app')
+  await handleWebhook(signed(body), body, unstarted)
+  assert.deepEqual(unstarted.ghDirs, [clone, clone])
+
+  const claimed = factory()
+  const relabelled = reviewRequest('acme/app', 'agent:review', 'agent:reviewing')
+  await handleWebhook(signed(relabelled), relabelled, claimed)
+  assert.deepEqual(claimed.ghDirs, [clone])
+})
+
 test('handleWebhook tracks each run it starts', async () => {
   const body = reviewRequest('acme/app')
   const served = factory()
   await handleWebhook(signed(body), body, served)
   assert.deepEqual(
-    [...served.runs.values()].map((run) => [run.workspace, run.release.join(' ')]),
-    [['w7', 'pr edit https://github.com/acme/app/pull/12 --remove-label agent:reviewing']],
+    [...served.runs.values()].map((run) => [run.workspace, run.cwd, run.release.join(' ')]),
+    [
+      [
+        'w7',
+        join(reposDir, 'acme/app'),
+        'pr edit https://github.com/acme/app/pull/12 --remove-label agent:reviewing',
+      ],
+    ],
   )
 
   const unstarted = factory(false)

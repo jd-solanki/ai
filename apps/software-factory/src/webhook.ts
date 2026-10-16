@@ -36,25 +36,25 @@ export async function handleWebhook(
   })
 
   const launch = claudeArgs(event, payload)
+  const cwd = join(reposDir, payload.repository.full_name)
   if ('skip' in launch) {
-    if (launch.unlabel) await gh(launch.unlabel)
+    if (launch.unlabel && existsSync(cwd)) await gh(launch.unlabel, cwd)
     return reply(200, launch.skip)
   }
 
-  const cwd = join(reposDir, payload.repository.full_name)
   if (!existsSync(cwd)) return reply(404, `No checkout at ${cwd}`)
 
   // Every factory gets every delivery, and two claims on one work item both succeed.
   const preferredFactory = await findPreferredFactoryUp()
   if (preferredFactory) return reply(200, `Deferred to ${preferredFactory}`)
 
-  const claim = await gh(launch.claim)
+  const claim = await gh(launch.claim, cwd)
   if (!claim.ok) return reply(500, claim.output.trim())
 
   const started = await startSession(launch, cwd)
-  if (started.ok) runs.set(launch.token, { ...launch, workspace: started.workspace })
+  if (started.ok) runs.set(launch.token, { ...launch, workspace: started.workspace, cwd })
   // The trigger label stays off: re-applying it sends `labeled`, which starts this run again.
-  else await gh(launch.release)
+  else await gh(launch.release, cwd)
   return reply(started.ok ? 202 : 500, started.output.trim())
 }
 

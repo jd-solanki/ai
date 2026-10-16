@@ -3,7 +3,7 @@ import type { closeWorkspace, gh, Launch } from './session.ts'
 
 export type Runs = Map<
   string,
-  Pick<Launch, 'name' | 'work' | 'release' | 'crash'> & { workspace: string }
+  Pick<Launch, 'name' | 'work' | 'release' | 'crash'> & { workspace: string; cwd: string }
 >
 
 interface Factory {
@@ -47,10 +47,11 @@ export async function handleRunReport(
     return { status: 500, body: `${run.name}: ${closed.output.trim()}` }
   }
   // The API error behind a StopFailure goes to the server's log only, not to the work item.
+  const ghInClone = (args: string[]) => gh(args, run.cwd)
   const crashed = hook === 'StopFailure' ? `Crashed: ${body.toString().trim()}` : 'Crashed'
   const { outcomes, did } = why
-    ? { outcomes: [await gh(run.release), await gh(run.crash(why))], did: crashed }
-    : await handOff(run, gh)
+    ? { outcomes: [await ghInClone(run.release), await ghInClone(run.crash(why))], did: crashed }
+    : await handOff(run, ghInClone)
   const failed = outcomes.filter((outcome) => !outcome.ok)
   const outcome = failed.map(({ output }) => output.trim()).join('\n') || did
   return { status: failed.length ? 500 : 200, body: `${run.name}: ${outcome}` }
