@@ -12,7 +12,9 @@ Two things that change together:
   matching agent works in a local clone and reports back on GitHub. It is a Node server
   on the owner's machine, or one per machine, driving Claude Code.
 
-Beside them, `apps/herdr-kanban/` is a herdr plugin: a board of every herdr agent by state.
+Beside them, two herdr plugins: `apps/herdr-kanban/`, a board of every herdr agent by
+state, and `apps/herdr-tab-title/`, which titles a tab named `#123` with that issue or pull
+request's title.
 
 ## Status
 

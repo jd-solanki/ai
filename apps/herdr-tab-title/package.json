@@ -1,0 +1,11 @@
+{
+  "name": "herdr-tab-title",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

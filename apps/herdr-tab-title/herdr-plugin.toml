@@ -1,0 +1,15 @@
+id = "jd-solanki.herdr-tab-title"
+name = "herdr tab title"
+version = "0.1.0"
+min_herdr_version = "0.9.5"
+description = "Titles a tab named #123 with that GitHub issue or pull request's title"
+platforms = ["linux", "macos"]
+
+# A tab created already named fires only tab.created, so both events are hooked.
+[[events]]
+on = "tab.renamed"
+command = ["node", "src/main.ts"]
+
+[[events]]
+on = "tab.created"
+command = ["node", "src/main.ts"]
