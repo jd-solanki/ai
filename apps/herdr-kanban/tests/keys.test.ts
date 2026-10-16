@@ -14,3 +14,11 @@ test('splitKeys keeps a mouse click whole', () => {
     'j',
   ])
 })
+
+test("splitKeys keeps the terminal's colour reply whole, whichever terminator ends it", () => {
+  assert.deepEqual(splitKeys('\x1b]11;rgb:ffff/ffff/ffff\x1b\\\x1b]4;2;rgb:1e/75/4f\x07q'), [
+    '\x1b]11;rgb:ffff/ffff/ffff\x1b\\',
+    '\x1b]4;2;rgb:1e/75/4f\x07',
+    'q',
+  ])
+})

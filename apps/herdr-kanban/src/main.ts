@@ -1,11 +1,13 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { applyColorReplies, colorQueries, type TerminalColors } from './accent.ts'
 import {
   cardAt,
   clampSelection,
   findCard,
   render,
   rowsFrom,
+  STATE_COLORS,
   toColumns,
   type Selection,
 } from './board.ts'
@@ -29,6 +31,7 @@ const KEY_STEPS: Record<string, { column: number; card: number }> = {
   h: { column: -1, card: 0 },
 }
 const QUIT_KEYS = ['q', '\x03']
+const COLOR_QUERIES = colorQueries(Object.values(STATE_COLORS))
 // Piped, so herdr's stderr lands in the error message instead of on the board.
 // Timed out, because a blocked call freezes the quit keys.
 const CAPTURED = { encoding: 'utf8', stdio: 'pipe', timeout: 3000 } as const
@@ -37,6 +40,7 @@ const rows = rowsFrom(readHerdrConfig())
 let columns = readColumns()
 let selected: Selection = { column: 0, card: 0 }
 let failure = ''
+const terminalColors: TerminalColors = new Map()
 
 // herdr gives a plugin none of its config, but its help names the file it reads, on any platform.
 function readHerdrConfig() {
@@ -60,7 +64,7 @@ function selectedCard() {
 
 function draw() {
   const { columns: width, rows: height } = process.stdout
-  const board = render(columns, selected, width, failure ? height - 1 : height)
+  const board = render(columns, selected, width, failure ? height - 1 : height, terminalColors)
   process.stdout.write(`${CLEAR_SCREEN}${board}${failure ? `\n\x1b[31m${failure}\x1b[0m` : ''}`)
 }
 
@@ -75,6 +79,7 @@ function refresh() {
   }
   selected = (paneId && findCard(columns, paneId)) || clampSelection(columns, selected)
   draw()
+  process.stdout.write(COLOR_QUERIES)
 }
 
 function focusSelected() {
@@ -115,7 +120,13 @@ process.stdout.write(ENTER_FULL_SCREEN)
 process.on('exit', () => process.stdout.write(LEAVE_FULL_SCREEN))
 process.stdin.setRawMode(true)
 process.stdin.setEncoding('utf8')
-process.stdin.on('data', (chunk: string) => splitKeys(chunk).forEach(press))
+process.stdin.on('data', (chunk: string) => {
+  const keys = splitKeys(chunk)
+  // press ignores a colour reply; the replies to one refresh's question arrive together.
+  keys.forEach(press)
+  if (applyColorReplies(terminalColors, keys)) draw()
+})
 process.stdout.on('resize', draw)
 setInterval(refresh, REFRESH_MS)
 draw()
+process.stdout.write(COLOR_QUERIES)

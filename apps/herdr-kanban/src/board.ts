@@ -1,3 +1,5 @@
+import { selectionStyle, type TerminalColors } from './accent.ts'
+
 export interface Snapshot {
   agents: {
     pane_id: string
@@ -113,22 +115,13 @@ export function clampSelection(columns: Column[], { column, card }: Selection): 
   return { column: clampedColumn, card: clamp(card, columns[clampedColumn].cards.length - 1) }
 }
 
-// herdr's sidebar colours each state from its theme; these are the same colours from the terminal's palette.
-const STATE_COLORS: Record<string, string> = {
-  working: '33',
-  blocked: '31',
-  done: '36',
-  idle: '32',
-  unknown: '90',
-}
-
-// A selected card fills with its state's colour; a fixed dark or light text keeps it readable on light and dark themes alike.
-const SELECTED_COLORS: Record<string, string> = {
-  working: '30;43',
-  blocked: '97;41',
-  done: '30;46',
-  idle: '30;42',
-  unknown: '97;100',
+// herdr's sidebar colours each state from its theme; these are the same colours from the terminal's palette, by number.
+export const STATE_COLORS: Record<string, number> = {
+  working: 3,
+  blocked: 1,
+  done: 6,
+  idle: 2,
+  unknown: 8,
 }
 
 const style = (codes: string, text: string) => `\x1b[${codes}m${text}\x1b[0m`
@@ -171,17 +164,25 @@ function layoutColumn(column: Column, columnWidth: number): ColumnLine[] {
 }
 
 // shortcut: no scrolling and titles wrap by code unit, so wide emoji can shift a column; scroll once a column outgrows the pane.
-export function render(columns: Column[], selected: Selection, width: number, height: number) {
+export function render(
+  columns: Column[],
+  selected: Selection,
+  width: number,
+  height: number,
+  terminalColors: TerminalColors = new Map(),
+) {
   const columnWidth = Math.floor(width / columns.length)
   const blank = fit('', columnWidth)
   const blocks = columns.map((column, columnIndex) => {
-    const color = STATE_COLORS[column.status]
+    const paletteIndex = STATE_COLORS[column.status]
+    const color = `38;5;${paletteIndex}`
+    const selection = selectionStyle(terminalColors, paletteIndex)
     return layoutColumn(column, columnWidth).map(({ text, card, row }, line) => {
       if (line === 0) return ` ${style(`1;${color}`, fit(text, columnWidth - 1))}`
       if (card === undefined) return blank
       const isSelected = columnIndex === selected.column && card === selected.card
-      const firstStyle = isSelected ? `1;${SELECTED_COLORS[column.status]}` : '1'
-      const restStyle = isSelected ? SELECTED_COLORS[column.status] : '2'
+      const firstStyle = isSelected ? `1;${selection}` : '1'
+      const restStyle = isSelected ? selection : '2'
       return `${style(row === 0 ? firstStyle : restStyle, ` ${text}`.padEnd(columnWidth - 1))} `
     })
   })

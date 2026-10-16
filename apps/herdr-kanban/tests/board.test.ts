@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { stripVTControlCharacters } from 'node:util'
+import { selectionStyle, type Rgb } from '../src/accent.ts'
 import {
   cardAt,
   clampSelection,
@@ -157,6 +158,22 @@ test('render wraps a long line at a space, or mid-word when no space fits', () =
     ' Supercalifragilis',
     ' tic',
   ])
+})
+
+test("render tints the selected card with its column's colour, once the terminal reports it", () => {
+  const columns = toColumns({ workspaces, tabs, agents: [herdrAgent('w1:p1', 'done')] })
+  const selected = { column: 2, card: 0 }
+  const colors = new Map<'background' | number, Rgb>([
+    ['background', [255, 255, 255]],
+    [6, [41, 152, 155]],
+  ])
+  assert.ok(
+    render(columns, selected, 80, 24, colors).includes(`\x1b[1;${selectionStyle(colors, 6)}m`),
+  )
+  assert.ok(
+    render(columns, selected, 80, 24).includes('\x1b[1;7;38;5;6m'),
+    'reverse video until then',
+  )
 })
 
 test('clampSelection keeps the selection on the board as cards come and go', () => {
