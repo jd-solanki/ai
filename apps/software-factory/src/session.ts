@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { realpath } from 'node:fs/promises'
 import { basename } from 'node:path'
 
 // Where the factory server listens, for GitHub and for a session's run reports.
@@ -207,9 +208,11 @@ async function findRepoWorkspace(clone: string): Promise<string | undefined> {
   const listed = await run('herdr', ['pane', 'list'])
   try {
     const panes: { cwd: string; workspace_id: string }[] = JSON.parse(listed.stdout).result.panes
-    return panes.find((pane) => pane.cwd === clone)?.workspace_id
+    // herdr reports a pane's cwd with symlinks resolved.
+    const realClone = await realpath(clone)
+    return panes.find((pane) => pane.cwd === realClone)?.workspace_id
   } catch {
-    // A herdr that is down fails the create that follows, which reports it.
+    // A herdr that is down, or a clone that is gone, fails the create that follows, which reports it.
     return undefined
   }
 }

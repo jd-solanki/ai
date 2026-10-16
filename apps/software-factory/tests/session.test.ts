@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { after, test } from 'node:test'
@@ -218,6 +218,18 @@ test('startSession opens the run as a tab in the first workspace with a pane at 
   t.after(() => delete process.env.PANES)
   process.env.PANES = panes(['wK', join(bin, 'apps/kanban')], ['wA', bin], ['wB', bin])
   const started = await startSession(review(), bin)
+  assert.equal(started.ok && started.tab, 'wA:t2')
+})
+
+test('startSession finds the repo workspace through a symlink in the clone path', async (t) => {
+  const link = `${bin}-link`
+  symlinkSync(bin, link)
+  t.after(() => {
+    rmSync(link)
+    delete process.env.PANES
+  })
+  process.env.PANES = panes(['wA', bin])
+  const started = await startSession(review(), link)
   assert.equal(started.ok && started.tab, 'wA:t2')
 })
 
