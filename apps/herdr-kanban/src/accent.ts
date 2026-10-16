@@ -32,12 +32,13 @@ export function applyColorReplies(colors: TerminalColors, keys: string[]) {
   return changed
 }
 
-// SGR codes for a selected card: text in its palette colour on the background mixed toward it,
-// or reverse video until the terminal reports both.
-export function selectionStyle(colors: TerminalColors, paletteIndex: number) {
+// SGR codes for a selected card: its text in its palette colour on the background mixed toward it,
+// or reverse video until the terminal reports both, and its fill, which writes in that same background.
+export function selectionStyles(colors: TerminalColors, paletteIndex: number) {
   const background = colors.get('background')
   const accent = colors.get(paletteIndex)
-  if (!background || !accent) return `7;38;5;${paletteIndex}`
+  if (!background || !accent)
+    return { text: `7;38;5;${paletteIndex}`, fill: `38;5;${paletteIndex}` }
   const tint = background.map((channel, i) => Math.round(channel + (accent[i] - channel) * TINT))
-  return `38;2;${accent.join(';')};48;2;${tint.join(';')}`
+  return { text: `38;2;${accent.join(';')};48;2;${tint.join(';')}`, fill: `38;2;${tint.join(';')}` }
 }

@@ -1,4 +1,4 @@
-import { selectionStyle, type TerminalColors } from './accent.ts'
+import { selectionStyles, type TerminalColors } from './accent.ts'
 
 export interface Snapshot {
   agents: {
@@ -176,13 +176,24 @@ export function render(
   const blocks = columns.map((column, columnIndex) => {
     const paletteIndex = STATE_COLORS[column.status]
     const color = `38;5;${paletteIndex}`
-    const selection = selectionStyle(terminalColors, paletteIndex)
-    return layoutColumn(column, columnWidth).map(({ text, card, row }, line) => {
+    const selection = selectionStyles(terminalColors, paletteIndex)
+    const isSelected = (card?: number) =>
+      card !== undefined && columnIndex === selected.column && card === selected.card
+    const lines = layoutColumn(column, columnWidth)
+    return lines.map(({ text, card, row }, line) => {
       if (line === 0) return ` ${style(`1;${color}`, fit(text, columnWidth - 1))}`
-      if (card === undefined) return blank
-      const isSelected = columnIndex === selected.column && card === selected.card
-      const firstStyle = isSelected ? `1;${selection}` : '1'
-      const restStyle = isSelected ? selection : '2'
+      if (card === undefined) {
+        // The blank lines around the selected card pad it with the half nearer its text,
+        // as a cell is about twice as tall as it is wide.
+        const pad = isSelected(lines[line + 1]?.card)
+          ? '▄'
+          : isSelected(lines[line - 1].card)
+            ? '▀'
+            : ''
+        return pad ? `${style(selection.fill, pad.repeat(columnWidth - 1))} ` : blank
+      }
+      const firstStyle = isSelected(card) ? `1;${selection.text}` : '1'
+      const restStyle = isSelected(card) ? selection.text : '2'
       return `${style(row === 0 ? firstStyle : restStyle, ` ${text}`.padEnd(columnWidth - 1))} `
     })
   })

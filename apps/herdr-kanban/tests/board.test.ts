@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { stripVTControlCharacters } from 'node:util'
-import { selectionStyle, type Rgb } from '../src/accent.ts'
+import { selectionStyles, type Rgb } from '../src/accent.ts'
 import {
   cardAt,
   clampSelection,
@@ -117,8 +117,11 @@ test('cardAt finds the card on every row render draws it on', () => {
     const unselected = render(columns, { column: -1, card: 0 }, 80, 24).split('\n')
     const x = selected.column * 20 + 1
     const drawn = rows.flatMap((row, i) => (row === unselected[i] ? [] : [i + 1]))
-    assert.equal(drawn.length, 2)
-    for (const y of drawn) assert.deepEqual(cardAt(columns, 80, x, y), selected)
+    // The padding on the blank lines around the card is drawn, but a click there selects nothing.
+    assert.deepEqual(
+      drawn.map((y) => cardAt(columns, 80, x, y)),
+      [undefined, selected, selected, undefined],
+    )
   }
 })
 
@@ -154,7 +157,7 @@ test('render wraps a long line at a space, or mid-word when no space fits', () =
   assert.deepEqual(lines.slice(2, 7), [
     ' PR #84 - Kiosk',
     ' Pairing',
-    '',
+    '▀'.repeat(19),
     ' Supercalifragilis',
     ' tic',
   ])
@@ -168,7 +171,13 @@ test("render tints the selected card with its column's colour, once the terminal
     [6, [41, 152, 155]],
   ])
   assert.ok(
-    render(columns, selected, 80, 24, colors).includes(`\x1b[1;${selectionStyle(colors, 6)}m`),
+    render(columns, selected, 80, 24, colors).includes(
+      `\x1b[1;${selectionStyles(colors, 6).text}m`,
+    ),
+  )
+  assert.ok(
+    render(columns, selected, 80, 24, colors).includes(`\x1b[${selectionStyles(colors, 6).fill}m▄`),
+    'the padding in the tint',
   )
   assert.ok(
     render(columns, selected, 80, 24).includes('\x1b[1;7;38;5;6m'),
