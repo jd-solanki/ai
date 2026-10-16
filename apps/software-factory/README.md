@@ -5,7 +5,7 @@ Put a label on a GitHub issue or pull request. A Claude Code session on your mac
 ```mermaid
 flowchart LR
   L["Label applied on GitHub"] -->|webhook| F["Tailscale Funnel"] --> S["src/server.ts"]
-  S -->|"herdr pane run"| B["claude in a herdr workspace,<br/>in its own worktree"]
+  S -->|"herdr pane run"| B["claude in a herdr tab,<br/>in its own worktree"]
   B -.->|"ends: the server applies the next agent's label"| L
 ```
 
@@ -13,7 +13,7 @@ flowchart LR
 `NEXT_STEPS` in `src/hand-off.ts` says where each run hands its work item when it ends.
 
 Each session is named `<label> <repo>#<number>`, for example `agent:implement ai#1`.
-Its herdr workspace carries the same name.
+It runs in a herdr tab labelled `<label> · <Issue|PR> #<number> - <title>`, in the first workspace with a pane at the clone itself. With none, the server opens a workspace named for the repo, which closes with its last tab.
 It works in its own git worktree, `.claude/worktrees/<skill>-<number>`, so two sessions never share a checkout.
 Applying the label again reuses that worktree.
 
@@ -21,7 +21,7 @@ Applying the label again reuses that worktree.
 
 - Node, in the range `engines` in the root `package.json` sets. The server runs TypeScript directly, with no build step.
 - Claude Code, on an account that can run Opus.
-- herdr, running on the factory machine. Each session starts in a new herdr workspace. With herdr down, a run fails to start and the server takes its `…ing` label off.
+- herdr, running on the factory machine. Each session starts in a new herdr tab. With herdr down, a run fails to start and the server takes its `…ing` label off.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.
 - Tailscale, logged in. The first `tailscale funnel` run prints a link to allow Funnel on your tailnet.
 
@@ -210,11 +210,11 @@ The review's verdict is a marker in its summary comment, written by `/review-pr`
 A run whose next step GitHub doesn't show, such as a review with no verdict of its own, waits on you: the work item is assigned to whoever applied the label, with a comment saying what was missing.
 
 When a run starts, the server swaps the trigger label for its `…ing` label.
-The run ends when its session stops with no background work left: the server closes the run's herdr workspace, takes the `…ing` label off and hands the work item on.
-A run whose session ends any other way, such as an API error, a closed workspace or herdr stopping, crashes: the label comes off too, and a comment on the work item asks for a retry.
+The run ends when its session stops with no background work left: the server closes the run's herdr tab, takes the `…ing` label off and hands the work item on.
+A run whose session ends any other way, such as an API error, a closed tab or herdr stopping, crashes: the label comes off too, and a comment on the work item asks for a retry.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
-Then, on the factory machine, each session shows in herdr's agent list, in a workspace named after it. Open it there to watch or answer.
+Then, on the factory machine, each session shows in herdr's agent list, in a tab labelled with its trigger label and work item. Open it there to watch or answer.
 
 ```bash
 herdr agent list   # sessions and their state

@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import { buffer } from 'node:stream/consumers'
 import { handleRunReport, type Runs } from './run-end.ts'
-import { closeWorkspace, gh, PORT, startSession } from './session.ts'
+import { closeTab, gh, PORT, startSession } from './session.ts'
 import { findFactoryUp, handleWebhook } from './webhook.ts'
 
 const { GITHUB_WEBHOOK_SECRET: secret, REPOS_DIR: reposDir, DEFER_TO } = process.env
@@ -9,7 +9,7 @@ if (!secret || !reposDir) throw new Error('Set GITHUB_WEBHOOK_SECRET and REPOS_D
 // git, gh and herdr inherit this env.
 delete process.env.GITHUB_WEBHOOK_SECRET
 
-// shortcut: runs live in memory, so a server restart leaves in-flight claims held, rebuild from herdr's run workspaces if restarts get common.
+// shortcut: runs live in memory, so a server restart leaves in-flight claims held, rebuild from herdr's run tabs if restarts get common.
 const runs: Runs = new Map()
 
 const preferredFactories = DEFER_TO?.split(',').filter(Boolean) ?? []
@@ -20,7 +20,7 @@ createServer(async (req, res) => {
   const body = await buffer(req)
   const isRunReport = req.url?.startsWith('/runs/')
   const { status, body: outcome } = isRunReport
-    ? await handleRunReport(req.url ?? '', body, { runs, gh, closeWorkspace })
+    ? await handleRunReport(req.url ?? '', body, { runs, gh, closeTab })
     : await handleWebhook(req.headers, body, {
         secret,
         reposDir,

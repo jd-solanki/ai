@@ -6,6 +6,10 @@
 The line between what a session may do and what static code does.
 _Avoid_: sandbox
 
+**Repo workspace**:
+A herdr workspace with a pane at a served repo's clone, where that repo's runs open as tabs.
+_Avoid_: run workspace, project workspace
+
 **Clean stop**:
 A Stop with no background work left in the session.
 _Avoid_: done, finished
@@ -28,7 +32,7 @@ _Avoid_: failure
 - Where static code takes over a git or GitHub write, it derives the text from GitHub: a
   sub-issue's title is the commit subject, and the spec's title is the pull request
   title. A session writes no meta file for static code to read.
-- A run ends at its clean stop: static code closes the run's workspace, releases the claim
+- A run ends at its clean stop: static code closes the run's tab, releases the claim
   and hands the work item on. A turn that ends on a question in the terminal is a clean stop too.
 - The factory server alone decides how a run ends. A session's hooks only report Stop,
   StopFailure and SessionEnd to it.
@@ -50,13 +54,16 @@ _Avoid_: failure
   rebuilds what `/implement-spec` already does.
 - The `claude` command is built and run in one module: settling how a session is launched
   changes that module alone.
-- A session runs as an interactive `claude` in a herdr workspace, not a background session,
+- A session runs as an interactive `claude` in a herdr tab, not a background session,
   so the owner sees every run in herdr's agent list beside their own herdr agents, and can watch it.
+- A run's tab opens in the repo workspace, so a served repo's runs sit beside the owner's own
+  tabs for it instead of each in a workspace of its own. Only a pane at the clone itself marks
+  the repo workspace: the owner's workspace for a subfolder, such as an app, is not the repo's.
 - Review runs at higher effort than implementation: review depth decides how many rounds
   a pull request takes, and implementation time is the factory's bottleneck.
 - Every session runs in auto mode, whatever the owner's default: each trigger's `allow` and
   instructions assume it, and under a manual default a run stops at its first approval prompt.
-- Closing the workspace makes a run last as long as its process, so a released run cannot
+- Closing the tab makes a run last as long as its process, so a released run cannot
   wake up again without a claim. herdr's state cannot mark the end instead: herdr itself
   says `idle` and `done` do not prove completion.
 - `blocked` keeps the claim with no code: herdr shows it only while a dialog is up, inside a
@@ -67,12 +74,12 @@ _Avoid_: failure
   The cost: an end reported while the server is down, or after it restarted, leaves the claim
   held, because the server keeps its runs in memory.
 - A crash is caught by SessionEnd, not by watching herdr. SessionEnd fires when herdr closes
-  the workspace or stops, so only `kill -9`, a power loss or a stopped factory server leave
+  the tab or stops, so only `kill -9`, a power loss or a stopped factory server leave
   the working label on, and a human removes it.
 - The pane's shell reports SessionEnd too, once claude exits: a claude that exits before its
   hooks load, such as in an untrusted folder, reports nothing. After a normal end that second
   report finds no run.
-- A run workspace herdr restores after a restart is left alone: its run already crashed on
+- A run tab herdr restores after a restart is left alone: its run already crashed on
   shutdown, and it comes back as a shell with no session and no claim.
 - Each run reports under a random token because the server's port is public, behind
   Tailscale Funnel: the token is what stops anyone else ending a run.
@@ -82,7 +89,7 @@ _Avoid_: failure
 - **Stop alone is not a clean stop.** Stop fires after every turn, so a turn that ends on a
   wait for subagents or a background shell looks like the end of the run. A turn that dies
   on an API error never reaches Stop at all. `apps/software-factory/src/run-end.ts:handleRunReport`
-- **Closing a run's workspace fires its SessionEnd.** herdr's close ends the session with
+- **Closing a run's tab fires its SessionEnd.** herdr's close ends the session with
   reason `other`, the same as a crash, so the server ignores an end from a run it already
   released. `apps/software-factory/src/run-end.ts:handleRunReport`
 - **A worktree holds only the default branch.** A skill a session needs must be pushed to the

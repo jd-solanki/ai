@@ -33,7 +33,7 @@ function factory({
   refuses = (_args: string[]): boolean => false,
 } = {}) {
   const run = launch(label)
-  const runs: Runs = new Map([[run.token, { ...run, workspace: 'w7', cwd: '/repos/acme/app' }]])
+  const runs: Runs = new Map([[run.token, { ...run, tab: 'w7:t3', cwd: '/repos/acme/app' }]])
   const writes: string[] = []
   const ghDirs = new Set<string | undefined>()
   const closed: string[] = []
@@ -58,10 +58,10 @@ function factory({
             : { ok: true, stdout: '', output: '' }
         },
         // herdr's first close that succeeds ends the session, which reports SessionEnd before the close returns.
-        closeWorkspace: async (workspace) => {
-          closed.push(workspace)
-          if (closes && !ended.has(workspace)) {
-            ended.add(workspace)
+        closeTab: async (tab) => {
+          closed.push(tab)
+          if (closes && !ended.has(tab)) {
+            ended.add(tab)
             sessionEnds.push(await report('SessionEnd', { reason: 'other' }))
           }
           return { ok: closes, output: closes ? '' : 'herdr is down' }
@@ -119,7 +119,7 @@ test('a clean stop hands a fixed pull request back to the Reviewer and closes th
     `pr edit ${pull} --remove-label agent:fixing`,
     `pr edit ${pull} --add-label agent:review`,
   ])
-  assert.deepEqual(run.closed, ['w7'])
+  assert.deepEqual(run.closed, ['w7:t3'])
 })
 
 test("a run's end reads and writes GitHub from the served repo's clone", async () => {
@@ -304,7 +304,7 @@ test('a session that exits before a clean stop crashes the run', async () => {
   const run = factory()
   await run.report('SessionEnd', { reason: 'other' })
   assert.deepEqual(run.writes, [released, crashed('exited')])
-  assert.deepEqual(run.closed, ['w7'])
+  assert.deepEqual(run.closed, ['w7:t3'])
 })
 
 test('a turn that dies on an API error crashes the run', async () => {
@@ -322,10 +322,10 @@ test('the session end that closing a run fires is ignored', async () => {
   await run.end()
   assert.deepEqual(run.sessionEnds, [{ status: 404, body: 'No run in progress for this report' }])
   assert.equal(run.writes.length, 2)
-  assert.deepEqual(run.closed, ['w7'])
+  assert.deepEqual(run.closed, ['w7:t3'])
 })
 
-test('a run whose workspace fails to close keeps its claim', async () => {
+test('a run whose tab fails to close keeps its claim', async () => {
   const run = factory({ closes: false })
   assert.deepEqual(await run.end(), { status: 500, body: 'agent:fix app#12: herdr is down' })
   assert.deepEqual(run.writes, [])
@@ -333,7 +333,7 @@ test('a run whose workspace fails to close keeps its claim', async () => {
   assert.equal(run.runs.size, 1)
 })
 
-test('a session that ended releases its run even when its workspace fails to close', async () => {
+test('a session that ended releases its run even when its tab fails to close', async () => {
   const run = factory({ closes: false })
   await run.report('SessionEnd', { reason: 'other' })
   assert.deepEqual(run.writes, [released, crashed('exited')])

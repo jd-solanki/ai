@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { basename } from 'node:path'
 
 // Where the factory server listens, for GitHub and for a session's run reports.
 export const PORT = 3456
@@ -136,7 +137,7 @@ export function claudeArgs(
     args,
     name,
     // A title is anyone's text bound for the owner's terminal: control characters must not reach it.
-    tabLabel: `${kind === 'pr' ? 'PR' : 'Issue'} #${subject.number} - ${subject.title.replace(/\p{Cc}/gu, '')}`,
+    tabLabel: `${trigger.label} · ${kind === 'pr' ? 'PR' : 'Issue'} #${subject.number} - ${subject.title.replace(/\p{Cc}/gu, '')}`,
     token,
     work: {
       trigger: trigger.label,
@@ -201,33 +202,42 @@ function run(file: string, args: string[], cwd?: string): Promise<Outcome & { st
   })
 }
 
+// The repo workspace is the first herdr lists with a pane at the clone itself: a pane in a worktree or subfolder does not count.
+async function findRepoWorkspace(clone: string): Promise<string | undefined> {
+  const listed = await run('herdr', ['pane', 'list'])
+  try {
+    const panes: { cwd: string; workspace_id: string }[] = JSON.parse(listed.stdout).result.panes
+    return panes.find((pane) => pane.cwd === clone)?.workspace_id
+  } catch {
+    // A herdr that is down fails the create that follows, which reports it.
+    return undefined
+  }
+}
+
 // `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
-// A herdr workspace puts the session in the owner's agent list; herdr must be running.
+// A herdr tab puts the session in the owner's agent list; herdr must be running.
 export async function startSession(
-  { args, name, tabLabel, token }: Launch,
+  { args, tabLabel, token }: Launch,
   cwd: string,
-): Promise<(Outcome & { ok: false }) | (Outcome & { ok: true; workspace: string })> {
+): Promise<(Outcome & { ok: false }) | (Outcome & { ok: true; tab: string })> {
   await run('git', ['fetch', 'origin'], cwd)
   await run('git', ['remote', 'set-head', 'origin', '--auto'], cwd)
-  const created = await run('herdr', [
-    'workspace',
-    'create',
-    '--cwd',
-    cwd,
-    '--label',
-    name,
-    '--no-focus',
-  ])
-  let pane: { pane_id: string; tab_id: string; workspace_id: string }
+  const workspace = await findRepoWorkspace(cwd)
+  // The clone sits at `<owner>/<repo>`, so a workspace the factory opens is named for the repo, as the owner names theirs.
+  const create = workspace
+    ? ['tab', 'create', '--workspace', workspace, '--cwd', cwd, '--no-focus']
+    : ['workspace', 'create', '--cwd', cwd, '--label', basename(cwd), '--no-focus']
+  const created = await run('herdr', create)
+  let pane: { pane_id: string; tab_id: string }
   try {
     // A warning on stderr must not break the parse.
     pane = JSON.parse(created.stdout).result.root_pane
     if (!pane.pane_id) throw new Error('no root pane')
   } catch {
     // Thrown, it would crash the server with the claim held.
-    return { ok: false, output: `herdr workspace create: ${created.output}` }
+    return { ok: false, output: `herdr ${create[0]} create: ${created.output}` }
   }
-  // A new workspace's tab is labelled `1`; a rename herdr refuses only costs the label.
+  // A new tab is labelled with its number; a rename herdr refuses only costs the label.
   await run('herdr', ['tab', 'rename', pane.tab_id, tabLabel])
   // A command typed before the shell's prompt is up loses its Enter.
   const prompt = await run('herdr', [
@@ -249,22 +259,23 @@ export async function startSession(
         `${shell(['claude', ...args])}; curl -sS -X POST http://localhost:${PORT}/runs/${token}/SessionEnd`,
       ])
     : prompt
-  if (started.ok) return { ...started, ok: true, workspace: pane.workspace_id }
+  if (started.ok) return { ...started, ok: true, tab: pane.tab_id }
   // The claim is released on failure, so a session that came up late must not run unclaimed.
   const failed = `herdr pane ${prompt.ok ? 'run' : 'wait-output'}: ${started.output}`
-  const closed = await closeWorkspace(pane.workspace_id)
+  const closed = await closeTab(pane.tab_id)
   if (closed.ok) return { ok: false, output: failed }
-  // The workspace may hold a session: its run keeps the claim until its end is reported.
+  // The tab may hold a session: its run keeps the claim until its end is reported.
   return {
     ok: true,
-    workspace: pane.workspace_id,
-    output: `${failed}\nherdr workspace close: ${closed.output}`,
+    tab: pane.tab_id,
+    output: `${failed}\nherdr tab close: ${closed.output}`,
   }
 }
-export async function closeWorkspace(workspace: string): Promise<Outcome> {
-  const closed = await run('herdr', ['workspace', 'close', workspace])
-  // A workspace a human closed first is closed all the same.
-  return { ...closed, ok: closed.ok || closed.output.includes('workspace_not_found') }
+// herdr closes a workspace with its last tab, so a workspace the factory opened goes with its run.
+export async function closeTab(tab: string): Promise<Outcome> {
+  const closed = await run('herdr', ['tab', 'close', tab])
+  // A tab a human closed first is closed all the same.
+  return { ...closed, ok: closed.ok || closed.output.includes('tab_not_found') }
 }
 // The owner's gh picks its account from the directory's git user.name, so a served repo's gh runs in its clone.
 export const gh = (args: string[], cwd?: string) => run('gh', args, cwd)

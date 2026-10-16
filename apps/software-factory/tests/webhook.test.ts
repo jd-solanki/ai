@@ -53,7 +53,7 @@ function factory(ok: boolean = true, claimed = true) {
     reposDir,
     startSession: async (_launch: Launch, cwd: string) => {
       started.push(cwd)
-      return ok ? { ok, output: 'claude output', workspace: 'w7' } : { ok, output: 'claude output' }
+      return ok ? { ok, output: 'claude output', tab: 'w7:t3' } : { ok, output: 'claude output' }
     },
     gh: async (args: string[], cwd?: string) => {
       ghDirs.push(cwd)
@@ -170,10 +170,10 @@ test('handleWebhook tracks each run it starts', async () => {
   const served = factory()
   await handleWebhook(signed(body), body, served)
   assert.deepEqual(
-    [...served.runs.values()].map((run) => [run.workspace, run.cwd, run.release.join(' ')]),
+    [...served.runs.values()].map((run) => [run.tab, run.cwd, run.release.join(' ')]),
     [
       [
-        'w7',
+        'w7:t3',
         join(reposDir, 'acme/app'),
         'pr edit https://github.com/acme/app/pull/12 --remove-label agent:reviewing',
       ],

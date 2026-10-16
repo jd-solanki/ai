@@ -35,9 +35,9 @@ Known gaps:
 - A run keeps its working label, and its trigger label is ignored, until a human removes
   the working label, when its session ends while the factory server is down or after it
   restarted, or is killed without ending: `kill -9`, a power loss.
-- After a herdr restart, a crashed run's workspace comes back with no session in it, and
+- After a herdr restart, a crashed run's tab comes back with no session in it, and
   waits for a human to close it.
-- A run whose launch failed and whose workspace would not close keeps its claim until a
+- A run whose launch failed and whose tab would not close keeps its claim until a
   human removes the working label.
 
 Deliberately unbuilt:

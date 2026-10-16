@@ -1,27 +1,27 @@
 import { handOff } from './hand-off.ts'
-import type { closeWorkspace, gh, Launch } from './session.ts'
+import type { closeTab, gh, Launch } from './session.ts'
 
 export type Runs = Map<
   string,
-  Pick<Launch, 'name' | 'work' | 'release' | 'crash'> & { workspace: string; cwd: string }
+  Pick<Launch, 'name' | 'work' | 'release' | 'crash'> & { tab: string; cwd: string }
 >
 
 interface Factory {
   runs: Runs
   gh: typeof gh
-  closeWorkspace: typeof closeWorkspace
+  closeTab: typeof closeTab
 }
 
 // A run ends at its clean stop, handing its work item on, or crashes when its session ends any other way.
-// shortcut: a report sent while the server is down, or a session killed with no SessionEnd, leaves the claim held, poll herdr for run workspaces if that happens.
+// shortcut: a report sent while the server is down, or a session killed with no SessionEnd, leaves the claim held, poll herdr for run tabs if that happens.
 export async function handleRunReport(
   path: string,
   body: Buffer,
-  { runs, gh, closeWorkspace }: Factory,
+  { runs, gh, closeTab }: Factory,
 ): Promise<{ status: number; body?: string }> {
   const [, , token = '', hook] = path.split('/')
   const run = runs.get(token)
-  // Closing a run's workspace ends its session, which reports here once more.
+  // Closing a run's tab ends its session, which reports here once more.
   if (!run) return { status: 404, body: 'No run in progress for this report' }
 
   const why = { StopFailure: 'stopped on an API error', SessionEnd: 'exited' }[hook ?? '']
@@ -40,7 +40,7 @@ export async function handleRunReport(
 
   // The run lasts as long as its session, so it is released only once the session is gone.
   runs.delete(token)
-  const closed = await closeWorkspace(run.workspace)
+  const closed = await closeTab(run.tab)
   // A session that ended runs no more, so a close herdr refuses must not keep its claim.
   if (!closed.ok && hook !== 'SessionEnd') {
     runs.set(token, run)

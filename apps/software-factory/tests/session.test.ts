@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { after, test } from 'node:test'
 import { claudeArgs, startSession, type WebhookPayload } from '../src/session.ts'
 
@@ -42,13 +42,13 @@ test('claudeArgs names the session for the trigger label and work item', () => {
   assert.equal(upgrade().name, 'agent:upgrade app#12')
 })
 
-test('claudeArgs labels the run tab with the work item number and title', () => {
-  assert.equal(implement().tabLabel, 'Issue #12 - Kiosk pairing')
-  assert.equal(review().tabLabel, 'PR #12 - Kiosk pairing')
+test('claudeArgs labels the run tab with the trigger label, work item number and title', () => {
+  assert.equal(implement().tabLabel, 'agent:implement · Issue #12 - Kiosk pairing')
+  assert.equal(review().tabLabel, 'agent:review · PR #12 - Kiosk pairing')
   const pullRequest = { ...subject(), title: 'Kiosk\x1b[2J pairing\n' }
   assert.equal(
     launch('pull_request', 'agent:fix', { pull_request: pullRequest }).tabLabel,
-    'PR #12 - Kiosk[2J pairing',
+    'agent:fix · PR #12 - Kiosk[2J pairing',
   )
 })
 
@@ -127,11 +127,13 @@ stub(
   'herdr',
   `echo "$1 $2 $3" >> "${bin}/calls.log"
 case "$1 $2" in
-  "workspace create") echo '{"result":{"root_pane":{"pane_id":"p1","tab_id":"t1","workspace_id":"w1"}}}' ;;
+  "pane list") if [ -n "$PANES" ]; then echo "$PANES"; else echo '{"result":{"panes":[]}}'; fi ;;
+  "workspace create") echo "$6" >> "${bin}/workspace.log"; echo '{"result":{"root_pane":{"pane_id":"p1","tab_id":"t1"}}}' ;;
+  "tab create") echo '{"result":{"root_pane":{"pane_id":"p2","tab_id":"'"$4"':t2"}}}' ;;
   "tab rename") echo "$3|$4" >> "${bin}/herdr.log"; exit "\${RENAME_EXIT:-0}" ;;
   "pane wait-output") exit "\${WAIT_EXIT:-0}" ;;
   "pane run") sh -c "$4"; exit "\${RUN_EXIT:-0}" ;;
-  "workspace close") exit "\${CLOSE_EXIT:-0}" ;;
+  "tab close") exit "\${CLOSE_EXIT:-0}" ;;
 esac`,
 )
 stub('claude', 'exit 1')
@@ -144,7 +146,7 @@ test('startSession has the shell report the end of a claude that exits before it
     ok: true,
     stdout: '',
     output: '',
-    workspace: 'w1',
+    tab: 't1',
   })
   assert.equal(
     readFileSync(join(bin, 'curl.log'), 'utf8'),
@@ -152,7 +154,7 @@ test('startSession has the shell report the end of a claude that exits before it
   )
 })
 
-test('startSession keeps the claim of a failed launch whose workspace will not close', async (t) => {
+test('startSession keeps the claim of a failed launch whose tab will not close', async (t) => {
   t.after(() => {
     delete process.env.RUN_EXIT
     delete process.env.CLOSE_EXIT
@@ -161,7 +163,7 @@ test('startSession keeps the claim of a failed launch whose workspace will not c
   process.env.CLOSE_EXIT = '1'
   const kept = await startSession(review(), bin)
   assert.equal(kept.ok, true)
-  assert.equal(kept.ok && kept.workspace, 'w1')
+  assert.equal(kept.ok && kept.tab, 't1')
   process.env.CLOSE_EXIT = '0'
   assert.equal((await startSession(review(), bin)).ok, false)
 })
@@ -171,13 +173,17 @@ test('startSession labels the run tab, and a rename herdr refuses still launches
   process.env.RENAME_EXIT = '1'
   writeFileSync(join(bin, 'herdr.log'), '')
   assert.equal((await startSession(review(), bin)).ok, true)
-  assert.equal(readFileSync(join(bin, 'herdr.log'), 'utf8'), 't1|PR #12 - Kiosk pairing\n')
+  assert.equal(
+    readFileSync(join(bin, 'herdr.log'), 'utf8'),
+    't1|agent:review · PR #12 - Kiosk pairing\n',
+  )
 })
 
 test("startSession types the command only once the shell's prompt is up", async () => {
   writeFileSync(join(bin, 'calls.log'), '')
   assert.equal((await startSession(review(), bin)).ok, true)
   assert.deepEqual(readFileSync(join(bin, 'calls.log'), 'utf8').split('\n'), [
+    'pane list ',
     'workspace create --cwd',
     'tab rename t1',
     'pane wait-output p1',
@@ -186,7 +192,7 @@ test("startSession types the command only once the shell's prompt is up", async 
   ])
 })
 
-test("startSession closes the workspace when the shell's prompt never comes up", async (t) => {
+test("startSession closes the run tab when the shell's prompt never comes up", async (t) => {
   t.after(() => delete process.env.WAIT_EXIT)
   process.env.WAIT_EXIT = '1'
   writeFileSync(join(bin, 'calls.log'), '')
@@ -194,10 +200,32 @@ test("startSession closes the workspace when the shell's prompt never comes up",
   assert.equal(failed.ok, false)
   assert.match(failed.output, /^herdr pane wait-output: /)
   assert.deepEqual(readFileSync(join(bin, 'calls.log'), 'utf8').split('\n'), [
+    'pane list ',
     'workspace create --cwd',
     'tab rename t1',
     'pane wait-output p1',
-    'workspace close w1',
+    'tab close t1',
     '',
   ])
+})
+
+const panes = (...listed: [workspace: string, cwd: string][]) =>
+  JSON.stringify({
+    result: { panes: listed.map(([workspace_id, cwd]) => ({ workspace_id, cwd })) },
+  })
+
+test('startSession opens the run as a tab in the first workspace with a pane at the clone itself', async (t) => {
+  t.after(() => delete process.env.PANES)
+  process.env.PANES = panes(['wK', join(bin, 'apps/kanban')], ['wA', bin], ['wB', bin])
+  const started = await startSession(review(), bin)
+  assert.equal(started.ok && started.tab, 'wA:t2')
+})
+
+test('startSession opens a workspace named for the repo when no pane sits at the clone itself', async (t) => {
+  t.after(() => delete process.env.PANES)
+  process.env.PANES = panes(['wA', join(bin, '.claude/worktrees/review-pr-12')])
+  writeFileSync(join(bin, 'workspace.log'), '')
+  const started = await startSession(review(), bin)
+  assert.equal(started.ok && started.tab, 't1')
+  assert.equal(readFileSync(join(bin, 'workspace.log'), 'utf8'), `${basename(bin)}\n`)
 })
