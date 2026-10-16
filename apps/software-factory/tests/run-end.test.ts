@@ -37,8 +37,9 @@ function factory({
   const writes: string[] = []
   const ghDirs = new Set<string | undefined>()
   const closed: string[] = []
+  const ended = new Set<string>()
   const sessionEnds: { status: number; body?: string }[] = []
-  const report = (hook: string, input: object | string = {}): ReturnType<typeof handleRunReport> =>
+  const report = (hook: string, input: object | string = {}) =>
     handleRunReport(
       `/runs/${run.token}/${hook}`,
       Buffer.from(typeof input === 'string' ? input : JSON.stringify(input)),
@@ -56,10 +57,13 @@ function factory({
             ? { ok: false, stdout: '', output: "could not add label: 'agent:review' not found" }
             : { ok: true, stdout: '', output: '' }
         },
-        // herdr's close ends the session, which reports SessionEnd before the close returns.
+        // herdr's first close that succeeds ends the session, which reports SessionEnd before the close returns.
         closeWorkspace: async (workspace) => {
           closed.push(workspace)
-          sessionEnds.push(await report('SessionEnd', { reason: 'other' }))
+          if (closes && !ended.has(workspace)) {
+            ended.add(workspace)
+            sessionEnds.push(await report('SessionEnd', { reason: 'other' }))
+          }
           return { ok: closes, output: closes ? '' : 'herdr is down' }
         },
       },
@@ -325,6 +329,7 @@ test('a run whose workspace fails to close keeps its claim', async () => {
   const run = factory({ closes: false })
   assert.deepEqual(await run.end(), { status: 500, body: 'agent:fix app#12: herdr is down' })
   assert.deepEqual(run.writes, [])
+  assert.deepEqual(run.sessionEnds, [])
   assert.equal(run.runs.size, 1)
 })
 

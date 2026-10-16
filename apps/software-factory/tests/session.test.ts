@@ -125,7 +125,7 @@ const stub = (name: string, body: string) => {
 }
 stub(
   'herdr',
-  `echo "$1 $2" >> "${bin}/calls.log"
+  `echo "$1 $2 $3" >> "${bin}/calls.log"
 case "$1 $2" in
   "workspace create") echo '{"result":{"root_pane":{"pane_id":"p1","tab_id":"t1","workspace_id":"w1"}}}' ;;
   "tab rename") echo "$3|$4" >> "${bin}/herdr.log"; exit "\${RENAME_EXIT:-0}" ;;
@@ -178,10 +178,10 @@ test("startSession types the command only once the shell's prompt is up", async 
   writeFileSync(join(bin, 'calls.log'), '')
   assert.equal((await startSession(review(), bin)).ok, true)
   assert.deepEqual(readFileSync(join(bin, 'calls.log'), 'utf8').split('\n'), [
-    'workspace create',
-    'tab rename',
-    'pane wait-output',
-    'pane run',
+    'workspace create --cwd',
+    'tab rename t1',
+    'pane wait-output p1',
+    'pane run p1',
     '',
   ])
 })
@@ -194,10 +194,10 @@ test("startSession closes the workspace when the shell's prompt never comes up",
   assert.equal(failed.ok, false)
   assert.match(failed.output, /^herdr pane wait-output: /)
   assert.deepEqual(readFileSync(join(bin, 'calls.log'), 'utf8').split('\n'), [
-    'workspace create',
-    'tab rename',
-    'pane wait-output',
-    'workspace close',
+    'workspace create --cwd',
+    'tab rename t1',
+    'pane wait-output p1',
+    'workspace close w1',
     '',
   ])
 })
