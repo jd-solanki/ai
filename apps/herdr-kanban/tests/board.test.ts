@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { stripVTControlCharacters } from 'node:util'
 import {
   cardAt,
   clampSelection,
@@ -126,6 +127,37 @@ test('cardAt finds the card under a click when each card is one row tall', () =>
   const columns = toColumns({ workspaces, tabs, agents }, [['workspace']])
   assert.deepEqual(cardAt(columns, 80, 1, 5), { column: 0, card: 1 })
   assert.equal(cardAt(columns, 80, 1, 4), undefined, 'the gap between cards is not a card')
+})
+
+test('cardAt finds the card under a click when a long title wraps onto more lines', () => {
+  const agents = [
+    herdrAgent('w1:p1', 'working', { tab_id: 'w1:t1' }),
+    herdrAgent('w1:p2', 'working'),
+  ]
+  const columns = toColumns({ workspaces, tabs, agents }, [['workspace'], ['tab']])
+  assert.deepEqual(cardAt(columns, 80, 1, 5), { column: 0, card: 0 }, 'the wrapped title')
+  assert.equal(cardAt(columns, 80, 1, 6), undefined, 'the gap below the taller card')
+  assert.deepEqual(cardAt(columns, 80, 1, 7), { column: 0, card: 1 })
+  assert.equal(cardAt(columns, 80, 1, 9), undefined, 'below the last card')
+})
+
+test('render wraps a long line at a space, or mid-word when no space fits', () => {
+  const agents = [
+    herdrAgent('w1:p1', 'working', { tab_id: 'w1:t1' }),
+    herdrAgent('w1:p2', 'working', { tab_id: 'w1:t2' }),
+  ]
+  const longWord = { tab_id: 'w1:t2', label: 'Supercalifragilistic' }
+  const columns = toColumns({ workspaces, tabs: [...tabs, longWord], agents }, [['tab']])
+  const lines = stripVTControlCharacters(render(columns, { column: 0, card: 0 }, 80, 20))
+    .split('\n')
+    .map((line) => line.slice(0, 20).trimEnd())
+  assert.deepEqual(lines.slice(2, 7), [
+    '▌ PR #84 - Kiosk',
+    '▌ Pairing',
+    '',
+    '  Supercalifragilis',
+    '  tic',
+  ])
 })
 
 test('clampSelection keeps the selection on the board as cards come and go', () => {
