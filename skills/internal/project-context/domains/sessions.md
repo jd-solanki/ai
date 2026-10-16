@@ -57,8 +57,7 @@ _Avoid_: failure
 - A session runs as an interactive `claude` in a herdr tab, not a background session,
   so the owner sees every run in herdr's agent list beside their own herdr agents, and can watch it.
 - A run's tab opens in the repo workspace, so a served repo's runs sit beside the owner's own
-  tabs for it instead of each in a workspace of its own. Only a pane at the clone itself marks
-  the repo workspace: the owner's workspace for a subfolder, such as an app, is not the repo's.
+  tabs for it instead of each in a workspace of its own.
 - Review runs at higher effort than implementation: review depth decides how many rounds
   a pull request takes, and implementation time is the factory's bottleneck.
 - Every session runs in auto mode, whatever the owner's default: each trigger's `allow` and
@@ -92,6 +91,9 @@ _Avoid_: failure
 - **Closing a run's tab fires its SessionEnd.** herdr's close ends the session with
   reason `other`, the same as a crash, so the server ignores an end from a run it already
   released. `apps/software-factory/src/run-end.ts:handleRunReport`
+- **Closing a run's workspace closes the owner's tabs.** A run's tab shares the repo workspace
+  with the owner's own, so a run's end and a failed launch close the tab alone. herdr removes a
+  workspace the factory opened along with its last tab. `apps/software-factory/src/session.ts:closeTab`
 - **A worktree holds only the default branch.** A skill a session needs must be pushed to the
   served repo's default branch, or the session starts without it. Claude Code branches a
   worktree from the clone's checkout under the owner's `worktree.baseRef: head`, so the factory

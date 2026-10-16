@@ -221,6 +221,25 @@ test('startSession opens the run as a tab in the first workspace with a pane at 
   assert.equal(started.ok && started.tab, 'wA:t2')
 })
 
+test('startSession closes only the run tab when a launch in the repo workspace fails', async (t) => {
+  t.after(() => {
+    delete process.env.PANES
+    delete process.env.WAIT_EXIT
+  })
+  process.env.PANES = panes(['wA', bin])
+  process.env.WAIT_EXIT = '1'
+  writeFileSync(join(bin, 'calls.log'), '')
+  assert.equal((await startSession(review(), bin)).ok, false)
+  assert.deepEqual(readFileSync(join(bin, 'calls.log'), 'utf8').split('\n'), [
+    'pane list ',
+    'tab create --workspace',
+    'tab rename wA:t2',
+    'pane wait-output p2',
+    'tab close wA:t2',
+    '',
+  ])
+})
+
 test('startSession opens a workspace named for the repo when no pane sits at the clone itself', async (t) => {
   t.after(() => delete process.env.PANES)
   process.env.PANES = panes(['wA', join(bin, '.claude/worktrees/review-pr-12')])

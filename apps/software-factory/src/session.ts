@@ -224,10 +224,10 @@ export async function startSession(
   await run('git', ['remote', 'set-head', 'origin', '--auto'], cwd)
   const workspace = await findRepoWorkspace(cwd)
   // The clone sits at `<owner>/<repo>`, so a workspace the factory opens is named for the repo, as the owner names theirs.
-  const create = workspace
+  const createArgs = workspace
     ? ['tab', 'create', '--workspace', workspace, '--cwd', cwd, '--no-focus']
     : ['workspace', 'create', '--cwd', cwd, '--label', basename(cwd), '--no-focus']
-  const created = await run('herdr', create)
+  const created = await run('herdr', createArgs)
   let pane: { pane_id: string; tab_id: string }
   try {
     // A warning on stderr must not break the parse.
@@ -235,7 +235,7 @@ export async function startSession(
     if (!pane.pane_id) throw new Error('no root pane')
   } catch {
     // Thrown, it would crash the server with the claim held.
-    return { ok: false, output: `herdr ${create[0]} create: ${created.output}` }
+    return { ok: false, output: `herdr ${createArgs[0]} create: ${created.output}` }
   }
   // A new tab is labelled with its number; a rename herdr refuses only costs the label.
   await run('herdr', ['tab', 'rename', pane.tab_id, tabLabel])
