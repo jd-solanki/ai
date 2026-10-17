@@ -22,9 +22,10 @@ Search the package's issues and pull requests, open and recently closed, by conc
 
 ## 2. Build the repro
 
-Build it in a subagent so the host conversation stays on its own task. Several bugs
-get one subagent each, run in parallel. Repro work lives in the worktree below. The
-host repo's uncommitted changes belong to someone else, so leave them alone.
+Build it in a forked subagent (`subagent_type: "fork"`): it starts with everything the
+investigation found, and the host conversation stays on its own task. Several bugs get
+one fork each, run in parallel. Repro work lives in the worktree below. The host repo's
+uncommitted changes belong to someone else, so leave them alone.
 
 Repros live in `jd-solanki/reproductions`, cloned at
 `~/Projects/github/jd-solanki/reproductions`. Each repro is its own branch, cut from
