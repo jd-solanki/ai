@@ -70,6 +70,10 @@ merges.
 
 ## 4. Join each member
 
+Hand this step to one forked subagent (`subagent_type: "fork"`): it inherits the
+`file:symbol` ends from step 2, which live only in this conversation, and keeps each
+member's output out of it. It returns what step 5 reports.
+
 One member at a time, from its root, on a new branch `<name>-landscape` off its default
 branch. A member that already has that branch is skipped: an earlier run's pull request
 is still open.
