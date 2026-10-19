@@ -44,7 +44,7 @@ test('claudeArgs names the session for the trigger label and work item', () => {
 
 test('claudeArgs labels the run tab with the trigger label, work item number and title', () => {
   assert.equal(implement().tabLabel, '🛠️ agent:implement · Issue #12 - Kiosk pairing')
-  assert.equal(review().tabLabel, '🔀 agent:review · PR #12 - Kiosk pairing')
+  assert.equal(review().tabLabel, '🔍 agent:review · PR #12 - Kiosk pairing')
   const pullRequest = { ...subject(), title: 'Kiosk\x1b[2J pairing\n' }
   assert.equal(
     launch('pull_request', 'agent:fix', { pull_request: pullRequest }).tabLabel,
@@ -175,7 +175,7 @@ test('startSession labels the run tab, and a rename herdr refuses still launches
   assert.equal((await startSession(review(), bin)).ok, true)
   assert.equal(
     readFileSync(join(bin, 'herdr.log'), 'utf8'),
-    't1|🔀 agent:review · PR #12 - Kiosk pairing\n',
+    't1|🔍 agent:review · PR #12 - Kiosk pairing\n',
   )
 })
 
