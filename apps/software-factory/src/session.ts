@@ -138,7 +138,8 @@ export function claudeArgs(
     args,
     name,
     // A title is anyone's text bound for the owner's terminal: control characters must not reach it.
-    tabLabel: `${trigger.label} · ${kind === 'pr' ? 'PR' : 'Issue'} #${subject.number} - ${subject.title.replace(/\p{Cc}/gu, '')}`,
+    // The emoji match apps/herdr-tab-title's, so a run's tab reads like the owner's own.
+    tabLabel: `${kind === 'pr' ? '🔀' : '🛠️'} ${trigger.label} · ${kind === 'pr' ? 'PR' : 'Issue'} #${subject.number} - ${subject.title.replace(/\p{Cc}/gu, '')}`,
     token,
     work: {
       trigger: trigger.label,
