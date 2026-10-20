@@ -58,7 +58,8 @@ _Avoid_: primary, higher-priority factory
   drops before claiming. `apps/software-factory/src/webhook.ts:findFactoryUp`
 - **A served repo lacking `agent:handed-back` refuses every claim.** `gh` fails a whole edit
   that removes a label the repo lacks, and every claim removes it, so a repo set up before the
-  label existed needs step 3 of the README's Add a project run again.
+  label existed needs the `gh label create agent:handed-back` line of step 3 of the README's
+  Add a project. Not the whole step: its `--force` without `--color` re-colours every label.
   `apps/software-factory/src/session.ts:claudeArgs`
 
 ## Where it lives

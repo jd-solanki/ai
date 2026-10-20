@@ -132,13 +132,14 @@ test('handleWebhook claims the work item before the session and hands it back wh
 
   const unstarted = factory(false)
   assert.equal((await handleWebhook(signed(body), body, unstarted)).status, 500)
-  assert.deepEqual(unstarted.labelEdits.slice(0, 2), [claim, '--remove-label agent:reviewing'])
-  assert.ok(unstarted.labelEdits.includes('--add-assignee octocat --add-label agent:handed-back'))
-  assert.ok(
-    unstarted.labelEdits.includes(
-      '--body <!-- factory -->\n@octocat the agent:review run could not start. Apply agent:review again to retry.',
-    ),
-  )
+  assert.deepEqual(unstarted.labelEdits, [
+    claim,
+    '--remove-label agent:reviewing',
+    '.login',
+    '--jq .[] | {id, login: .user.login, updated_at, body} | tojson',
+    '--add-assignee octocat --add-label agent:handed-back',
+    '--body <!-- factory -->\n@octocat the agent:review run could not start. Apply agent:review again to retry.',
+  ])
 
   const unclaimed = factory(true, false)
   assert.deepEqual(await handleWebhook(signed(body), body, unclaimed), {

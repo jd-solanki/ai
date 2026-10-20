@@ -105,17 +105,17 @@ const comments =
 const scenarios =
   '## QA steps\n\n- [ ] **Saving shows a toast**\n  1. Click Save → a toast appears.\n\n## Notes\n'
 // `body` is the pull request body a dry review leaves.
+const pullRequestReads =
+  (body: string, said: string[]) =>
+  (args: string[]): string | undefined =>
+    ({
+      'api user --jq .login': 'factory\n',
+      [comments]: said.join('\n'),
+      [`pr view ${pull} --json body --jq .body`]: body,
+      [`pr view ${pull} --json headRefOid --jq .headRefOid`]: 'abc1234def\n',
+    })[args.join(' ')]
 const pullRequest = (label: string, body: string, ...said: string[]) =>
-  factory({
-    label,
-    github: (args) =>
-      ({
-        'api user --jq .login': 'factory\n',
-        [comments]: said.join('\n'),
-        [`pr view ${pull} --json body --jq .body`]: body,
-        [`pr view ${pull} --json headRefOid --jq .headRefOid`]: 'abc1234def\n',
-      })[args.join(' ')],
-  })
+  factory({ label, github: pullRequestReads(body, said) })
 const review = (...said: string[]) => pullRequest('agent:review', '', ...said)
 const verify = (...said: string[]) => pullRequest('agent:verify', scenarios, ...said)
 const upgrade = (head: string) =>
@@ -179,6 +179,22 @@ test('a dry review marks the pull request ready', async () => {
     'agent:review app#12: Waiting on octocat: it is marked ready for you to merge',
   )
   assert.deepEqual(run.writes, markedReady('agent:review'))
+})
+
+test('a dry review GitHub will not mark ready waits on whoever applied the label', async () => {
+  const run = factory({
+    label: 'agent:review',
+    github: pullRequestReads('', [summary(fresh, 'dry')]),
+    refuses: (args) => args[1] === 'ready',
+  })
+  await run.end()
+  const [released, ...wait] = waits(
+    pull,
+    'pr',
+    'agent:review',
+    "the factory could not mark it ready: could not add label: 'agent:review' not found",
+  )
+  assert.deepEqual(run.writes, [released, `pr ready ${pull}`, ...wait])
 })
 
 test('a dry review of an older head hands the pull request back to the Reviewer', async () => {

@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict'
-import { chmodSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { after, test } from 'node:test'
@@ -126,7 +134,8 @@ test('claudeArgs has each run-ending hook report to the factory server under the
 })
 
 // Stubs on PATH: herdr logs each call and runs the typed command through sh, claude exits before its hooks load, curl logs its report.
-const bin = mkdtempSync(join(tmpdir(), 'software-factory-bin-'))
+// herdr reports a resolved cwd, and macOS's tmpdir is a symlink.
+const bin = realpathSync(mkdtempSync(join(tmpdir(), 'software-factory-bin-')))
 after(() => rmSync(bin, { recursive: true }))
 const stub = (name: string, body: string) => {
   writeFileSync(join(bin, name), `#!/bin/sh\n${body}\n`)
