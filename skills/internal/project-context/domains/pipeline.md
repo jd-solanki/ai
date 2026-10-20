@@ -52,7 +52,7 @@ _Avoid_: result, review status
   6. The Verifier runs `/verify-pr`: it tries every QA scenario, ticks the ones that pass unless
      the run fails, and posts each failure as a review thread. A pass marks the pull request
      ready for review. A fail goes to the Fixer, then the Reviewer, then the Verifier again.
-  7. A human merges, then does the Owner steps and any QA scenario left unticked.
+  7. A human tries any QA scenario left unticked, merges, then does the Owner steps.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
   runs `/implement` with instructions appended: the release notes are the spec, and the code
@@ -191,8 +191,8 @@ _Avoid_: result, review status
   guess at the line responsible.
 - The QA report is its own comment, not a section of the review summary: each skill rewrites its
   comment whole, and either runs without the other.
-- Blocked scenarios do not hold ready back: a human merges anyway, and an unticked box is the
-  list of what is left for them.
+- Blocked scenarios do not hold ready back: ready asks for a human anyway, and an unticked box is
+  the list of what they try before merging.
 
 ## Fences
 
