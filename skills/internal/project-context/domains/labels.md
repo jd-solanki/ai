@@ -14,9 +14,10 @@ _Avoid_: primary, higher-priority factory
 ## Rules
 
 - A work item's `agent:*` label is its state. A trigger label means work is requested, a
-  working label means a run holds the claim, and neither means no agent is on it.
-- Claiming swaps the labels: static code removes the trigger label and applies the
-  working label. The working label stays exactly as long as the run.
+  working label means a run holds the claim, `agent:handed-back` means a run left it to a
+  human, and none means no agent is on it.
+- Claiming swaps the labels: static code removes the trigger label and `agent:handed-back`,
+  and applies the working label. The working label stays exactly as long as the run.
 - A trigger label re-applied while its working label is on is ignored: static code logs it
   and removes the trigger label.
 - Only static code applies or removes a working label. A human applies a trigger label,
@@ -36,6 +37,13 @@ _Avoid_: primary, higher-priority factory
   cannot start a run.
 - No outcome labels: GitHub already records a review, a merge and a closed issue, and a
   label copying one drifts when a review is dismissed or a branch is pushed.
+- `agent:handed-back` is state, not an outcome: it says whose turn it is, which GitHub keeps
+  nowhere a filter reaches, since an assignment mixes with every other. `is:open
+  label:agent:handed-back assignee:@me` lists what waits on a human across served repos,
+  from any device. One label, not a past tense per agent: the factory comment and the pull
+  request's draft or ready state say how far it got.
+- The claim removes `agent:handed-back` so a re-triggered work item leaves that list, which
+  its assignment never does.
 
 ## Fences
 
@@ -48,11 +56,15 @@ _Avoid_: primary, higher-priority factory
 - **A fallback defers by liveness, not by repo or claim.** It defers whenever a preferred
   factory is up, so a repo that factory doesn't serve is lost, and so is a delivery it
   drops before claiming. `apps/software-factory/src/webhook.ts:findFactoryUp`
+- **A served repo lacking `agent:handed-back` refuses every claim.** `gh` fails a whole edit
+  that removes a label the repo lacks, and every claim removes it, so a repo set up before the
+  label existed needs step 3 of the README's Add a project run again.
+  `apps/software-factory/src/session.ts:claudeArgs`
 
 ## Where it lives
 
 `apps/software-factory/src/session.ts` (`TRIGGERS`, `claudeArgs`), `apps/software-factory/src/webhook.ts` (`handleWebhook`: what a
 GitHub event must pass to start a run), `apps/software-factory/src/run-end.ts` (`handleRunReport`: when
 a run's working label comes off), `apps/software-factory/src/hand-off.ts` (`handOff`: the
-trigger label a run's end applies), `apps/software-factory/README.md` (Add a project: the labels a served
+trigger label a run's end applies; `tell`: `agent:handed-back`), `apps/software-factory/README.md` (Add a project: the labels a served
 repo needs; Run on more than one machine: a fallback's setup).

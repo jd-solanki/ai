@@ -1,4 +1,4 @@
-import { handOff, tellCrash } from './hand-off.ts'
+import { crash, handOff } from './hand-off.ts'
 import type { closeTab, gh, Launch } from './session.ts'
 
 export type Runs = Map<
@@ -24,7 +24,10 @@ export async function handleRunReport(
   // Closing a run's tab ends its session, which reports here once more.
   if (!run) return { status: 404, body: 'No run in progress for this report' }
 
-  const why = { StopFailure: 'stopped on an API error', SessionEnd: 'exited' }[hook ?? '']
+  const why = {
+    StopFailure: 'stopped on an API error before it finished',
+    SessionEnd: 'exited before it finished',
+  }[hook ?? '']
   if (!why) {
     if (hook !== 'Stop') return { status: 404, body: `Not a run report: ${hook}` }
     let backgroundTasks: unknown
@@ -51,7 +54,7 @@ export async function handleRunReport(
   const crashed = hook === 'StopFailure' ? `Crashed: ${body.toString().trim()}` : 'Crashed'
   const { outcomes, did } = why
     ? {
-        outcomes: [await ghInClone(run.release), ...(await tellCrash(run.work, why, ghInClone))],
+        outcomes: await crash(run, why, ghInClone),
         did: crashed,
       }
     : await handOff(run, ghInClone)

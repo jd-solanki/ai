@@ -6,6 +6,9 @@ import { basename } from 'node:path'
 // Where the factory server listens, for GitHub and for a session's run reports.
 export const PORT = 3456
 
+// The label a work item carries while it waits on a human after a run.
+export const HANDED_BACK = 'agent:handed-back'
+
 const TRIGGERS = [
   {
     event: 'issues',
@@ -164,7 +167,15 @@ export function claudeArgs(
       head: subject.head?.sha,
       claimedAt: new Date().toISOString(),
     },
-    claim: [...edit, '--remove-label', trigger.label, '--add-label', working],
+    claim: [
+      ...edit,
+      '--remove-label',
+      trigger.label,
+      '--remove-label',
+      HANDED_BACK,
+      '--add-label',
+      working,
+    ],
     release: [...edit, '--remove-label', working],
   }
 }

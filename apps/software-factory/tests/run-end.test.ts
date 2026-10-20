@@ -127,13 +127,18 @@ const upgrade = (head: string) =>
 
 const fresh = '2999-01-01T00:00:00Z'
 const told = (url: string, kind: string, message: string) => [
-  `${kind} edit ${url} --add-assignee octocat`,
+  `${kind} edit ${url} --add-assignee octocat --add-label agent:handed-back`,
   `${kind} comment ${url} --body <!-- factory -->\n@octocat ${message}`,
 ]
 const waits = (url: string, kind: string, label: string, why: string) => [
   `${kind} edit ${url} --remove-label ${label.replace(/e?$/, 'ing')}`,
   ...told(url, kind, `the ${label} run ended and waits on you: ${why}.`),
 ]
+// A pull request marked ready waits on whoever applied the label, to merge it.
+const markedReady = (label: string) => {
+  const [released, ...wait] = waits(pull, 'pr', label, 'it is marked ready for you to merge')
+  return [released, `pr ready ${pull}`, ...wait]
+}
 
 test('a clean stop hands a fixed pull request back to the Reviewer and closes the run', async () => {
   const run = factory()
@@ -169,11 +174,11 @@ test('a review that leaves tasks hands the pull request to the Fixer', async () 
 
 test('a dry review marks the pull request ready', async () => {
   const run = review(summary(fresh, 'dry'))
-  assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
-  assert.deepEqual(run.writes, [
-    `pr edit ${pull} --remove-label agent:reviewing`,
-    `pr ready ${pull}`,
-  ])
+  assert.equal(
+    (await run.end()).body,
+    'agent:review app#12: Waiting on octocat: it is marked ready for you to merge',
+  )
+  assert.deepEqual(run.writes, markedReady('agent:review'))
 })
 
 test('a dry review of an older head hands the pull request back to the Reviewer', async () => {
@@ -209,7 +214,8 @@ test('a dry review whose summary names no readable commit waits rather than revi
 
   // A commit in backticks still reads.
   const quoted = review(summary(fresh, 'dry', 'factory', '`abc1234`'))
-  assert.equal((await quoted.end()).body, 'agent:review app#12: Marked ready')
+  await quoted.end()
+  assert.deepEqual(quoted.writes, markedReady('agent:review'))
 })
 
 test('a dry review hands a pull request with QA scenarios to the Verifier', async () => {
@@ -228,17 +234,15 @@ test('a dry review marks ready a pull request whose QA steps hold no scenario', 
     '## QA steps\n\n1. Run it.\n\n## Notes\n\n- [ ] not a scenario\n',
   ]) {
     const run = pullRequest('agent:review', body, summary(fresh, 'dry'))
-    assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
+    await run.end()
+    assert.deepEqual(run.writes, markedReady('agent:review'))
   }
 })
 
 test('a passing QA run marks the pull request ready and a failing one hands it to the Fixer', async () => {
   const passed = verify(summary('2000-01-01T00:00:00Z', 'dry'), qaReport(fresh, 'pass'))
-  assert.equal((await passed.end()).body, 'agent:verify app#12: Marked ready')
-  assert.deepEqual(passed.writes, [
-    `pr edit ${pull} --remove-label agent:verifying`,
-    `pr ready ${pull}`,
-  ])
+  await passed.end()
+  assert.deepEqual(passed.writes, markedReady('agent:verify'))
 
   // A pass with no dry review goes to the Reviewer, whose dry round hands it back.
   const unreviewed = verify(qaReport(fresh, 'pass'))
@@ -299,14 +303,15 @@ test('the factory edits its own comment in place rather than adding one', async 
   await run.end()
   assert.deepEqual(run.writes, [
     `pr edit ${pull} --remove-label agent:reviewing`,
-    `pr edit ${pull} --add-assignee octocat`,
+    `pr edit ${pull} --add-assignee octocat --add-label agent:handed-back`,
     `api -X PATCH repos/acme/app/issues/comments/99 -f body=<!-- factory -->\n@octocat the agent:review run ended and waits on you: this run left no review verdict on the pull request.`,
   ])
 })
 
 test("a verdict planted in someone else's comment is ignored", async () => {
   const run = review(summary(fresh, 'tasks', 'mallory'), summary(fresh, 'dry'))
-  assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
+  await run.end()
+  assert.deepEqual(run.writes, markedReady('agent:review'))
 })
 
 test('a review that ended waits on whoever applied its label', async () => {
@@ -400,10 +405,7 @@ test('an upgrade run hands new commits to the Reviewer and marks an untouched up
 
   const untouched = upgrade('abc\n')
   await untouched.end()
-  assert.deepEqual(untouched.writes, [
-    `pr edit ${pull} --remove-label agent:upgrading`,
-    `pr ready ${pull}`,
-  ])
+  assert.deepEqual(untouched.writes, markedReady('agent:upgrade'))
 })
 
 test('a run whose next step cannot be read waits on whoever applied its label', async () => {
@@ -469,6 +471,22 @@ test('a turn that dies on an API error crashes the run', async () => {
     body: `agent:fix app#12: Crashed: ${JSON.stringify(input)}`,
   })
   assert.deepEqual(run.writes, [released, ...crashed('stopped on an API error')])
+})
+
+test('a crash whose working label cannot be removed says to remove it before retrying', async () => {
+  const run = factory({ refuses: (args) => args.includes('--remove-label') })
+  assert.deepEqual(await run.report('SessionEnd', { reason: 'other' }), {
+    status: 500,
+    body: "agent:fix app#12: could not add label: 'agent:review' not found",
+  })
+  assert.deepEqual(run.writes, [
+    released,
+    ...told(
+      pull,
+      'pr',
+      "the agent:fix run exited before it finished. The factory could not remove its working label, so remove it before you retry: could not add label: 'agent:review' not found",
+    ),
+  ])
 })
 
 test('the session end that closing a run fires is ignored', async () => {
