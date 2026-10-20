@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import type { IncomingHttpHeaders } from 'node:http'
 import { join } from 'node:path'
-import { tellCrash } from './hand-off.ts'
+import { crash } from './hand-off.ts'
 import type { Runs } from './run-end.ts'
 import { claudeArgs, type gh, type startSession, type WebhookPayload } from './session.ts'
 
@@ -53,14 +53,14 @@ export async function handleWebhook(
   if (!claim.ok) return reply(500, claim.output.trim())
 
   const started = await startSession(launch, cwd)
-  if (started.ok) runs.set(launch.token, { ...launch, tab: started.tab, cwd })
-  else {
-    // The trigger label stays off: re-applying it sends `labeled`, which starts this run again.
-    const ghInClone = (args: string[]) => gh(args, cwd)
-    await ghInClone(launch.release)
-    await tellCrash(launch.work, 'could not start', ghInClone)
+  if (started.ok) {
+    runs.set(launch.token, { ...launch, tab: started.tab, cwd })
+    return reply(202, started.output.trim())
   }
-  return reply(started.ok ? 202 : 500, started.output.trim())
+  // The trigger label stays off: re-applying it sends `labeled`, which starts this run again.
+  const outcomes = await crash(launch, 'could not start', (args) => gh(args, cwd))
+  const failed = outcomes.filter((outcome) => !outcome.ok).map(({ output }) => output.trim())
+  return reply(500, [started.output.trim(), ...failed].join('\n'))
 }
 
 const UP_CHECK_TIMEOUT_MS = 2000

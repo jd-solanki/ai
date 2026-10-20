@@ -148,6 +148,23 @@ test('handleWebhook claims the work item before the session and hands it back wh
   assert.deepEqual(unclaimed.started, [])
 })
 
+test('handleWebhook says to remove the working label when a failed launch cannot', async () => {
+  const body = reviewRequest('acme/app')
+  const unstarted = factory(false)
+  const gh = unstarted.gh
+  unstarted.gh = async (args, cwd) =>
+    args.at(-1) === 'agent:reviewing' && args.at(-2) === '--remove-label'
+      ? { ok: false, stdout: '', output: 'HTTP 502' }
+      : gh(args, cwd)
+  assert.deepEqual(await handleWebhook(signed(body), body, unstarted), {
+    status: 500,
+    body: 'pull_request labeled agent:review acme/app#12: claude output\nHTTP 502',
+  })
+  const comment = unstarted.labelEdits.find((edit) => edit.startsWith('--body'))
+  assert.match(comment ?? '', /could not remove its working label/)
+  assert.doesNotMatch(comment ?? '', /Apply agent:review again to retry/)
+})
+
 test('handleWebhook ignores a trigger label on a claimed work item and removes it', async () => {
   const body = reviewRequest('acme/app', 'agent:review', 'agent:reviewing')
   const served = factory()

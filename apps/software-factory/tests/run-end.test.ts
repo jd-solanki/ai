@@ -473,6 +473,22 @@ test('a turn that dies on an API error crashes the run', async () => {
   assert.deepEqual(run.writes, [released, ...crashed('stopped on an API error')])
 })
 
+test('a crash whose working label cannot be removed says to remove it before retrying', async () => {
+  const run = factory({ refuses: (args) => args.includes('--remove-label') })
+  assert.deepEqual(await run.report('SessionEnd', { reason: 'other' }), {
+    status: 500,
+    body: "agent:fix app#12: could not add label: 'agent:review' not found",
+  })
+  assert.deepEqual(run.writes, [
+    released,
+    ...told(
+      pull,
+      'pr',
+      "the agent:fix run exited before it finished. The factory could not remove its working label, so remove it before you retry: could not add label: 'agent:review' not found",
+    ),
+  ])
+})
+
 test('the session end that closing a run fires is ignored', async () => {
   const run = factory()
   await run.end()

@@ -103,9 +103,18 @@ export async function handOff({ release, work }: Pick<Launch, 'release' | 'work'
   }
 }
 
-// A crash hands nothing on: whoever applied the trigger label retries.
-export const tellCrash = (work: WorkItem, why: string, gh: Gh) =>
-  tell(work, `the ${work.trigger} run ${why}. Apply ${work.trigger} again to retry.`, gh)
+// A crash or a failed launch hands nothing on: whoever applied the trigger label retries, once the claim is off.
+export async function crash(
+  { release, work }: Pick<Launch, 'release' | 'work'>,
+  why: string,
+  gh: Gh,
+) {
+  const released = await gh(release)
+  const next = released.ok
+    ? `Apply ${work.trigger} again to retry.`
+    : `The factory could not remove its working label, so remove it before you retry: ${released.output.trim()}`
+  return [released, ...(await tell(work, `the ${work.trigger} run ${why}. ${next}`, gh))]
+}
 
 const FACTORY = '<!-- factory -->'
 
