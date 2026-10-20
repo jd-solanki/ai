@@ -214,7 +214,8 @@ flowchart LR
   R -->|"tasks"| X["agent:fix"] --> R
   R -->|"dry, with QA scenarios"| V["agent:verify"]
   R -->|"dry, none"| D["PR ready for review"]
-  V -->|"pass"| D
+  V -->|"pass after a dry review"| D
+  V -->|"pass, review not dry"| R
   V -->|"fail"| X
   R -->|"ended"| H["Assigned to you"]
   V -->|"ended"| H

@@ -38,7 +38,10 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   'agent:fix': async () => ({ to: 'agent:review' }),
   'agent:verify': async (work, gh) => {
     const verdict = await readVerdict(work, gh, 'verify-pr:report')
-    if (verdict === 'pass') return { ready: true }
+    if (verdict === 'pass')
+      return (await readVerdict(work, gh, 'review-pr:summary', null)) === 'dry'
+        ? { ready: true }
+        : { to: 'agent:review' }
     if (verdict === 'fail') return { to: 'agent:fix' }
     if (verdict === 'ended')
       return { wait: 'QA ended with scenarios still failing, so you decide what happens to them' }
@@ -148,15 +151,20 @@ async function nextStep(work: WorkItem, gh: Gh): Promise<Step> {
   }
 }
 
-// A verdict counts only from a skill's comment this run edited: an older one belongs to an earlier round.
+// A verdict counts only from a skill's comment edited since `since`, this run's claim unless null: an older one belongs to an earlier round.
 // `marker` opens the comment, `<skill>:<name>`, and the skill's verdict line follows it.
 // shortcut: compares this machine's clock with GitHub's, so a clock seconds off misreads a run that ends within seconds of its claim, compare the reviewed head instead if that happens.
-async function readVerdict(work: WorkItem, gh: Gh, marker: string) {
+async function readVerdict(
+  work: WorkItem,
+  gh: Gh,
+  marker: string,
+  since: string | null = work.claimedAt,
+) {
   const skill = marker.split(':')[0]
   const comment = (await ownComments(work, gh)).find(({ body }) =>
     body.startsWith(`<!-- ${marker} -->`),
   )
-  if (!comment || Date.parse(comment.updated_at) < Date.parse(work.claimedAt)) return undefined
+  if (!comment || (since && Date.parse(comment.updated_at) < Date.parse(since))) return undefined
   return new RegExp(`<!-- ${skill}:verdict (\\w+) -->`).exec(comment.body)?.[1]
 }
 

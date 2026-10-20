@@ -186,11 +186,19 @@ test('a dry review marks ready a pull request whose QA steps hold no scenario', 
 })
 
 test('a passing QA run marks the pull request ready and a failing one hands it to the Fixer', async () => {
-  const passed = verify(qaReport(fresh, 'pass'))
+  const passed = verify(summary('2000-01-01T00:00:00Z', 'dry'), qaReport(fresh, 'pass'))
   assert.equal((await passed.end()).body, 'agent:verify app#12: Marked ready')
   assert.deepEqual(passed.writes, [
     `pr edit ${pull} --remove-label agent:verifying`,
     `pr ready ${pull}`,
+  ])
+
+  // A pass with no dry review goes to the Reviewer, whose dry round hands it back.
+  const unreviewed = verify(qaReport(fresh, 'pass'))
+  await unreviewed.end()
+  assert.deepEqual(unreviewed.writes, [
+    `pr edit ${pull} --remove-label agent:verifying`,
+    `pr edit ${pull} --add-label agent:review`,
   ])
 
   const failed = verify(summary(fresh, 'dry'), qaReport(fresh, 'fail'))
