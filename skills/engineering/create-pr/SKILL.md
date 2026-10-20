@@ -26,7 +26,7 @@ author's call, never yours.
 
 The diff is already open in the reviewer's tab. Anything they can read there is not
 your job to restate: bullets that say "adds X", "moves Y", "renames Z" pad the body
-without giving the reviewer something new. The body is four sections, in this order:
+without giving the reviewer something new. The body is these sections, in this order:
 
 1. `## What problem this solves` — the issue that already exists, or the feature
    that is missing. What was true before, and what forced the change: the trigger,
@@ -40,18 +40,24 @@ without giving the reviewer something new. The body is four sections, in this or
    migration, a published contract, deleted data), two-way when a revert undoes it.
    Then the **blast radius**: what breaks if the change is wrong (consumers, layout,
    mobile, a scheduled job).
-4. `## Notes` — what a careful reader still cannot infer from the diff after
+4. `## QA steps` — how a person tries the change by hand before it merges. Number
+   the steps from a checkout of the branch: the command to run or the thing to
+   click, then the result they should see. Cover the changed behaviour first, then
+   its blast radius. CI already reports the tests, so every step is something a
+   person does by hand. A change with no visible behaviour, such as a refactor, gets
+   the steps that show nothing moved.
+5. `## Notes` — what a careful reader still cannot infer from the diff after
    reading it. Invariants that hold across the change, a decision that looks
    arbitrary but was deliberate, a gotcha that will trip the next person, a
    constraint from outside the repo.
 
-Anything belonging to none of the four gets its own section after them, named the
-way a colleague would name it.
+Anything belonging to none of them gets its own section after them, named the way a
+colleague would name it.
 
 Every section survives on the test "could the reviewer figure this out from the diff
-alone?" A section that fails comes out rather than getting padded. Section 1 stays
-regardless — the reason a change happened is never in the diff — so a one-line body
-carrying only the problem is a fine pull request.
+alone?" A section that fails comes out rather than getting padded. What problem this
+solves and QA steps stay regardless — the reason for a change and how to try it are
+never in the diff — so a body carrying only those two is a fine pull request.
 
 ## Show the shape
 
@@ -123,23 +129,23 @@ uncommitted.
 The diff, the log, and the ticket it closes.
 
 **Done when:** from what you read, you can state the problem, the approach, the
-downstream effect with its door and blast radius, and every Note you plan to include.
+downstream effect with its door and blast radius, the QA steps a reviewer will follow,
+and every Note you plan to include.
 
 ### 3. Draft the body
 
-Title, then the four sections in order, then any section that fits none of them,
+Title, then the sections in order, then any section that fits none of them,
 then the ticket line. Drop a section that fails the diff-alone test rather than
 filling it.
 
 ### 4. Clean it up
 
 Run the draft through `/writing-for-humans`: the title, the evidence, the secrets
-check, and the humanizer pass. Two extra tells in a pull request:
+check, and the humanizer pass. Extra tells in a pull request:
 
 - A bullet per file that only restates the filename.
-- An extra section named for the check the reviewer is being asked to do rather
-  than the thing they are being told (`How you know`, `Verification`). Name it for
-  the thing, or cut it if it only restated the diff.
+- A second section of checks beside `## QA steps` (`How you know`, `Verification`).
+  Fold it into QA steps, or cut it if it only restated the diff.
 
 ### 5. Open it
 
@@ -163,7 +169,8 @@ GitHub through the `gh` CLI is the fallback. Before you settle for it, check
 
 A repo pull request template at `.github/pull_request_template.md` is the house
 style, and it wins. Fill its sections; sections that do not apply to this change
-come out rather than getting padded.
+come out rather than getting padded. A template with no QA section still gets
+`## QA steps`, after its own sections.
 
 ## Boundaries
 
