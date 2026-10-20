@@ -27,7 +27,8 @@ A pull request that bumps dependency versions and carries their release notes in
 as Renovate opens one.
 
 **Verdict**:
-How a review round ended: `dry`, `tasks` or `ended`.
+How a review or QA run ended: a review's `dry`, `tasks` or `ended`, a QA run's `pass`, `fail` or
+`ended`.
 _Avoid_: result, review status
 
 ## Rules
@@ -109,7 +110,7 @@ _Avoid_: result, review status
   crash hands nothing on. A run with no next step on GitHub waits on whoever applied its
   trigger label.
 - A review run's verdict is the one `/review-pr` writes into its summary comment, and a QA run's
-  the one `/verify-pr` writes into its QA comment: `pass`, `fail` or `ended`.
+  the one `/verify-pr` writes into its QA comment.
 - A pull request is marked ready only after a dry review and, when its body holds QA scenarios,
   a passing QA run since; an upgrade with no commits skips both. Every fix goes back through
   review, a fix for QA included.
