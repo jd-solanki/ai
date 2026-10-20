@@ -24,6 +24,7 @@ function herdrAgent(pane_id: string, agent_status: string, more = {}) {
     agent: 'claude',
     workspace_id: 'w1',
     tab_id: 'w1:t9',
+    cwd: '/code/nuxtstart',
     terminal_title_stripped: 'Fix login',
     ...more,
   }
@@ -194,6 +195,26 @@ test('clampSelection keeps the selection on the board as cards come and go', () 
   assert.deepEqual(clampSelection(columns, { column: 0, card: 5 }), { column: 0, card: 1 })
   assert.deepEqual(clampSelection(columns, { column: -1, card: 0 }), { column: 0, card: 0 })
   assert.deepEqual(clampSelection(columns, { column: 9, card: 1 }), { column: 3, card: 0 })
+})
+
+test("toColumns links a card to the issue or pull request its tab's name numbers", () => {
+  const snapshot = {
+    workspaces,
+    tabs: [
+      { tab_id: 'w1:t1', label: '🔍 #365 chore(deps): return to stable Nuxt' },
+      { tab_id: 'w1:t2', label: 'n8n & OSS business model' },
+      { tab_id: 'w1:t3', label: 'C#1 notes' },
+    ],
+    agents: [
+      herdrAgent('w1:p1', 'working', { tab_id: 'w1:t1' }),
+      herdrAgent('w1:p2', 'working', { tab_id: 'w1:t2' }),
+      herdrAgent('w1:p3', 'working', { tab_id: 'w1:t3' }),
+    ],
+  }
+  assert.deepEqual(
+    toColumns(snapshot)[0].cards.map((card) => card.issue),
+    [{ number: '365', cwd: '/code/nuxtstart' }, undefined, undefined],
+  )
 })
 
 test('toColumns adds an unknown column only while a herdr agent is in it', () => {

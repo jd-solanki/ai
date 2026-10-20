@@ -6,6 +6,7 @@ A herdr plugin that shows every herdr agent on the server in a column for its st
 
 - herdr 0.9.5 or newer, with the server restarted onto it.
 - Node, in the range `engines` in the root `package.json` sets. The plugin runs TypeScript directly, with no build step.
+- For Option+click, `gh`, logged in, on the `PATH` of the herdr server. The plugin runs in the server's environment, not your shell's.
 
 ## Install
 
@@ -28,7 +29,7 @@ It opens in its own workspace, 🗂️ Kanban, so it sits in the sidebar one cli
 
 To open it as a tab in the current workspace instead, run only `herdr plugin pane open --plugin jd-solanki.herdr-kanban --entrypoint board`.
 
-Arrow keys or `hjkl` move between cards. The selected card is tinted with its column's colour, in that colour. Enter, or a click on a card, focuses that herdr agent and leaves the board open. Each column takes the colour herdr's sidebar gives its state, from your terminal's palette. `q` closes it. The board refreshes every second.
+Arrow keys or `hjkl` move between cards. The selected card is tinted with its column's colour, in that colour. Enter, or a click on a card, focuses that herdr agent and leaves the board open. Option+click on a card opens its issue or pull request on GitHub: the first `#number` in its tab's name, in the repository of the herdr agent's directory. A software factory run's tab has one, and so does a tab you name `#123`. Cmd+click cannot work: a terminal never tells the board Cmd was held. Each column takes the colour herdr's sidebar gives its state, from your terminal's palette. `q` closes it. The board refreshes every second.
 
 A card shows the same fields, in the same order, as that herdr agent's row in herdr's sidebar: it reads `rows` under `[ui.sidebar.agents]` from your herdr config when it opens, so reopen it after changing them. `rows_by_agent` and a style table's colours are not read, and `machine`, `pane` and `$name` fields stay empty. `state_icon` is left out, since the column already shows the state.
 

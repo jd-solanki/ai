@@ -8,6 +8,7 @@ export interface Snapshot {
     display_agent?: string
     workspace_id: string
     tab_id: string
+    cwd: string
     terminal_title?: string
     terminal_title_stripped?: string
   }[]
@@ -19,6 +20,8 @@ export interface Card {
   paneId: string
   // One line per configured row, as herdr's sidebar draws it.
   lines: string[]
+  // Issue or pull request: GitHub numbers both from one sequence. cwd is the clone gh reads the repository from.
+  issue?: { number: string; cwd: string }
 }
 
 export interface Column {
@@ -32,6 +35,8 @@ export interface Selection {
 }
 
 const STATUSES = ['working', 'blocked', 'done', 'idle']
+// The first #number, as apps/software-factory and apps/herdr-tab-title both put it in a tab's name; `C#1` is not one.
+const ISSUE_NUMBER = /(?:^|\s)#(\d+)/
 
 export type Rows = string[][]
 // herdr's own default, for a config that sets no rows.
@@ -88,7 +93,9 @@ export function toColumns(snapshot: Snapshot, rows: Rows = DEFAULT_ROWS): Column
           terminal_title: agent.terminal_title,
           terminal_title_stripped: agent.terminal_title_stripped,
         }
-        return { paneId: agent.pane_id, lines: rows.map((row) => line(row, values)) }
+        const card: Card = { paneId: agent.pane_id, lines: rows.map((row) => line(row, values)) }
+        const issueNumber = values.tab?.match(ISSUE_NUMBER)?.[1]
+        return issueNumber ? { ...card, issue: { number: issueNumber, cwd: agent.cwd } } : card
       }),
   }))
   return columns.filter((column) => STATUSES.includes(column.status) || column.cards.length)

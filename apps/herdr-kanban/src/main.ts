@@ -19,6 +19,8 @@ const REFRESH_MS = 1000
 const ENTER_FULL_SCREEN = '\x1b[?1049h\x1b[?25l\x1b[?1000h\x1b[?1006h' // alternate screen, cursor hidden, SGR mouse clicks
 const LEAVE_FULL_SCREEN = '\x1b[?1006l\x1b[?1000l\x1b[?25h\x1b[?1049l'
 const LEFT_CLICK = /^\x1b\[<0;(\d+);(\d+)M$/
+// Button 8 is a left click with Option held. A terminal never reports Cmd: Cmd+click arrives as a plain click.
+const OPTION_CLICK = /^\x1b\[<8;(\d+);(\d+)M$/
 const CLEAR_SCREEN = '\x1b[H\x1b[2J'
 const KEY_STEPS: Record<string, { column: number; card: number }> = {
   '\x1b[A': { column: 0, card: -1 },
@@ -40,6 +42,8 @@ const rows = rowsFrom(readHerdrConfig())
 let columns = readColumns()
 let selected: Selection = { column: 0, card: 0 }
 let failure = ''
+// Kept until the next Enter or click, as a refresh clears only its own failure.
+let actionFailure = ''
 const terminalColors: TerminalColors = new Map()
 
 // herdr gives a plugin none of its config, but its help names the file it reads, on any platform.
@@ -64,8 +68,9 @@ function selectedCard() {
 
 function draw() {
   const { columns: width, rows: height } = process.stdout
-  const board = render(columns, selected, width, failure ? height - 1 : height, terminalColors)
-  process.stdout.write(`${CLEAR_SCREEN}${board}${failure ? `\n\x1b[31m${failure}\x1b[0m` : ''}`)
+  const message = failure || actionFailure
+  const board = render(columns, selected, width, message ? height - 1 : height, terminalColors)
+  process.stdout.write(`${CLEAR_SCREEN}${board}${message ? `\n\x1b[31m${message}\x1b[0m` : ''}`)
 }
 
 function refresh() {
@@ -75,7 +80,7 @@ function refresh() {
     failure = ''
   } catch (error) {
     // Keep the last board: a server restart or handoff fails a snapshot or two.
-    failure = `Could not read herdr's state: ${(error as Error).message.split('\n')[0]}`
+    failure = `Could not read herdr's state: ${firstLine(error)}`
   }
   selected = (paneId && findCard(columns, paneId)) || clampSelection(columns, selected)
   draw()
@@ -83,29 +88,53 @@ function refresh() {
 }
 
 function focusSelected() {
+  actionFailure = ''
   const card = selectedCard()
   if (!card) return
   try {
     execFileSync(herdr, ['agent', 'focus', card.paneId], CAPTURED)
   } catch (error) {
-    failure = `Could not focus ${card.lines.join(' ')}: ${(error as Error).message.split('\n')[0]}`
+    actionFailure = `Could not focus ${card.lines.join(' ')}: ${firstLine(error)}`
     draw()
   }
 }
 
-function click(x: number, y: number) {
+function openSelectedOnGitHub() {
+  actionFailure = ''
+  const card = selectedCard()
+  if (!card) return
+  if (!card.issue) {
+    actionFailure = `No #number in the tab name of ${card.lines.join(' ')}`
+    return draw()
+  }
+  try {
+    execFileSync('gh', ['browse', card.issue.number], { ...CAPTURED, cwd: card.issue.cwd })
+  } catch (error) {
+    actionFailure = `Could not open #${card.issue.number} on GitHub: ${firstLine(error)}`
+    draw()
+  }
+}
+
+function firstLine(error: unknown) {
+  return (error as Error).message.split('\n')[0]
+}
+
+function click(x: number, y: number, act: () => void) {
   const card = cardAt(columns, process.stdout.columns, x, y)
   if (!card) return
   selected = card
   draw()
-  focusSelected()
+  act()
 }
 
 function press(key: string) {
   if (QUIT_KEYS.includes(key)) process.exit(0)
   if (key === '\r') return focusSelected()
   const leftClick = key.match(LEFT_CLICK)
-  if (leftClick) return click(Number(leftClick[1]), Number(leftClick[2]))
+  if (leftClick) return click(Number(leftClick[1]), Number(leftClick[2]), focusSelected)
+  const optionClick = key.match(OPTION_CLICK)
+  if (optionClick)
+    return click(Number(optionClick[1]), Number(optionClick[2]), openSelectedOnGitHub)
   const step = KEY_STEPS[key]
   if (!step) return
   selected = clampSelection(columns, {
