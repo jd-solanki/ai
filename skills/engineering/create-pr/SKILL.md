@@ -40,12 +40,20 @@ without giving the reviewer something new. The body is these sections, in this o
    migration, a published contract, deleted data), two-way when a revert undoes it.
    Then the **blast radius**: what breaks if the change is wrong (consumers, layout,
    mobile, a scheduled job).
-4. `## QA steps` — how a person tries the change by hand before it merges. Number
-   the steps from a checkout of the branch: the command to run or the thing to
-   click, then the result they should see. Cover the changed behaviour first, then
-   its blast radius. CI already reports the tests, so every step is something a
-   person does by hand. A change with no visible behaviour, such as a refactor, gets
-   the steps that show nothing moved.
+4. `## QA steps` — how a person tries the change by hand before it merges, as a list
+   of scenarios. Each scenario is an unticked checkbox naming one behaviour, with its
+   steps numbered beneath it from a checkout of the branch: the command to run or the
+   thing to click, then the result they should see. Scenarios for the changed
+   behaviour come first, then its blast radius. CI already reports the tests, so every
+   step is something a person does by hand. A change with no visible behaviour, such
+   as a refactor, gets the scenario that shows nothing moved. Whoever tries a scenario
+   and sees it pass ticks its box.
+
+   ```markdown
+   - [ ] **Saving settings shows a toast**
+     1. `pnpm dev`, open `/settings` → the form loads with your current values.
+     2. Change the name, click Save → a "Saved" toast appears.
+   ```
 5. `## Notes` — what a careful reader still cannot infer from the diff after
    reading it. Invariants that hold across the change, a decision that looks
    arbitrary but was deliberate, a gotcha that will trip the next person, a
@@ -129,7 +137,7 @@ uncommitted.
 The diff, the log, and the ticket it closes.
 
 **Done when:** from what you read, you can state the problem, the approach, the
-downstream effect with its door and blast radius, the QA steps a reviewer will follow,
+downstream effect with its door and blast radius, the QA scenarios a reviewer will try,
 and every Note you plan to include.
 
 ### 3. Draft the body
