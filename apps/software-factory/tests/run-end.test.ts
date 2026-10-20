@@ -222,7 +222,11 @@ test('a dry review hands a pull request with QA scenarios to the Verifier', asyn
 })
 
 test('a dry review marks ready a pull request whose QA steps hold no scenario', async () => {
-  for (const body of ['## QA steps\n\n1. Run it.\n', '## Notes\n\n- [ ] not a scenario\n']) {
+  for (const body of [
+    '## QA steps\n\n1. Run it.\n',
+    '## Notes\n\n- [ ] not a scenario\n',
+    '## QA steps\n\n1. Run it.\n\n## Notes\n\n- [ ] not a scenario\n',
+  ]) {
     const run = pullRequest('agent:review', body, summary(fresh, 'dry'))
     assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
   }
@@ -289,9 +293,9 @@ test('a QA run that ended or left no verdict of its own waits on whoever applied
 })
 
 test('the factory edits its own comment in place rather than adding one', async () => {
-  const factoryComment = (login: string) =>
-    JSON.stringify({ id: 99, login, updated_at: fresh, body: '<!-- factory -->\n@octocat earlier' })
-  const run = review(factoryComment('mallory'), factoryComment('factory'))
+  const factoryComment = (id: number, login: string) =>
+    JSON.stringify({ id, login, updated_at: fresh, body: '<!-- factory -->\n@octocat earlier' })
+  const run = review(factoryComment(98, 'mallory'), factoryComment(99, 'factory'))
   await run.end()
   assert.deepEqual(run.writes, [
     `pr edit ${pull} --remove-label agent:reviewing`,

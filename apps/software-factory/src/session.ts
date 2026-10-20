@@ -94,8 +94,6 @@ export interface Launch {
   work: WorkItem
   claim: string[]
   release: string[]
-  // What a crash tells whoever applied the trigger label.
-  crash: (why: string) => string
 }
 
 export function claudeArgs(
@@ -168,8 +166,6 @@ export function claudeArgs(
     },
     claim: [...edit, '--remove-label', trigger.label, '--add-label', working],
     release: [...edit, '--remove-label', working],
-    crash: (why) =>
-      `the ${trigger.label} run ${why} before it finished. Apply ${trigger.label} again to retry.`,
   }
 }
 

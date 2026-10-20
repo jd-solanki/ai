@@ -212,10 +212,11 @@ flowchart LR
   A["agent:upgrade<br/>on a Renovate PR"] -->|"commits on its branch"| R
   A -->|"nothing to change"| D
   R -->|"tasks"| X["agent:fix"] --> R
-  R -->|"dry, with QA scenarios"| V["agent:verify"]
-  R -->|"dry, none"| D["PR ready for review"]
+  R -->|"dry of the head, with QA scenarios"| V["agent:verify"]
+  R -->|"dry of the head, none"| D["PR ready for review"]
+  R -->|"dry of an older head"| R
   V -->|"pass after a dry review of the head"| D
-  V -->|"pass, review not dry"| R
+  V -->|"pass, head not dry-reviewed"| R
   V -->|"fail"| X
   R -->|"ended"| H["Assigned to you"]
   V -->|"ended"| H

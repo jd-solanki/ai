@@ -118,7 +118,7 @@ _Avoid_: result, review status
   machine lacks, holds back nothing: it stays unticked for the human.
 - A tick means the scenario passed on the pull request's current code. `/create-pr` writes every
   box unticked, so the Reviewer's rewrite clears them and the QA run that follows sets them.
-- `/verify-pr` caps QA runs as `/review-pr` caps reviews: a third run that still fails ends QA,
+- `/verify-pr` caps QA runs as `/review-pr` caps reviews: a last run that still fails ends QA,
   and a human decides.
 
 ## Reasons
