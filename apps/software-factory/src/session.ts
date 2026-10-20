@@ -44,6 +44,15 @@ const TRIGGERS = [
     instructions:
       "The work is upgrading the code for the dependency update this pull request makes: leave the code as it would read had it been written against the new versions. The release notes in the pull request body are the spec; follow their links where they defer to a migration guide. Check the pull request out detached: its branch may be checked out in another worktree. Each change is its own commit, with a Conventional Commit subject; an update the code needs nothing from gets no commit. Search this repository's open issues and pull requests for the upstream issues and pull requests the release notes name. Comment on each match, not on this pull request, linking this pull request and saying what the release changes for it. A commit that does an open issue's work ends with Closes <owner>/<repo>#<n>, so the merge closes it; never close one yourself, and an issue the release does not make doable gets a comment at most. Say on this pull request what you changed or why nothing needed to, and push your commits to the pull request's branch.",
   },
+  {
+    event: 'pull_request',
+    label: 'agent:verify',
+    emoji: '🧪',
+    skill: 'verify-pr',
+    effort: 'medium',
+    // The skill ticks the scenarios that passed in the pull request body.
+    allow: ['Bash(gh pr edit:*)'],
+  },
 ]
 
 interface Subject {
@@ -85,7 +94,8 @@ export interface Launch {
   work: WorkItem
   claim: string[]
   release: string[]
-  crash: (why: string) => string[]
+  // What a crash tells whoever applied the trigger label.
+  crash: (why: string) => string
 }
 
 export function claudeArgs(
@@ -128,7 +138,8 @@ export function claudeArgs(
     '--permission-mode',
     'auto',
     '--append-system-prompt',
-    `You run unattended for the software factory: nobody reads this terminal or answers a question asked in it. ${mention} applied ${trigger.label}: anything they must do or decide goes on ${url}, mentioning them. ${trigger.instructions ?? ''}`.trimEnd(),
+    // A wrap-up comment beside the skill's own record repeats it, once per round.
+    `You run unattended for the software factory: nobody reads this terminal or answers a question asked in it. ${mention} applied ${trigger.label}: anything they must do or decide goes in what your skill writes on ${url}, mentioning them. Post nothing there beyond what your skill and these instructions write. ${trigger.instructions ?? ''}`.trimEnd(),
     '--settings',
     JSON.stringify({
       hooks: hooks(token),
@@ -157,13 +168,8 @@ export function claudeArgs(
     },
     claim: [...edit, '--remove-label', trigger.label, '--add-label', working],
     release: [...edit, '--remove-label', working],
-    crash: (why) => [
-      kind,
-      'comment',
-      url,
-      '--body',
-      `${mention} the ${trigger.label} run ${why} before it finished. Apply ${trigger.label} again to retry.`,
-    ],
+    crash: (why) =>
+      `the ${trigger.label} run ${why} before it finished. Apply ${trigger.label} again to retry.`,
   }
 }
 

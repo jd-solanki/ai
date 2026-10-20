@@ -26,6 +26,7 @@ const review = () => launch('pull_request', 'agent:review', { pull_request: subj
 const fix = () => launch('pull_request', 'agent:fix', { pull_request: subject() })
 const upgrade = () =>
   launch('pull_request', 'agent:upgrade', { pull_request: subject('⬆️ Renovate') })
+const verify = () => launch('pull_request', 'agent:verify', { pull_request: subject() })
 
 test('claudeArgs starts the trigger label skill in an interactive session of its own', () => {
   const { args } = implement()
@@ -37,6 +38,7 @@ test('claudeArgs starts the trigger label skill in an interactive session of its
   assert.equal(fix().args.at(-1), '/implement https://github.com/acme/app/issues/12')
   const followUp = launch('issues', 'agent:implement', { issue: subject('issue:follow-up') })
   assert.equal(followUp.args.at(-1), '/implement-spec https://github.com/acme/app/issues/12')
+  assert.equal(verify().args.at(-1), '/verify-pr https://github.com/acme/app/issues/12')
 })
 
 test('claudeArgs names the session for the trigger label and work item', () => {
@@ -48,6 +50,7 @@ test("claudeArgs labels the run tab with its trigger's emoji, the work item numb
   assert.equal(implement().tabLabel, '🏗️ #12 Kiosk pairing')
   assert.equal(review().tabLabel, '🔍 #12 Kiosk pairing')
   assert.equal(upgrade().tabLabel, '⬆️ #12 Kiosk pairing')
+  assert.equal(verify().tabLabel, '🧪 #12 Kiosk pairing')
   const pullRequest = { ...subject(), title: 'Kiosk\x1b[2J pairing\n' }
   assert.equal(
     launch('pull_request', 'agent:fix', { pull_request: pullRequest }).tabLabel,
@@ -92,20 +95,22 @@ test('claudeArgs tells each session who to mention and leaves the hand-off to th
   assert.match(prompt(implement()), /@octocat applied agent:implement/)
   assert.match(
     prompt(implement()),
-    /goes on https:\/\/github.com\/acme\/app\/issues\/12, mentioning them\.$/,
+    /goes in what your skill writes on https:\/\/github.com\/acme\/app\/issues\/12, mentioning them\. Post nothing there beyond what your skill and these instructions write\.$/,
   )
   assert.match(prompt(review()), /keeping every Closes line/)
-  for (const launched of [implement(), review(), fix(), upgrade()])
+  for (const launched of [implement(), review(), fix(), upgrade(), verify()])
     assert.doesNotMatch(prompt(launched), /label|ready for review/)
   const allowed = ({ args }: { args: string[] }) =>
     JSON.parse(flag(args, '--settings') ?? '').permissions.allow
   assert.deepEqual(allowed(review()), ['Bash(gh pr edit:*)'])
   assert.deepEqual(allowed(upgrade()), [])
+  assert.deepEqual(allowed(verify()), ['Bash(gh pr edit:*)'])
 })
 
 test('claudeArgs claims a work item with the working label of its trigger', () => {
   assert.equal(implement().claim.at(-1), 'agent:implementing')
   assert.equal(upgrade().claim.at(-1), 'agent:upgrading')
+  assert.equal(verify().claim.at(-1), 'agent:verifying')
 })
 
 test('claudeArgs has each run-ending hook report to the factory server under the run token', () => {

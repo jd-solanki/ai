@@ -13,8 +13,14 @@ The sub-issues outside the done set whose blocking siblings are all inside it.
 A human step a spec lists for its pull request: it blocks merge or production, never an
 AFK issue.
 
-**Implementer**, **Reviewer**, **Fixer**, **Upgrader**:
-The agents that `agent:implement`, `agent:review`, `agent:fix` and `agent:upgrade` request.
+**Implementer**, **Reviewer**, **Fixer**, **Upgrader**, **Verifier**:
+The agents that `agent:implement`, `agent:review`, `agent:fix`, `agent:upgrade` and
+`agent:verify` request.
+
+**QA scenario**:
+One checkbox under a pull request body's `## QA steps`: a behaviour to try by hand, with
+numbered steps, each naming the result to see.
+_Avoid_: test case, test plan, verification step
 
 **Dependency update**:
 A pull request that bumps dependency versions and carries their release notes in its body,
@@ -40,9 +46,12 @@ _Avoid_: result, review status
   5. The Implementer exits, and static code hands the draft to the Reviewer. Review runs and
      Fixer runs alternate until a review comes back dry, which is the approval: `/review-pr`
      defines dry, and files what the review leaves for later as one follow-up. The Reviewer then rewrites the pull
-     request body with `/create-pr`, keeping every `Closes` line, and static code marks the pull
-     request ready for review.
-  6. A human merges, then does the Owner steps.
+     request body with `/create-pr`, keeping every `Closes` line. Static code hands it to the
+     Verifier when the body holds a QA scenario, and marks it ready for review when not.
+  6. The Verifier runs `/verify-pr`: it tries every QA scenario, ticks the ones that pass, and
+     posts each failure as a review thread. A pass marks the pull request ready for review. A
+     fail goes to the Fixer, then the Reviewer, then the Verifier again.
+  7. A human merges, then does the Owner steps and any QA scenario left unticked.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
   runs `/implement` with instructions appended: the release notes are the spec, and the code
@@ -99,7 +108,16 @@ _Avoid_: result, review status
 - Static code hands a work item on at its run's clean stop, from what GitHub shows then; a
   crash hands nothing on. A run with no next step on GitHub waits on whoever applied its
   trigger label.
-- A review run's verdict is the one `/review-pr` writes into its summary comment.
+- A review run's verdict is the one `/review-pr` writes into its summary comment, and a QA run's
+  the one `/verify-pr` writes into its QA comment: `pass`, `fail` or `ended`.
+- A pull request is marked ready only after a dry review, and, when its body holds QA scenarios,
+  a passing QA run since. Every fix goes back through review, a fix for QA included.
+- A QA scenario ends `pass`, `fail` or `blocked`. A blocked one, which needs what the factory
+  machine lacks, holds back nothing: it stays unticked for the human.
+- A tick means the scenario passed on the pull request's current code. `/create-pr` writes every
+  box unticked, so the Reviewer's rewrite clears them and the QA run that follows sets them.
+- `/verify-pr` caps QA runs as `/review-pr` caps reviews: a third run that still fails ends QA,
+  and a human decides.
 
 ## Reasons
 
@@ -155,7 +173,8 @@ _Avoid_: result, review status
 - A Fixer run with no commits still goes to the Reviewer: its `blocked` replies need judging.
 - Waiting on a human is an assignment, which queues the work item under the human's assigned
   items: every factory write runs as the factory owner, so the factory's mention never
-  notifies the owner.
+  notifies the owner. What static code tells them goes in one factory comment per work item,
+  edited in place, so retries and waits never pile up.
 - A follow-up's items are checked, not trusted: an agent wrote them, some unproven, and the
   code may have moved since.
 - A follow-up's pull request files no follow-up of its own, or each would breed the next, as
@@ -163,6 +182,15 @@ _Avoid_: result, review status
 - A changed decision or a wrong spec line goes to a human because the owner holds the
   one-way doors; by the pull request, the code already rests on the agent's call.
 - This file is the only definition of the pipeline, so served repos carry no copy.
+- QA runs after a dry review, not before: a review's fixes would change the code a QA run had
+  passed.
+- A QA failure is a review thread so the Fixer and the Reviewer's fix-verify work it as they
+  work a review's, with its done and blocked replies. The cost: its anchor is the Verifier's
+  guess at the line responsible.
+- The QA report is its own comment, not a section of the review summary: each skill rewrites its
+  comment whole, and either runs without the other.
+- Blocked scenarios do not hold ready back: a human merges anyway, and an unticked box is the
+  list of what is left for them.
 
 ## Fences
 
@@ -174,8 +202,12 @@ _Avoid_: result, review status
   branch once another author commits to it, and the checkbox recreates the branch from
   scratch. Re-apply `agent:upgrade` after ticking it. `apps/software-factory/src/session.ts:TRIGGERS`
 
+- **A file-level review comment opens a review of its own.** GitHub files a `subject_type: file`
+  comment apart from the review it was posted with, so the Fixer's "threads of the last review"
+  would miss the rest. Every QA thread sits on a changed line. `skills/in-progress/verify-pr/SKILL.md`
+
 ## Where it lives
 
 `apps/software-factory/src/session.ts` (`TRIGGERS`: the skill each trigger label starts),
 `apps/software-factory/src/hand-off.ts` (`NEXT_STEPS`: where each run hands its work item), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
-`create-pr`), `.agents/skills/` (`grill-with-docs`, `implement`), `apps/software-factory/README.md` (Add a project: the labels a served repo needs).
+`create-pr`, `verify-pr`), `.agents/skills/` (`grill-with-docs`, `implement`), `apps/software-factory/README.md` (Add a project: the labels a served repo needs).

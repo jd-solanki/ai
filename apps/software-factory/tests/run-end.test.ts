@@ -48,7 +48,11 @@ function factory({
         gh: async (args, cwd) => {
           ghDirs.add(cwd)
           const read = github(args)
-          if (['list', 'view', 'api'].some((verb) => args.includes(verb)))
+          // A PATCH through `gh api` is a write.
+          if (
+            ['list', 'view'].some((verb) => args.includes(verb)) ||
+            (args[0] === 'api' && !args.includes('-X'))
+          )
             return read === undefined
               ? { ok: false, stdout: '', output: 'HTTP 502' }
               : { ok: true, stdout: read, output: read }
@@ -79,22 +83,34 @@ function factory({
   }
 }
 
-const summary = (updated_at: string, verdict: string, login = 'factory') =>
+const comment = (marker: string, verdict: string, updated_at: string, login: string) =>
   JSON.stringify({
+    id: 7,
     login,
     updated_at,
-    body: `<!-- review-pr:summary -->\n<!-- review-pr:verdict ${verdict} -->\n## 🔍 Review: 7/10`,
+    body: `<!-- ${marker} -->\n<!-- ${marker.split(':')[0]}:verdict ${verdict} -->\n## 7/10`,
   })
-const review = (...comments: string[]) =>
+const summary = (updated_at: string, verdict: string, login = 'factory') =>
+  comment('review-pr:summary', verdict, updated_at, login)
+const qaReport = (updated_at: string, verdict: string) =>
+  comment('verify-pr:report', verdict, updated_at, 'factory')
+const comments =
+  'api repos/acme/app/issues/12/comments --paginate --jq .[] | {id, login: .user.login, updated_at, body} | tojson'
+const scenarios =
+  '## QA steps\n\n- [ ] **Saving shows a toast**\n  1. Click Save → a toast appears.\n\n## Notes\n'
+// `body` is the pull request body a dry review leaves.
+const pullRequest = (label: string, body: string, ...said: string[]) =>
   factory({
-    label: 'agent:review',
+    label,
     github: (args) =>
       ({
         'api user --jq .login': 'factory\n',
-        'api repos/acme/app/issues/12/comments --paginate --jq .[] | {login: .user.login, updated_at, body} | tojson':
-          comments.join('\n'),
+        [comments]: said.join('\n'),
+        [`pr view ${pull} --json body --jq .body`]: body,
       })[args.join(' ')],
   })
+const review = (...said: string[]) => pullRequest('agent:review', '', ...said)
+const verify = (...said: string[]) => pullRequest('agent:verify', scenarios, ...said)
 const upgrade = (head: string) =>
   factory({
     label: 'agent:upgrade',
@@ -103,10 +119,13 @@ const upgrade = (head: string) =>
   })
 
 const fresh = '2999-01-01T00:00:00Z'
+const told = (url: string, kind: string, message: string) => [
+  `${kind} edit ${url} --add-assignee octocat`,
+  `${kind} comment ${url} --body <!-- factory -->\n@octocat ${message}`,
+]
 const waits = (url: string, kind: string, label: string, why: string) => [
   `${kind} edit ${url} --remove-label ${label.replace(/e?$/, 'ing')}`,
-  `${kind} edit ${url} --add-assignee octocat`,
-  `${kind} comment ${url} --body @octocat the ${label} run ended and waits on you: ${why}.`,
+  ...told(url, kind, `the ${label} run ended and waits on you: ${why}.`),
 ]
 
 test('a clean stop hands a fixed pull request back to the Reviewer and closes the run', async () => {
@@ -147,6 +166,75 @@ test('a dry review marks the pull request ready', async () => {
   assert.deepEqual(run.writes, [
     `pr edit ${pull} --remove-label agent:reviewing`,
     `pr ready ${pull}`,
+  ])
+})
+
+test('a dry review hands a pull request with QA scenarios to the Verifier', async () => {
+  const run = pullRequest('agent:review', scenarios, summary(fresh, 'dry'))
+  assert.equal((await run.end()).body, 'agent:review app#12: Handed it to agent:verify')
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:reviewing`,
+    `pr edit ${pull} --add-label agent:verify`,
+  ])
+})
+
+test('a dry review marks ready a pull request whose QA steps hold no scenario', async () => {
+  for (const body of ['## QA steps\n\n1. Run it.\n', '## Notes\n\n- [ ] not a scenario\n']) {
+    const run = pullRequest('agent:review', body, summary(fresh, 'dry'))
+    assert.equal((await run.end()).body, 'agent:review app#12: Marked ready')
+  }
+})
+
+test('a passing QA run marks the pull request ready and a failing one hands it to the Fixer', async () => {
+  const passed = verify(qaReport(fresh, 'pass'))
+  assert.equal((await passed.end()).body, 'agent:verify app#12: Marked ready')
+  assert.deepEqual(passed.writes, [
+    `pr edit ${pull} --remove-label agent:verifying`,
+    `pr ready ${pull}`,
+  ])
+
+  const failed = verify(summary(fresh, 'dry'), qaReport(fresh, 'fail'))
+  await failed.end()
+  assert.deepEqual(failed.writes, [
+    `pr edit ${pull} --remove-label agent:verifying`,
+    `pr edit ${pull} --add-label agent:fix`,
+  ])
+})
+
+test('a QA run that ended or left no verdict of its own waits on whoever applied its label', async () => {
+  const ended = verify(qaReport(fresh, 'ended'))
+  await ended.end()
+  assert.deepEqual(
+    ended.writes,
+    waits(
+      pull,
+      'pr',
+      'agent:verify',
+      'QA ended with scenarios still failing, so you decide what happens to them',
+    ),
+  )
+  // A review's verdict is not a QA verdict.
+  for (const run of [
+    verify(summary(fresh, 'dry')),
+    verify(qaReport('2000-01-01T00:00:00Z', 'pass')),
+  ]) {
+    await run.end()
+    assert.deepEqual(
+      run.writes,
+      waits(pull, 'pr', 'agent:verify', 'this run left no QA verdict on the pull request'),
+    )
+  }
+})
+
+test('the factory edits its own comment in place rather than adding one', async () => {
+  const factoryComment = (login: string) =>
+    JSON.stringify({ id: 99, login, updated_at: fresh, body: '<!-- factory -->\n@octocat earlier' })
+  const run = review(factoryComment('mallory'), factoryComment('factory'))
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:reviewing`,
+    `pr edit ${pull} --add-assignee octocat`,
+    `api -X PATCH repos/acme/app/issues/comments/99 -f body=<!-- factory -->\n@octocat the agent:review run ended and waits on you: this run left no review verdict on the pull request.`,
   ])
 })
 
@@ -298,12 +386,12 @@ test('a stop with background work left keeps the run', async () => {
 
 const released = `pr edit ${pull} --remove-label agent:fixing`
 const crashed = (why: string) =>
-  `pr comment ${pull} --body @octocat the agent:fix run ${why} before it finished. Apply agent:fix again to retry.`
+  told(pull, 'pr', `the agent:fix run ${why} before it finished. Apply agent:fix again to retry.`)
 
 test('a session that exits before a clean stop crashes the run', async () => {
   const run = factory()
   await run.report('SessionEnd', { reason: 'other' })
-  assert.deepEqual(run.writes, [released, crashed('exited')])
+  assert.deepEqual(run.writes, [released, ...crashed('exited')])
   assert.deepEqual(run.closed, ['w7:t3'])
 })
 
@@ -314,7 +402,7 @@ test('a turn that dies on an API error crashes the run', async () => {
     status: 200,
     body: `agent:fix app#12: Crashed: ${JSON.stringify(input)}`,
   })
-  assert.deepEqual(run.writes, [released, crashed('stopped on an API error')])
+  assert.deepEqual(run.writes, [released, ...crashed('stopped on an API error')])
 })
 
 test('the session end that closing a run fires is ignored', async () => {
@@ -336,7 +424,7 @@ test('a run whose tab fails to close keeps its claim', async () => {
 test('a session that ended releases its run even when its tab fails to close', async () => {
   const run = factory({ closes: false })
   await run.report('SessionEnd', { reason: 'other' })
-  assert.deepEqual(run.writes, [released, crashed('exited')])
+  assert.deepEqual(run.writes, [released, ...crashed('exited')])
   assert.equal(run.runs.size, 0)
 })
 
