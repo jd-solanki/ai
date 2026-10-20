@@ -27,8 +27,10 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   },
   'agent:review': async (work, gh) => {
     const verdict = await readVerdict(work, gh, 'review-pr:summary')
-    if (verdict === 'dry')
+    if (verdict === 'dry') {
+      if (!(await reviewedHead(work, gh))) return { to: 'agent:review' }
       return (await hasQaScenarios(work, gh)) ? { to: 'agent:verify' } : { ready: true }
+    }
     if (verdict === 'tasks') return { to: 'agent:fix' }
     if (verdict === 'ended')
       return { wait: 'the review ended, so you decide what happens to what it left open' }
@@ -38,16 +40,8 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   'agent:fix': async () => ({ to: 'agent:review' }),
   'agent:verify': async (work, gh) => {
     const verdict = await readVerdict(work, gh, 'verify-pr:report')
-    if (verdict === 'pass') {
-      // A push since the dry review, a fix's or a human's, leaves the head unreviewed.
-      const review = (await readComment(work, gh, 'review-pr:summary', null)) ?? ''
-      const reviewed = /Last reviewed commit: ([0-9a-f]{7,40})/.exec(review)?.[1]
-      return review.includes('<!-- review-pr:verdict dry -->') &&
-        reviewed &&
-        (await currentHead(work, gh)).startsWith(reviewed)
-        ? { ready: true }
-        : { to: 'agent:review' }
-    }
+    if (verdict === 'pass')
+      return (await reviewedHead(work, gh, null)) ? { ready: true } : { to: 'agent:review' }
     if (verdict === 'fail') return { to: 'agent:fix' }
     if (verdict === 'ended')
       return { wait: 'QA ended with scenarios still failing, so you decide what happens to them' }
@@ -55,6 +49,17 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   },
   'agent:upgrade': async (work, gh) =>
     (await currentHead(work, gh)) === work.head ? { ready: true } : { to: 'agent:review' },
+}
+
+// A push since the dry review, a fix's or a human's, leaves the head unreviewed.
+async function reviewedHead(work: WorkItem, gh: Gh, since?: string | null) {
+  const review = (await readComment(work, gh, 'review-pr:summary', since)) ?? ''
+  const reviewed = /Last reviewed commit: ([0-9a-f]{7,40})/.exec(review)?.[1]
+  return (
+    review.includes('<!-- review-pr:verdict dry -->') &&
+    !!reviewed &&
+    (await currentHead(work, gh)).startsWith(reviewed)
+  )
 }
 
 const currentHead = async (work: WorkItem, gh: Gh) =>

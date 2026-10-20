@@ -176,6 +176,15 @@ test('a dry review marks the pull request ready', async () => {
   ])
 })
 
+test('a dry review of an older head hands the pull request back to the Reviewer', async () => {
+  const run = review(summary(fresh, 'dry', 'factory', '1111111'))
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:reviewing`,
+    `pr edit ${pull} --add-label agent:review`,
+  ])
+})
+
 test('a dry review hands a pull request with QA scenarios to the Verifier', async () => {
   const run = pullRequest('agent:review', scenarios, summary(fresh, 'dry'))
   assert.equal((await run.end()).body, 'agent:review app#12: Handed it to agent:verify')
