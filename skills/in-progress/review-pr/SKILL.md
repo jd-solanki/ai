@@ -92,7 +92,9 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
   reply claims `blocked`. Unresolved and silent is open.
 - **The closing round files what is left.** A round that closes the review, dry or ended, files
   every listed nitpick and every Unproven finding as one issue on the pull request's repository,
-  and links it from the summary. A later round edits that issue rather than filing a second.
+  labelled `issue:follow-up` and titled with a Conventional Commit subject, and links it from the
+  summary. A later round edits that issue rather than filing a second. A pull request whose
+  `Closes` lines name an `issue:follow-up` issue files nothing.
 - **The third round is the last.** A third round that leaves tasks ends the review: the tasks go
   to a human, not to an implementer, and the summary's Action reads `Review ended: a human
   decides`. Every later round ends the same way. Rounds that do not converge spend budget with
@@ -128,7 +130,7 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 <details><summary>⚓ Died at the Anchor grep (<count>)</summary> … </details>
 <details><summary>🙈 Unchecked (<count>)</summary> … </details>
 
-<sub>Reviews (<n>) · Last reviewed commit: <short sha> · Took <minutes>m · Left for later: <the filed issue, once filed></sub>
+<sub>Reviews (<n>) · Last reviewed commit: <short sha> · Took <minutes>m · Left for later: <the filed issue, once filed, or none: this PR does a follow-up></sub>
 ```
 
 Emoji go on headings and severities only, one meaning each: 🔴 blocker, 🟠 major, 🟡 minor. A
