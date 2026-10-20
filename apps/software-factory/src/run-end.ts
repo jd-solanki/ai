@@ -1,9 +1,9 @@
-import { handOff, tell } from './hand-off.ts'
+import { handOff, tellCrash } from './hand-off.ts'
 import type { closeTab, gh, Launch } from './session.ts'
 
 export type Runs = Map<
   string,
-  Pick<Launch, 'name' | 'work' | 'release' | 'crash'> & { tab: string; cwd: string }
+  Pick<Launch, 'name' | 'work' | 'release'> & { tab: string; cwd: string }
 >
 
 interface Factory {
@@ -51,10 +51,7 @@ export async function handleRunReport(
   const crashed = hook === 'StopFailure' ? `Crashed: ${body.toString().trim()}` : 'Crashed'
   const { outcomes, did } = why
     ? {
-        outcomes: [
-          await ghInClone(run.release),
-          ...(await tell(run.work, run.crash(why), ghInClone)),
-        ],
+        outcomes: [await ghInClone(run.release), ...(await tellCrash(run.work, why, ghInClone))],
         did: crashed,
       }
     : await handOff(run, ghInClone)

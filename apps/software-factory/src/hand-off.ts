@@ -100,6 +100,14 @@ export async function handOff({ release, work }: Pick<Launch, 'release' | 'work'
   }
 }
 
+// A crash hands nothing on: whoever applied the trigger label retries.
+export const tellCrash = (work: WorkItem, why: string, gh: Gh) =>
+  tell(
+    work,
+    `the ${work.trigger} run ${why} before it finished. Apply ${work.trigger} again to retry.`,
+    gh,
+  )
+
 const FACTORY = '<!-- factory -->'
 
 // One factory comment per work item, edited in place, so a run's crashes and waits never pile up.
