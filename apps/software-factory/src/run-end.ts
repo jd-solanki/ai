@@ -1,4 +1,4 @@
-import { handOff } from './hand-off.ts'
+import { handOff, tell } from './hand-off.ts'
 import type { closeTab, gh, Launch } from './session.ts'
 
 export type Runs = Map<
@@ -50,7 +50,13 @@ export async function handleRunReport(
   const ghInClone = (args: string[]) => gh(args, run.cwd)
   const crashed = hook === 'StopFailure' ? `Crashed: ${body.toString().trim()}` : 'Crashed'
   const { outcomes, did } = why
-    ? { outcomes: [await ghInClone(run.release), await ghInClone(run.crash(why))], did: crashed }
+    ? {
+        outcomes: [
+          await ghInClone(run.release),
+          ...(await tell(run.work, run.crash(why), ghInClone)),
+        ],
+        did: crashed,
+      }
     : await handOff(run, ghInClone)
   const failed = outcomes.filter((outcome) => !outcome.ok)
   const outcome = failed.map(({ output }) => output.trim()).join('\n') || did

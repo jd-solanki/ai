@@ -37,6 +37,8 @@ _Avoid_: failure
 - The factory server alone decides how a run ends. A session's hooks only report Stop,
   StopFailure and SessionEnd to it.
 - A crash releases the claim and asks whoever applied the trigger label to apply it again.
+- A session writes on GitHub only what its skill and its trigger's instructions write. What a
+  human must do or decide goes in there, mentioning them.
 
 ## Reasons
 
@@ -67,6 +69,8 @@ _Avoid_: failure
   says `idle` and `done` do not prove completion.
 - `blocked` keeps the claim with no code: herdr shows it only while a dialog is up, inside a
   turn, and Stop fires only after a turn ends.
+- A session posts no wrap-up comment because it repeats, once per round, the record its skill
+  already keeps on the work item.
 - A terminal question ends the run because a session is told nobody answers there: what it
   needs goes on the work item, and a re-trigger resumes from the worktree.
 - The server owns a run's end so one place picks the release and the crash in tested code.

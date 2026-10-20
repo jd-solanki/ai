@@ -13,7 +13,7 @@ flowchart LR
 `NEXT_STEPS` in `src/hand-off.ts` says where each run hands its work item when it ends.
 
 Each session is named `<label> <repo>#<number>`, for example `agent:implement ai#1`.
-It runs in a herdr tab labelled `<emoji> #<number> <title>`, the emoji naming the trigger label (🏗️ implement, 🔍 review, 🩹 fix, ⬆️ upgrade), in the first workspace with a pane at the clone itself. With none, the server opens a workspace named for the repo, which closes with its last tab.
+It runs in a herdr tab labelled `<emoji> #<number> <title>`, the emoji naming the trigger label (🏗️ implement, 🔍 review, 🩹 fix, ⬆️ upgrade, 🧪 verify), in the first workspace with a pane at the clone itself. With none, the server opens a workspace named for the repo, which closes with its last tab.
 It works in its own git worktree, `.claude/worktrees/<skill>-<number>`, so two sessions never share a checkout.
 Applying the label again reuses that worktree.
 
@@ -23,6 +23,7 @@ Applying the label again reuses that worktree.
 - Claude Code, on an account that can run Opus.
 - herdr, running on the factory machine. Each session starts in a new herdr tab. With herdr down, a run fails to start and the server takes its `…ing` label off.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.
+- `playwright-cli`, with its browsers: `npm i -g @playwright/cli@latest`, then `playwright-cli install-browser`. The Verifier drives the browser through it.
 - Tailscale, logged in. The first `tailscale funnel` run prints a link to allow Funnel on your tailnet.
 
 ## Conventions for every project
@@ -32,7 +33,7 @@ The server finds everything by convention. Each repo it serves needs:
 1. A clone at `$REPOS_DIR/<owner>/<repo>`, matching GitHub's `owner/repo`. With `REPOS_DIR=~/Projects/github`, `acme/app` lives at `~/Projects/github/acme/app`. Sessions run there, not in the folder the server runs from.
 2. Claude Code trust. In a folder you haven't trusted, `claude --worktree` exits at once, and the run crashes and asks for the trigger label again.
 3. Every label in step 3 of [Add a project](#add-a-project).
-4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr` and `review-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. Ours install from `jd-solanki/ai`; the root `skills-lock.json` lists where the rest come from.
+4. The pipeline's skills (`create-spec`, `implement-spec`, `implement`, `create-pr`, `review-pr` and `verify-pr`) and the skills those call, pushed to the default branch. A session's worktree starts from it. Ours install from `jd-solanki/ai`; the root `skills-lock.json` lists where the rest come from.
 5. `.claude/worktrees/` in `.gitignore`, or every session's worktree shows up as untracked in your clone.
 6. A webhook to this server, using the JSON content type, the `issues` and `pull_request` events, and the secret from `.env`.
 
@@ -99,6 +100,8 @@ gh label create agent:fix -R "$REPO" --force -d "Factory: fix this PR's review f
 gh label create agent:fixing -R "$REPO" --force -d "Factory: a Fixer run holds this PR"
 gh label create agent:upgrade -R "$REPO" --force -d "Factory: upgrade the code for this Renovate PR (needs ⬆️ Renovate)"
 gh label create agent:upgrading -R "$REPO" --force -d "Factory: an Upgrader run holds this PR"
+gh label create agent:verify -R "$REPO" --force -d "Factory: try this PR's QA scenarios"
+gh label create agent:verifying -R "$REPO" --force -d "Factory: a Verifier run holds this PR"
 ```
 
 Step 6 needs admin access to the repo, in the same shell:
@@ -199,6 +202,7 @@ Apply a trigger label on GitHub:
 - `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score.
 - `agent:fix` on a pull request. The session fixes the review's threads.
 - `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, and brings the code in line with the new versions.
+- `agent:verify` on a pull request. The session tries each QA scenario in its body, ticks the ones that pass, posts each failure as a thread and keeps one QA comment.
 
 You apply the first label. When a run ends, the server reads GitHub and applies the next one:
 
@@ -208,17 +212,22 @@ flowchart LR
   A["agent:upgrade<br/>on a Renovate PR"] -->|"commits on its branch"| R
   A -->|"nothing to change"| D
   R -->|"tasks"| X["agent:fix"] --> R
-  R -->|"dry"| D["PR ready for review"]
+  R -->|"dry, with QA scenarios"| V["agent:verify"]
+  R -->|"dry, none"| D["PR ready for review"]
+  V -->|"pass after a dry review of the head"| D
+  V -->|"pass, review not dry"| R
+  V -->|"fail"| X
   R -->|"ended"| H["Assigned to you"]
+  V -->|"ended"| H
   I -->|"no draft PR"| H
 ```
 
-The review's verdict is a marker in its summary comment, written by `/review-pr`, so each served repo needs a `/review-pr` that writes it.
-A run whose next step GitHub doesn't show, such as a review with no verdict of its own, waits on you: the work item is assigned to whoever applied the label, with a comment saying what was missing.
+The review's verdict is a marker in its summary comment, written by `/review-pr`, and QA's is one in its QA comment, written by `/verify-pr`, so each served repo needs the skills that write them.
+A run whose next step GitHub doesn't show, such as a review with no verdict of its own, waits on you: the work item is assigned to whoever applied the label, and the factory's one comment on it says what was missing.
 
 When a run starts, the server swaps the trigger label for its `…ing` label.
 The run ends when its session stops with no background work left: the server closes the run's herdr tab, takes the `…ing` label off and hands the work item on.
-A run whose session ends any other way, such as an API error, a closed tab or herdr stopping, crashes: the label comes off too, and a comment on the work item asks for a retry.
+A run whose session ends any other way, such as an API error, a closed tab or herdr stopping, crashes: the label comes off too, the work item is assigned to whoever applied the label, and the factory's one comment on it asks for a retry.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
 Then, on the factory machine, each session shows in herdr's agent list, in a tab labelled with its trigger's emoji and work item. Open it there to watch or answer.
