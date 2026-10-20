@@ -41,6 +41,20 @@ The reasoning behind all of it — why domain and not document type, why the glo
 
 Repos connected to each other also share a **landscape**, which `/setup-landscape` writes and joins each repo to. The steps for one repo or many, with an organisation example and one across owners, are in [`docs/setting-up-context.md`](./docs/setting-up-context.md).
 
+## Whose herdr tab is it
+
+[`herdr-tab-title`](./apps/herdr-tab-title/) and the [software factory](./apps/software-factory/) both label tabs `<emoji> #<number> <title>`. The emoji tells you who owns the tab:
+
+| Emoji | Tab                                         | Owner            |
+| ----- | ------------------------------------------- | ---------------- |
+| 🛠️    | an issue, from a tab you named `#123`       | you              |
+| 🔀    | a pull request, from a tab you named `#123` | you              |
+| 🏗️    | an implement run                            | software factory |
+| 🔍    | a review run                                | software factory |
+| 🩹    | a fix run                                   | software factory |
+| ⬆️    | an upgrade run                              | software factory |
+| 🧪    | a verify run                                | software factory |
+
 ## Tips
 
 - Use global instruction files (`~/.claude/CLAUDE.md` & `~/.codex/AGENTS.md`) for behavioural changes and use project instructions for working instructions.
