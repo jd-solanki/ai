@@ -54,7 +54,7 @@ export async function handleWebhook(
   const started = await startSession(launch, cwd)
   if (started.ok) runs.set(launch.token, { ...launch, tab: started.tab, cwd })
   // The trigger label stays off: re-applying it sends `labeled`, which starts this run again.
-  else await gh(launch.release, cwd)
+  else await gh(launch.unclaim, cwd)
   return reply(started.ok ? 202 : 500, started.output.trim())
 }
 

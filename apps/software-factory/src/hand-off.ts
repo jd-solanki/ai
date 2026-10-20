@@ -1,4 +1,4 @@
-import type { gh as ghCommand, Launch, WorkItem } from './session.ts'
+import { HANDED_BACK, type gh as ghCommand, type Launch, type WorkItem } from './session.ts'
 
 type Gh = typeof ghCommand
 // The next agent's trigger label, on another work item when `url` says so, or a human step.
@@ -88,8 +88,11 @@ export async function handOff({ release, work }: Pick<Launch, 'release' | 'work'
   }
   if ('ready' in step) {
     const marked = await gh(['pr', 'ready', work.url])
-    if (marked.ok) return { outcomes: [released], did: 'Marked ready' }
-    step = { wait: `the factory could not mark it ready: ${marked.output.trim()}` }
+    step = {
+      wait: marked.ok
+        ? 'it is marked ready for you to merge'
+        : `the factory could not mark it ready: ${marked.output.trim()}`,
+    }
   }
   return {
     outcomes: [
@@ -112,6 +115,7 @@ const FACTORY = '<!-- factory -->'
 
 // One factory comment per work item, edited in place, so a run's crashes and waits never pile up.
 // An assignment queues the work item under the human's assigned items: an edit notifies nobody, and a mention from the owner's own login never notified the owner.
+// The label sets it apart from their other assignments, in its own edit so a repo still lacking the label keeps the assignment.
 export async function tell(work: WorkItem, message: string, gh: Gh) {
   const body = `${FACTORY}\n@${work.sender} ${message}`
   // A comment list GitHub refuses gets a second comment: better than saying nothing.
@@ -121,6 +125,7 @@ export async function tell(work: WorkItem, message: string, gh: Gh) {
   )
   return [
     await gh([work.kind, 'edit', work.url, '--add-assignee', work.sender]),
+    await gh([work.kind, 'edit', work.url, '--add-label', HANDED_BACK]),
     said
       ? await gh([
           'api',

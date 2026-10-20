@@ -133,6 +133,15 @@ test('handleWebhook claims the work item before the session and releases it when
   assert.equal((await handleWebhook(signed(body), body, unstarted)).status, 500)
   assert.deepEqual(unstarted.labelEdits, [claim, '--remove-label agent:reviewing'])
 
+  // A run that never started leaves a handed-back work item on its human's list.
+  const handedBack = reviewRequest('acme/app', 'agent:handed-back')
+  const unstartedHandedBack = factory(false)
+  await handleWebhook(signed(handedBack), handedBack, unstartedHandedBack)
+  assert.deepEqual(unstartedHandedBack.labelEdits, [
+    '--remove-label agent:review --remove-label agent:handed-back --add-label agent:reviewing',
+    '--remove-label agent:reviewing --add-label agent:handed-back',
+  ])
+
   const unclaimed = factory(true, false)
   assert.deepEqual(await handleWebhook(signed(body), body, unclaimed), {
     status: 500,
