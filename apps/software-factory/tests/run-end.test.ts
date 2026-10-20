@@ -185,6 +185,33 @@ test('a dry review of an older head hands the pull request back to the Reviewer'
   ])
 })
 
+test('a dry review whose summary names no readable commit waits rather than reviewing again', async () => {
+  const why =
+    "the dry review's summary names no commit the factory can read, so it cannot tell whether the head was reviewed"
+  const reworded = review(
+    comment('review-pr:summary', 'dry', fresh, 'factory', '\n<sub>Reviews (1)</sub>'),
+  )
+  await reworded.end()
+  assert.deepEqual(reworded.writes, waits(pull, 'pr', 'agent:review', why))
+
+  const passed = verify(
+    comment(
+      'review-pr:summary',
+      'dry',
+      '2000-01-01T00:00:00Z',
+      'factory',
+      '\n<sub>Reviews (1)</sub>',
+    ),
+    qaReport(fresh, 'pass'),
+  )
+  await passed.end()
+  assert.deepEqual(passed.writes, waits(pull, 'pr', 'agent:verify', why))
+
+  // A commit in backticks still reads.
+  const quoted = review(summary(fresh, 'dry', 'factory', '`abc1234`'))
+  assert.equal((await quoted.end()).body, 'agent:review app#12: Marked ready')
+})
+
 test('a dry review hands a pull request with QA scenarios to the Verifier', async () => {
   const run = pullRequest('agent:review', scenarios, summary(fresh, 'dry'))
   assert.equal((await run.end()).body, 'agent:review app#12: Handed it to agent:verify')

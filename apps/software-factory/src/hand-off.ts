@@ -28,7 +28,8 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   'agent:review': async (work, gh) => {
     const verdict = await readVerdict(work, gh, 'review-pr:summary')
     if (verdict === 'dry') {
-      if (!(await reviewedHead(work, gh))) return { to: 'agent:review' }
+      const head = await reviewedHead(work, gh)
+      if (head !== 'current') return head ? { to: 'agent:review' } : { wait: UNREAD_HEAD }
       return (await hasQaScenarios(work, gh)) ? { to: 'agent:verify' } : { ready: true }
     }
     if (verdict === 'tasks') return { to: 'agent:fix' }
@@ -40,8 +41,11 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   'agent:fix': async () => ({ to: 'agent:review' }),
   'agent:verify': async (work, gh) => {
     const verdict = await readVerdict(work, gh, 'verify-pr:report')
-    if (verdict === 'pass')
-      return (await reviewedHead(work, gh, null)) ? { ready: true } : { to: 'agent:review' }
+    if (verdict === 'pass') {
+      const head = await reviewedHead(work, gh, null)
+      if (head !== 'current') return head ? { to: 'agent:review' } : { wait: UNREAD_HEAD }
+      return { ready: true }
+    }
     if (verdict === 'fail') return { to: 'agent:fix' }
     if (verdict === 'ended')
       return { wait: 'QA ended with scenarios still failing, so you decide what happens to them' }
@@ -51,15 +55,18 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
     (await currentHead(work, gh)) === work.head ? { ready: true } : { to: 'agent:review' },
 }
 
+const UNREAD_HEAD =
+  "the dry review's summary names no commit the factory can read, so it cannot tell whether the head was reviewed"
+
 // A push since the dry review, a fix's or a human's, leaves the head unreviewed.
+// A dry summary with no commit to read is undefined, not unreviewed: dry rounds never reach the review cap, so handing it back to review would loop.
+// shortcut: reads the commit off the summary's footer, so a reworded footer waits on a human, have /review-pr write a marker if that happens.
 async function reviewedHead(work: WorkItem, gh: Gh, since?: string | null) {
   const review = (await readComment(work, gh, 'review-pr:summary', since)) ?? ''
-  const reviewed = /Last reviewed commit: ([0-9a-f]{7,40})/.exec(review)?.[1]
-  return (
-    review.includes('<!-- review-pr:verdict dry -->') &&
-    !!reviewed &&
-    (await currentHead(work, gh)).startsWith(reviewed)
-  )
+  if (!review.includes('<!-- review-pr:verdict dry -->')) return 'unreviewed'
+  const reviewed = /Last reviewed commit: `?([0-9a-f]{7,40})\b/.exec(review)?.[1]
+  if (!reviewed) return undefined
+  return (await currentHead(work, gh)).startsWith(reviewed) ? 'current' : 'unreviewed'
 }
 
 const currentHead = async (work: WorkItem, gh: Gh) =>

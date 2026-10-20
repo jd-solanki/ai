@@ -204,6 +204,9 @@ _Avoid_: result, review status
   branch once another author commits to it, and the checkbox recreates the branch from
   scratch. Re-apply `agent:upgrade` after ticking it. `apps/software-factory/src/session.ts:TRIGGERS`
 
+- **A dry round never reaches the review cap.** The cap counts rounds that leave tasks, so a dry
+  review handed back to review whenever its reviewed commit can't be read would loop unwatched. A
+  summary with no readable commit waits on a human. `apps/software-factory/src/hand-off.ts:reviewedHead`
 - **A file-level review comment opens a review of its own.** GitHub files a `subject_type: file`
   comment apart from the review it was posted with, so the Fixer's "threads of the last review"
   would miss the rest. Every QA thread sits on a changed line. `skills/in-progress/verify-pr/SKILL.md`
