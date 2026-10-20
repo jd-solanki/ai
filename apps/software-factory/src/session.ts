@@ -11,7 +11,7 @@ const TRIGGERS = [
     event: 'issues',
     label: 'agent:implement',
     emoji: '🏗️',
-    requires: 'issue:spec',
+    requiresOneOf: ['issue:spec', 'issue:follow-up'],
     skill: 'implement-spec',
     effort: 'medium',
   },
@@ -38,7 +38,7 @@ const TRIGGERS = [
     event: 'pull_request',
     label: 'agent:upgrade',
     emoji: '⬆️',
-    requires: '⬆️ Renovate',
+    requiresOneOf: ['⬆️ Renovate'],
     skill: 'implement',
     effort: 'medium',
     instructions:
@@ -97,8 +97,8 @@ export function claudeArgs(
     return { skip: 'Not a label applied to a work item' }
   const trigger = TRIGGERS.find((t) => t.event === event && t.label === payload.label?.name)
   if (!trigger) return { skip: `Not a trigger label for ${event}` }
-  if (trigger.requires && !subject.labels.some((l) => l.name === trigger.requires))
-    return { skip: `Work item lacks ${trigger.requires}` }
+  if (trigger.requiresOneOf && !subject.labels.some((l) => trigger.requiresOneOf.includes(l.name)))
+    return { skip: `Work item lacks ${trigger.requiresOneOf.join(' or ')}` }
 
   const url = subject.html_url
   const working = trigger.label.replace(/e?$/, 'ing')

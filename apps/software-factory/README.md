@@ -87,6 +87,7 @@ gh repo clone "$REPO" "${REPOS_DIR:?run from apps/software-factory so .env loads
 
 # 3. Labels
 gh label create issue:spec -R "$REPO" --force -d "Spec an agent implements unattended"
+gh label create issue:follow-up -R "$REPO" --force -d "What a PR review left for later, for an agent to implement"
 gh label create issue:AFK -R "$REPO" --force -d "Sub-issue an agent does unattended"
 gh label create issue:HITL -R "$REPO" --force -d "Sub-issue a human does"
 gh label create issue:HITL-done -R "$REPO" --force -d "The human finished this HITL issue"
@@ -194,7 +195,7 @@ Apply the trigger label again to retry.
 
 Apply a trigger label on GitHub:
 
-- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session builds the spec's sub-issues, in parallel where none blocks another, and opens a draft PR.
+- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files, or `issue:follow-up`, which is what `/review-pr` files. The session builds the spec's sub-issues, in parallel where none blocks another, or the spec itself when it has none, and opens a draft PR.
 - `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score.
 - `agent:fix` on a pull request. The session fixes the review's threads.
 - `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, and brings the code in line with the new versions.
