@@ -10,6 +10,7 @@ const TRIGGERS = [
   {
     event: 'issues',
     label: 'agent:implement',
+    emoji: '🏗️',
     requires: 'issue:spec',
     skill: 'implement-spec',
     effort: 'medium',
@@ -27,6 +28,7 @@ const TRIGGERS = [
   {
     event: 'pull_request',
     label: 'agent:fix',
+    emoji: '🩹',
     skill: 'implement',
     effort: 'medium',
     instructions:
@@ -35,6 +37,7 @@ const TRIGGERS = [
   {
     event: 'pull_request',
     label: 'agent:upgrade',
+    emoji: '⬆️',
     requires: '⬆️ Renovate',
     skill: 'implement',
     effort: 'medium',
@@ -139,8 +142,8 @@ export function claudeArgs(
     args,
     name,
     // A title is anyone's text bound for the owner's terminal: control characters must not reach it.
-    // Unless the trigger names its own, the emoji match apps/herdr-tab-title's, so a run's tab reads like the owner's own.
-    tabLabel: `${trigger.emoji ?? (kind === 'pr' ? '🔀' : '🛠️')} ${trigger.label} · ${kind === 'pr' ? 'PR' : 'Issue'} #${subject.number} - ${subject.title.replace(/\p{Cc}/gu, '')}`,
+    // Shaped like apps/herdr-tab-title's labels, with an emoji per trigger apart from its 🔀 and 🛠️, so a run's tab says which agent holds it.
+    tabLabel: `${trigger.emoji} #${subject.number} ${subject.title.replace(/\p{Cc}/gu, '')}`,
     token,
     work: {
       trigger: trigger.label,

@@ -13,7 +13,7 @@ flowchart LR
 `NEXT_STEPS` in `src/hand-off.ts` says where each run hands its work item when it ends.
 
 Each session is named `<label> <repo>#<number>`, for example `agent:implement ai#1`.
-It runs in a herdr tab labelled `<label> · <Issue|PR> #<number> - <title>`, in the first workspace with a pane at the clone itself. With none, the server opens a workspace named for the repo, which closes with its last tab.
+It runs in a herdr tab labelled `<emoji> #<number> <title>`, the emoji naming the trigger label (🏗️ implement, 🔍 review, 🩹 fix, ⬆️ upgrade), in the first workspace with a pane at the clone itself. With none, the server opens a workspace named for the repo, which closes with its last tab.
 It works in its own git worktree, `.claude/worktrees/<skill>-<number>`, so two sessions never share a checkout.
 Applying the label again reuses that worktree.
 
@@ -220,7 +220,7 @@ The run ends when its session stops with no background work left: the server clo
 A run whose session ends any other way, such as an API error, a closed tab or herdr stopping, crashes: the label comes off too, and a comment on the work item asks for a retry.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
-Then, on the factory machine, each session shows in herdr's agent list, in a tab labelled with its trigger label and work item. Open it there to watch or answer.
+Then, on the factory machine, each session shows in herdr's agent list, in a tab labelled with its trigger's emoji and work item. Open it there to watch or answer.
 
 ```bash
 herdr agent list   # sessions and their state

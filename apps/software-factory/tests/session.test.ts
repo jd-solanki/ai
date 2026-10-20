@@ -42,13 +42,14 @@ test('claudeArgs names the session for the trigger label and work item', () => {
   assert.equal(upgrade().name, 'agent:upgrade app#12')
 })
 
-test('claudeArgs labels the run tab with the trigger label, work item number and title', () => {
-  assert.equal(implement().tabLabel, '🛠️ agent:implement · Issue #12 - Kiosk pairing')
-  assert.equal(review().tabLabel, '🔍 agent:review · PR #12 - Kiosk pairing')
+test("claudeArgs labels the run tab with its trigger's emoji, the work item number and title", () => {
+  assert.equal(implement().tabLabel, '🏗️ #12 Kiosk pairing')
+  assert.equal(review().tabLabel, '🔍 #12 Kiosk pairing')
+  assert.equal(upgrade().tabLabel, '⬆️ #12 Kiosk pairing')
   const pullRequest = { ...subject(), title: 'Kiosk\x1b[2J pairing\n' }
   assert.equal(
     launch('pull_request', 'agent:fix', { pull_request: pullRequest }).tabLabel,
-    '🔀 agent:fix · PR #12 - Kiosk[2J pairing',
+    '🩹 #12 Kiosk[2J pairing',
   )
 })
 
@@ -173,10 +174,7 @@ test('startSession labels the run tab, and a rename herdr refuses still launches
   process.env.RENAME_EXIT = '1'
   writeFileSync(join(bin, 'herdr.log'), '')
   assert.equal((await startSession(review(), bin)).ok, true)
-  assert.equal(
-    readFileSync(join(bin, 'herdr.log'), 'utf8'),
-    't1|🔍 agent:review · PR #12 - Kiosk pairing\n',
-  )
+  assert.equal(readFileSync(join(bin, 'herdr.log'), 'utf8'), 't1|🔍 #12 Kiosk pairing\n')
 })
 
 test("startSession types the command only once the shell's prompt is up", async () => {
