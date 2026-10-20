@@ -38,28 +38,27 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   'agent:fix': async () => ({ to: 'agent:review' }),
   'agent:verify': async (work, gh) => {
     const verdict = await readVerdict(work, gh, 'verify-pr:report')
-    if (verdict === 'pass')
-      return (await readVerdict(work, gh, 'review-pr:summary', null)) === 'dry'
+    if (verdict === 'pass') {
+      // A push since the dry review, a fix's or a human's, leaves the head unreviewed.
+      const review = (await readComment(work, gh, 'review-pr:summary', null)) ?? ''
+      const reviewed = /Last reviewed commit: ([0-9a-f]{7,40})/.exec(review)?.[1]
+      return review.includes('<!-- review-pr:verdict dry -->') &&
+        reviewed &&
+        (await currentHead(work, gh)).startsWith(reviewed)
         ? { ready: true }
         : { to: 'agent:review' }
+    }
     if (verdict === 'fail') return { to: 'agent:fix' }
     if (verdict === 'ended')
       return { wait: 'QA ended with scenarios still failing, so you decide what happens to them' }
     return { wait: 'this run left no QA verdict on the pull request' }
   },
-  'agent:upgrade': async (work, gh) => {
-    const head = await read(gh, [
-      'pr',
-      'view',
-      work.url,
-      '--json',
-      'headRefOid',
-      '--jq',
-      '.headRefOid',
-    ])
-    return head.trim() === work.head ? { ready: true } : { to: 'agent:review' }
-  },
+  'agent:upgrade': async (work, gh) =>
+    (await currentHead(work, gh)) === work.head ? { ready: true } : { to: 'agent:review' },
 }
+
+const currentHead = async (work: WorkItem, gh: Gh) =>
+  (await read(gh, ['pr', 'view', work.url, '--json', 'headRefOid', '--jq', '.headRefOid'])).trim()
 
 // A run hands its work item on at its clean stop, from what GitHub shows then.
 // The release is its own write, so a hand-off GitHub refuses still releases the claim.
@@ -151,21 +150,27 @@ async function nextStep(work: WorkItem, gh: Gh): Promise<Step> {
   }
 }
 
-// A verdict counts only from a skill's comment edited since `since`, this run's claim unless null: an older one belongs to an earlier round.
-// `marker` opens the comment, `<skill>:<name>`, and the skill's verdict line follows it.
+// A skill's comment counts only when edited since `since`, this run's claim unless null: an older one belongs to an earlier round.
+// `marker` opens the comment, `<skill>:<name>`.
 // shortcut: compares this machine's clock with GitHub's, so a clock seconds off misreads a run that ends within seconds of its claim, compare the reviewed head instead if that happens.
-async function readVerdict(
+async function readComment(
   work: WorkItem,
   gh: Gh,
   marker: string,
   since: string | null = work.claimedAt,
 ) {
-  const skill = marker.split(':')[0]
   const comment = (await ownComments(work, gh)).find(({ body }) =>
     body.startsWith(`<!-- ${marker} -->`),
   )
   if (!comment || (since && Date.parse(comment.updated_at) < Date.parse(since))) return undefined
-  return new RegExp(`<!-- ${skill}:verdict (\\w+) -->`).exec(comment.body)?.[1]
+  return comment.body
+}
+
+// The skill's verdict line follows its marker in this run's comment.
+async function readVerdict(work: WorkItem, gh: Gh, marker: string) {
+  const skill = marker.split(':')[0]
+  const body = await readComment(work, gh, marker)
+  return body && new RegExp(`<!-- ${skill}:verdict (\\w+) -->`).exec(body)?.[1]
 }
 
 async function read(gh: Gh, args: string[]) {

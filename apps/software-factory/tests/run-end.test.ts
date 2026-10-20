@@ -83,15 +83,21 @@ function factory({
   }
 }
 
-const comment = (marker: string, verdict: string, updated_at: string, login: string) =>
+const comment = (marker: string, verdict: string, updated_at: string, login: string, tail = '') =>
   JSON.stringify({
     id: 7,
     login,
     updated_at,
-    body: `<!-- ${marker} -->\n<!-- ${marker.split(':')[0]}:verdict ${verdict} -->\n## 7/10`,
+    body: `<!-- ${marker} -->\n<!-- ${marker.split(':')[0]}:verdict ${verdict} -->\n## 7/10${tail}`,
   })
-const summary = (updated_at: string, verdict: string, login = 'factory') =>
-  comment('review-pr:summary', verdict, updated_at, login)
+const summary = (updated_at: string, verdict: string, login = 'factory', reviewed = 'abc1234') =>
+  comment(
+    'review-pr:summary',
+    verdict,
+    updated_at,
+    login,
+    `\n<sub>Reviews (1) · Last reviewed commit: ${reviewed}</sub>`,
+  )
 const qaReport = (updated_at: string, verdict: string) =>
   comment('verify-pr:report', verdict, updated_at, 'factory')
 const comments =
@@ -107,6 +113,7 @@ const pullRequest = (label: string, body: string, ...said: string[]) =>
         'api user --jq .login': 'factory\n',
         [comments]: said.join('\n'),
         [`pr view ${pull} --json body --jq .body`]: body,
+        [`pr view ${pull} --json headRefOid --jq .headRefOid`]: 'abc1234def\n',
       })[args.join(' ')],
   })
 const review = (...said: string[]) => pullRequest('agent:review', '', ...said)
@@ -197,6 +204,17 @@ test('a passing QA run marks the pull request ready and a failing one hands it t
   const unreviewed = verify(qaReport(fresh, 'pass'))
   await unreviewed.end()
   assert.deepEqual(unreviewed.writes, [
+    `pr edit ${pull} --remove-label agent:verifying`,
+    `pr edit ${pull} --add-label agent:review`,
+  ])
+
+  // A dry review of an earlier commit leaves the head unreviewed.
+  const stale = verify(
+    summary('2000-01-01T00:00:00Z', 'dry', 'factory', '1111111'),
+    qaReport(fresh, 'pass'),
+  )
+  await stale.end()
+  assert.deepEqual(stale.writes, [
     `pr edit ${pull} --remove-label agent:verifying`,
     `pr edit ${pull} --add-label agent:review`,
   ])

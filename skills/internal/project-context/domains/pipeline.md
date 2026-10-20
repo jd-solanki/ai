@@ -111,9 +111,9 @@ _Avoid_: result, review status
   trigger label.
 - A review run's verdict is the one `/review-pr` writes into its summary comment, and a QA run's
   the one `/verify-pr` writes into its QA comment.
-- A pull request is marked ready only after a dry review and, when its body holds QA scenarios,
-  a passing QA run since; an upgrade with no commits skips both. Every fix goes back through
-  review, a fix for QA included.
+- A pull request is marked ready only after a dry review of its current head and, when its body
+  holds QA scenarios, a passing QA run since; an upgrade with no commits skips both. Every fix
+  goes back through review, a fix for QA included.
 - A QA scenario ends `pass`, `fail` or `blocked`. A blocked one, which needs what the factory
   machine lacks, holds back nothing: it stays unticked for the human.
 - A tick means the scenario passed on the pull request's current code. `/create-pr` writes every
