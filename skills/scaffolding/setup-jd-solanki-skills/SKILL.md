@@ -89,6 +89,7 @@ Examples:
 - Import a shared constant instead of redefining the same value in multiple modules.
 - Read configuration from its canonical source instead of maintaining parallel copies.
 - **Repository content quoted in prose:** When an issue, PR description, or doc refers to something that lives in the repository — a list in `README.md`, a set of supported options, a config schema — point the reader at that location instead of pasting the content. The pasted copy goes stale the moment the source changes, and readers then trust the wrong one. Write "see the supported providers list in `README.md`" instead of reproducing the list.
+- **Magic numbers in prose:** Name the list or item instead of hard-coding its count or position ("the five sections", "section 4").
 
 Before adding duplicated information, check whether a canonical source already exists. If it does, use that source.
 
