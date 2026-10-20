@@ -21,7 +21,7 @@ Applying the label again reuses that worktree.
 
 - Node, in the range `engines` in the root `package.json` sets. The server runs TypeScript directly, with no build step.
 - Claude Code, on an account that can run Opus.
-- herdr, running on the factory machine. Each session starts in a new herdr tab. With herdr down, a run fails to start and the server takes its `…ing` label off.
+- herdr, running on the factory machine. Each session starts in a new herdr tab. With herdr down, a run fails to start: the server takes its `…ing` label off and hands the work item back to you, as below.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.
 - `playwright-cli`, with its browsers: `npm i -g @playwright/cli@latest`, then `playwright-cli install-browser`. The Verifier drives the browser through it.
 - Tailscale, logged in. The first `tailscale funnel` run prints a link to allow Funnel on your tailnet.
@@ -231,7 +231,7 @@ Search `is:open label:agent:handed-back assignee:@me` on GitHub, or save it as a
 
 When a run starts, the server swaps the trigger label, and any `agent:handed-back`, for its `…ing` label.
 The run ends when its session stops with no background work left: the server closes the run's herdr tab, takes the `…ing` label off and hands the work item on.
-A run whose session ends any other way, such as an API error, a closed tab or herdr stopping, crashes: the label comes off too, the work item gets `agent:handed-back` and is assigned to whoever applied the label, and the factory's one comment on it asks for a retry.
+A run whose session ends any other way, such as an API error, a closed tab or herdr stopping, crashes: the label comes off too, it is handed back the same way, and the factory's one comment on it asks for a retry.
 Apply the trigger label again to retry or resume. Applied while the `…ing` label is still on, it is removed and nothing starts.
 
 Then, on the factory machine, each session shows in herdr's agent list, in a tab labelled with its trigger's emoji and work item. Open it there to watch or answer.

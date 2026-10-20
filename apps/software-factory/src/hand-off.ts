@@ -105,17 +105,13 @@ export async function handOff({ release, work }: Pick<Launch, 'release' | 'work'
 
 // A crash hands nothing on: whoever applied the trigger label retries.
 export const tellCrash = (work: WorkItem, why: string, gh: Gh) =>
-  tell(
-    work,
-    `the ${work.trigger} run ${why} before it finished. Apply ${work.trigger} again to retry.`,
-    gh,
-  )
+  tell(work, `the ${work.trigger} run ${why}. Apply ${work.trigger} again to retry.`, gh)
 
 const FACTORY = '<!-- factory -->'
 
 // One factory comment per work item, edited in place, so a run's crashes and waits never pile up.
 // An assignment queues the work item under the human's assigned items: an edit notifies nobody, and a mention from the owner's own login never notified the owner.
-// The label sets it apart from their other assignments, in its own edit so a repo still lacking the label keeps the assignment.
+// The label sets it apart from their other assignments.
 export async function tell(work: WorkItem, message: string, gh: Gh) {
   const body = `${FACTORY}\n@${work.sender} ${message}`
   // A comment list GitHub refuses gets a second comment: better than saying nothing.
@@ -124,8 +120,15 @@ export async function tell(work: WorkItem, message: string, gh: Gh) {
     () => undefined,
   )
   return [
-    await gh([work.kind, 'edit', work.url, '--add-assignee', work.sender]),
-    await gh([work.kind, 'edit', work.url, '--add-label', HANDED_BACK]),
+    await gh([
+      work.kind,
+      'edit',
+      work.url,
+      '--add-assignee',
+      work.sender,
+      '--add-label',
+      HANDED_BACK,
+    ]),
     said
       ? await gh([
           'api',

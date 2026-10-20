@@ -127,8 +127,7 @@ const upgrade = (head: string) =>
 
 const fresh = '2999-01-01T00:00:00Z'
 const told = (url: string, kind: string, message: string) => [
-  `${kind} edit ${url} --add-assignee octocat`,
-  `${kind} edit ${url} --add-label agent:handed-back`,
+  `${kind} edit ${url} --add-assignee octocat --add-label agent:handed-back`,
   `${kind} comment ${url} --body <!-- factory -->\n@octocat ${message}`,
 ]
 const waits = (url: string, kind: string, label: string, why: string) => [
@@ -304,8 +303,7 @@ test('the factory edits its own comment in place rather than adding one', async 
   await run.end()
   assert.deepEqual(run.writes, [
     `pr edit ${pull} --remove-label agent:reviewing`,
-    `pr edit ${pull} --add-assignee octocat`,
-    `pr edit ${pull} --add-label agent:handed-back`,
+    `pr edit ${pull} --add-assignee octocat --add-label agent:handed-back`,
     `api -X PATCH repos/acme/app/issues/comments/99 -f body=<!-- factory -->\n@octocat the agent:review run ended and waits on you: this run left no review verdict on the pull request.`,
   ])
 })

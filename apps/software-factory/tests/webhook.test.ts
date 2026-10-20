@@ -121,9 +121,10 @@ test('handleWebhook starts a session only for a trigger label on a served repo',
   assert.deepEqual(served.started, [join(reposDir, 'acme/app')])
 })
 
-test('handleWebhook claims the work item before the session and releases it when the session fails to start', async () => {
+test('handleWebhook claims the work item before the session and hands it back when the session fails to start', async () => {
   const body = reviewRequest('acme/app')
-  const claim = '--remove-label agent:review --add-label agent:reviewing'
+  const claim =
+    '--remove-label agent:review --remove-label agent:handed-back --add-label agent:reviewing'
 
   const served = factory()
   await handleWebhook(signed(body), body, served)
@@ -131,16 +132,13 @@ test('handleWebhook claims the work item before the session and releases it when
 
   const unstarted = factory(false)
   assert.equal((await handleWebhook(signed(body), body, unstarted)).status, 500)
-  assert.deepEqual(unstarted.labelEdits, [claim, '--remove-label agent:reviewing'])
-
-  // A run that never started leaves a handed-back work item on its human's list.
-  const handedBack = reviewRequest('acme/app', 'agent:handed-back')
-  const unstartedHandedBack = factory(false)
-  await handleWebhook(signed(handedBack), handedBack, unstartedHandedBack)
-  assert.deepEqual(unstartedHandedBack.labelEdits, [
-    '--remove-label agent:review --remove-label agent:handed-back --add-label agent:reviewing',
-    '--remove-label agent:reviewing --add-label agent:handed-back',
-  ])
+  assert.deepEqual(unstarted.labelEdits.slice(0, 2), [claim, '--remove-label agent:reviewing'])
+  assert.ok(unstarted.labelEdits.includes('--add-assignee octocat --add-label agent:handed-back'))
+  assert.ok(
+    unstarted.labelEdits.includes(
+      '--body <!-- factory -->\n@octocat the agent:review run could not start. Apply agent:review again to retry.',
+    ),
+  )
 
   const unclaimed = factory(true, false)
   assert.deepEqual(await handleWebhook(signed(body), body, unclaimed), {
@@ -166,7 +164,7 @@ test("handleWebhook runs gh in the served repo's clone", async () => {
   const unstarted = factory(false)
   const body = reviewRequest('acme/app')
   await handleWebhook(signed(body), body, unstarted)
-  assert.deepEqual(unstarted.ghDirs, [clone, clone])
+  assert.deepEqual(new Set(unstarted.ghDirs), new Set([clone]))
 
   const claimed = factory()
   const relabelled = reviewRequest('acme/app', 'agent:review', 'agent:reviewing')

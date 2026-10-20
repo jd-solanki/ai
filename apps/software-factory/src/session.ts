@@ -97,8 +97,6 @@ export interface Launch {
   work: WorkItem
   claim: string[]
   release: string[]
-  // A launch that fails puts back what its claim took, bar the trigger label.
-  unclaim: string[]
 }
 
 export function claudeArgs(
@@ -124,8 +122,6 @@ export function claudeArgs(
       unlabel: [...edit, '--remove-label', trigger.label],
     }
 
-  // gh fails the whole edit when asked to remove a label the repo lacks.
-  const handedBack = subject.labels.some((l) => l.name === HANDED_BACK)
   const name = `${trigger.label} ${payload.repository.name}#${subject.number}`
   const mention = `@${payload.sender.login}`
   const token = randomUUID()
@@ -175,17 +171,12 @@ export function claudeArgs(
       ...edit,
       '--remove-label',
       trigger.label,
-      ...(handedBack ? ['--remove-label', HANDED_BACK] : []),
+      '--remove-label',
+      HANDED_BACK,
       '--add-label',
       working,
     ],
     release: [...edit, '--remove-label', working],
-    unclaim: [
-      ...edit,
-      '--remove-label',
-      working,
-      ...(handedBack ? ['--add-label', HANDED_BACK] : []),
-    ],
   }
 }
 

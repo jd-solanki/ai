@@ -114,25 +114,6 @@ test('claudeArgs claims a work item with the working label of its trigger', () =
   assert.equal(verify().claim.at(-1), 'agent:verifying')
 })
 
-test('claudeArgs takes agent:handed-back off a work item that carries it as it claims', () => {
-  const handedBack = launch('pull_request', 'agent:review', {
-    pull_request: subject('agent:handed-back'),
-  })
-  assert.deepEqual(handedBack.claim, [
-    'pr',
-    'edit',
-    'https://github.com/acme/app/issues/12',
-    '--remove-label',
-    'agent:review',
-    '--remove-label',
-    'agent:handed-back',
-    '--add-label',
-    'agent:reviewing',
-  ])
-  // gh fails the whole edit when asked to remove a label the repo lacks.
-  assert.ok(!review().claim.includes('agent:handed-back'))
-})
-
 test('claudeArgs has each run-ending hook report to the factory server under the run token', () => {
   const launched = review()
   const hooks = JSON.parse(flag(launched.args, '--settings') ?? '').hooks
