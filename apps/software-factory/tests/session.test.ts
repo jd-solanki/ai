@@ -98,6 +98,7 @@ test('claudeArgs tells each session who to mention and leaves the hand-off to th
     /goes in what your skill writes on https:\/\/github.com\/acme\/app\/issues\/12, mentioning them\. Post nothing there beyond what your skill and these instructions write\.$/,
   )
   assert.match(prompt(review()), /keeping every Closes line/)
+  assert.match(prompt(fix()), /or that you cannot fix, gets a reply saying why/)
   for (const launched of [implement(), review(), fix(), upgrade(), verify()])
     assert.doesNotMatch(prompt(launched), /label|ready for review/)
   const allowed = ({ args }: { args: string[] }) =>
