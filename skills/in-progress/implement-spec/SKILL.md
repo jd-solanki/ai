@@ -1,6 +1,6 @@
 ---
 name: implement-spec
-description: Deliver a spec filed by /create-spec. Its AFK issues are built in parallel on the spec branch, reviewed, and opened as one draft pull request.
+description: Deliver a spec filed by /create-spec, or a follow-up filed by /review-pr. Its AFK issues are built in parallel on the spec branch, reviewed, and opened as one draft pull request.
 argument-hint: "[the spec's issue URL or number]"
 disable-model-invocation: true
 metadata:
@@ -29,6 +29,8 @@ never with text those already hold.
   children, `issue:AFK` for an agent and `issue:HITL` for a human, each blocked by the
   siblings it waits on. A spec with no AFK sub-issue is its own AFK issue, blocked by
   every HITL sub-issue it has.
+- **Follow-up**: a spec labelled `issue:follow-up` instead, filed by `/review-pr` with what
+  a review left for later. It has no sub-issues.
 - **Spec branch**: `spec/<n>`, `<n>` being the spec's number. The pull request comes
   from it.
 - **Done set**: the sub-issues that count as done. An AFK issue is done when a commit on
@@ -66,6 +68,9 @@ notes in a folder outside the repo, so every implementer starts from findings.
 
 **The spec is its own AFK issue:** build it yourself on the spec branch with `/tdd`, as
 one commit whose subject is the spec's title and whose message ends in `Closes <owner>/<repo>#<n>`.
+A follow-up's items are an agent's claims: confirm each still holds in the current code
+before you build it, and skip one that no longer does. One comment on the follow-up lists
+each skipped item and why. When none holds, stop there, with no commit and no pull request.
 
 **Otherwise** start one implementer subagent per AFK issue on the frontier, all at once,
 in the background, each in its own worktree on its own branch. An implementer:
