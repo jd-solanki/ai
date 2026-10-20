@@ -39,7 +39,7 @@ _Avoid_: result, review status
      with `/create-pr`.
   5. The Implementer exits, and static code hands the draft to the Reviewer. Review runs and
      Fixer runs alternate until a review comes back dry, which is the approval: `/review-pr`
-     defines dry, and files what the review leaves for later as one issue. The Reviewer then rewrites the pull
+     defines dry, and files what the review leaves for later as one follow-up. The Reviewer then rewrites the pull
      request body with `/create-pr`, keeping every `Closes` line, and static code marks the pull
      request ready for review.
   6. A human merges, then does the Owner steps.
@@ -63,9 +63,9 @@ _Avoid_: result, review status
 - A sub-issue waits on the siblings GitHub lists as blocking it. The frontier's AFK
   issues run at once, each in its own worktree, and each lands on the spec branch as it
   finishes.
-- Every spec carries `issue:spec`, and `agent:implement` acts only on an issue that
-  carries it. Every sub-issue lives in the spec's repository and carries exactly one of
-  `issue:AFK` or `issue:HITL`.
+- Every spec carries `issue:spec`, a follow-up `issue:follow-up` instead, and
+  `agent:implement` acts only on an issue that carries one of them. Every sub-issue lives
+  in the spec's repository and carries exactly one of `issue:AFK` or `issue:HITL`.
 - The done set: an AFK issue is done when a commit on the spec branch, and not on the
   default branch, has a message ending in `Closes <owner>/<repo>#<n>`. A HITL issue is done when it
   carries `issue:HITL-done`. Open or closed state never counts.
@@ -79,6 +79,9 @@ _Avoid_: result, review status
   decision recorded in project context, or that finds a line of its spec wrong files a
   HITL issue naming it, blocking the sub-issues that wait on the answer, and stops as
   above.
+- The Implementer delivers a follow-up as a spec with no sub-issues. `/implement-spec`
+  defines how it checks the follow-up's items first.
+- A review of a pull request that closes a follow-up files no follow-up.
 - A sub-issue title is a Conventional Commit subject: it becomes the commit subject.
 - A review fix is its own commit, with a Conventional Commit subject naming the fix and
   no `Closes` footer: only an AFK issue's commit marks it done.
@@ -153,6 +156,10 @@ _Avoid_: result, review status
 - Waiting on a human is an assignment, which queues the work item under the human's assigned
   items: every factory write runs as the factory owner, so the factory's mention never
   notifies the owner.
+- A follow-up's items are checked, not trusted: an agent wrote them, some unproven, and the
+  code may have moved since.
+- A follow-up's pull request files no follow-up of its own, or each would breed the next, as
+  jd-solanki/ai#26 did. What it leaves stays in its summary, for the human who merges.
 - A changed decision or a wrong spec line goes to a human because the owner holds the
   one-way doors; by the pull request, the code already rests on the agent's call.
 - This file is the only definition of the pipeline, so served repos carry no copy.

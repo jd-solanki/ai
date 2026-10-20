@@ -98,6 +98,11 @@ The issue an agent is asked to implement: a standalone issue, or a parent whose 
 split the work.
 _Avoid_: ticket, epic, PRD
 
+**Follow-up**:
+The spec a closing review round files with what it leaves for later: its nitpicks and
+Unproven findings.
+_Avoid_: nitpicks issue, leftovers
+
 **Sub-issue**:
 A spec's native GitHub child: one piece of the spec's work, blocked by the siblings it
 waits on.

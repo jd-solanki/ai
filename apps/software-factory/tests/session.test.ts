@@ -35,6 +35,8 @@ test('claudeArgs starts the trigger label skill in an interactive session of its
   assert.equal(args.at(-1), '/implement-spec https://github.com/acme/app/issues/12')
   assert.equal(review().args.at(-1), '/review-pr https://github.com/acme/app/issues/12')
   assert.equal(fix().args.at(-1), '/implement https://github.com/acme/app/issues/12')
+  const followUp = launch('issues', 'agent:implement', { issue: subject('issue:follow-up') })
+  assert.equal(followUp.args.at(-1), '/implement-spec https://github.com/acme/app/issues/12')
 })
 
 test('claudeArgs names the session for the trigger label and work item', () => {
@@ -71,7 +73,7 @@ test('claudeArgs starts nothing for a label event that is not a trigger', () => 
   )
   assert.deepEqual(
     skip('issues', { ...labeled, label: { name: 'agent:implement' }, issue: subject() }),
-    { skip: 'Work item lacks issue:spec' },
+    { skip: 'Work item lacks issue:spec or issue:follow-up' },
   )
   assert.deepEqual(
     skip('pull_request', { ...labeled, label: { name: 'agent:upgrade' }, pull_request: subject() }),
