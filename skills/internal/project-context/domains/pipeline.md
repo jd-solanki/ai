@@ -108,7 +108,8 @@ _Avoid_: result, review status
   request stays a draft, and a human decides what happens to the open findings.
 - Static code hands a work item on at its run's clean stop, from what GitHub shows then; a
   crash hands nothing on. A run that hands its work item to no agent waits on whoever applied
-  its trigger label: a pull request marked ready, a next step GitHub does not show, a crash.
+  its trigger label: a pull request marked ready, a next step GitHub does not show, a crash or
+  a failed launch.
 - A review run's verdict is the one `/review-pr` writes into its summary comment, and a QA run's
   the one `/verify-pr` writes into its QA comment.
 - A pull request is marked ready only after a dry review of its current head and, when its body

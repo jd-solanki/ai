@@ -18,8 +18,6 @@ _Avoid_: primary, higher-priority factory
   human, and none means no agent is on it.
 - Claiming swaps the labels: static code removes the trigger label and `agent:handed-back`,
   and applies the working label. The working label stays exactly as long as the run.
-- Static code applies `agent:handed-back` with the assignment whenever a run waits on a
-  human, as `pipeline.md` says.
 - A trigger label re-applied while its working label is on is ignored: static code logs it
   and removes the trigger label.
 - Only static code applies or removes a working label. A human applies a trigger label,
@@ -58,10 +56,10 @@ _Avoid_: primary, higher-priority factory
 - **A fallback defers by liveness, not by repo or claim.** It defers whenever a preferred
   factory is up, so a repo that factory doesn't serve is lost, and so is a delivery it
   drops before claiming. `apps/software-factory/src/webhook.ts:findFactoryUp`
-- **`gh` fails the whole edit on a label the repo lacks.** A served repo set up before
-  `agent:handed-back` existed would refuse every claim that removes it, so the claim removes
-  it only from a work item that carries it, and `tell` adds it in an edit of its own, apart
-  from the assignment. `apps/software-factory/src/session.ts:claudeArgs`
+- **A served repo lacking `agent:handed-back` refuses every claim.** `gh` fails a whole edit
+  that removes a label the repo lacks, and every claim removes it, so a repo set up before the
+  label existed needs step 3 of the README's Add a project run again.
+  `apps/software-factory/src/session.ts:claudeArgs`
 
 ## Where it lives
 
