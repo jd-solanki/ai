@@ -6,6 +6,7 @@
   "scripts": {
     "ready": "vp check && vp run -r test",
     "factory": "pnpm --filter software-factory start",
+    "factory:check": "tailscale funnel status && curl -fsSI -o /dev/null --doh-url https://cloudflare-dns.com/dns-query \"https://$(tailscale status --json | jq -r '.Self.DNSName | rtrimstr(\".\")')/\" && echo 'Reachable from the internet' || { echo 'NOT reachable from the internet, so GitHub webhooks fail. See the factory README: Start the factory'; exit 1; }",
     "prepare": "vp config"
   },
   "devDependencies": {

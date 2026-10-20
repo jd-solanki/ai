@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { buffer } from 'node:stream/consumers'
 import { handleRunReport, type Runs } from './run-end.ts'
@@ -33,4 +34,6 @@ createServer(async (req, res) => {
   const source = isRunReport ? 'run report' : req.headers['x-github-delivery']
   console.log(new Date().toISOString(), source, status, outcome)
   res.writeHead(status).end(outcome)
-}).listen(PORT)
+}).listen(PORT, () =>
+  spawn('pnpm', ['--silent', '--workspace-root', 'factory:check'], { stdio: 'inherit' }),
+)

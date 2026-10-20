@@ -62,6 +62,12 @@ tailscale funnel status      # prints the public URL
 
 For the first few minutes after you enable Funnel, webhooks can time out before they reach the server.
 
+Once the server is up, `pnpm factory` checks that the internet can reach it, and prints `Reachable from the internet` or why not.
+To check again later, such as when a label isn't picked up, run `pnpm factory:check` from the repository root.
+`tailscale funnel status` reads only this machine's config, and on a tailnet machine MagicDNS answers for the Funnel URL, so both look fine while the internet can't reach the server.
+The check resolves the Funnel URL through public DNS and asks the server whether it is up.
+If the host name doesn't resolve, Tailscale's public record for it is gone: run `tailscale funnel reset`, run your `tailscale funnel` commands again, and wait up to 5 minutes for DNS to catch up.
+
 ## Add a project
 
 Run these from `apps/software-factory` so `.env` loads. The numbers match the conventions above.
