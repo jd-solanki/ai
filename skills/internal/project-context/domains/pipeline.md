@@ -107,8 +107,8 @@ _Avoid_: result, review status
   comment. A last review that leaves findings open ends the alternation: the pull
   request stays a draft, and a human decides what happens to the open findings.
 - Static code hands a work item on at its run's clean stop, from what GitHub shows then; a
-  crash hands nothing on. A run with no next step on GitHub waits on whoever applied its
-  trigger label.
+  crash hands nothing on. A run that hands its work item to no agent waits on whoever applied
+  its trigger label: a pull request marked ready, a next step GitHub does not show, a crash.
 - A review run's verdict is the one `/review-pr` writes into its summary comment, and a QA run's
   the one `/verify-pr` writes into its QA comment.
 - A pull request is marked ready only after a dry review of its current head and, when its body
@@ -173,10 +173,14 @@ _Avoid_: result, review status
   threads: the Tasks heading's mark ignores Unproven findings and failed checks, and a thread
   the Reviewer accepts after a Fixer's `blocked` reply stays unresolved.
 - A Fixer run with no commits still goes to the Reviewer: its `blocked` replies need judging.
-- Waiting on a human is an assignment, which queues the work item under the human's assigned
-  items: every factory write runs as the factory owner, so the factory's mention never
-  notifies the owner. What static code tells them goes in one factory comment per work item,
-  edited in place, so retries and waits never pile up.
+- Waiting on a human is an assignment and `agent:handed-back`, which queue the work item on
+  GitHub, where the human reads it from any device: every factory write runs as the factory
+  owner, so the factory's mention never notifies the owner. What static code tells them goes
+  in one factory comment per work item, edited in place, so retries and waits never pile up.
+- A pull request marked ready waits like any other end: the merge is a human's step, and
+  nothing else tells the owner it came back.
+- No desktop notification: it reaches only the machine that raises it, and the factory may
+  run where nobody sits.
 - A follow-up's items are checked, not trusted: an agent wrote them, some unproven, and the
   code may have moved since.
 - A follow-up's pull request files no follow-up of its own, or each would breed the next, as

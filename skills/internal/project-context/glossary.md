@@ -64,6 +64,10 @@ _Avoid_: tag, command
 The `agent:<verb>ing` label a work item carries while a run holds it.
 _Avoid_: status label, in-progress label
 
+**Handed back**:
+A work item a run left to a human, carrying `agent:handed-back` while it waits on them.
+_Avoid_: done, finished
+
 **Run**:
 One agent's work on one request, from claim to exit.
 _Avoid_: job, execution
