@@ -64,9 +64,10 @@ acts on, and it must point at threads that already exist.
    changed line most likely responsible, or the first changed line of that file when you
    cannot tell; GitHub takes only lines in the diff. A blocked scenario gets no thread: no
    code change unblocks it.
-2. **Checkboxes.** Tick each scenario that passed this run and untick every other, then
-   `gh pr edit <n> --body-file <file>`. A tick means it passed on this commit. Change nothing
-   else in the body.
+2. **Checkboxes.** On a `fail` verdict, untick every box: the Fixer pushes next, so no pass
+   would hold on the code a human sees. Otherwise tick each scenario that passed this run and
+   untick every other, then `gh pr edit <n> --body-file <file>`. A tick means it passed on this
+   commit. Change nothing else in the body.
 3. **The QA comment.** Rewrite it whole from the template below, editing it in place with
    `gh api -X PATCH repos/<owner>/<repo>/issues/comments/<id> -F body=@<file>`, or create it
    with `gh pr comment <n> --body-file <file>` when none exists. Post no other comment.

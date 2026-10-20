@@ -48,9 +48,9 @@ _Avoid_: result, review status
      defines dry, and files what the review leaves for later as one follow-up. The Reviewer then rewrites the pull
      request body with `/create-pr`, keeping every `Closes` line. Static code hands it to the
      Verifier when the body holds a QA scenario, and marks it ready for review when not.
-  6. The Verifier runs `/verify-pr`: it tries every QA scenario, ticks the ones that pass, and
-     posts each failure as a review thread. A pass marks the pull request ready for review. A
-     fail goes to the Fixer, then the Reviewer, then the Verifier again.
+  6. The Verifier runs `/verify-pr`: it tries every QA scenario, ticks the ones that pass unless
+     the run fails, and posts each failure as a review thread. A pass marks the pull request
+     ready for review. A fail goes to the Fixer, then the Reviewer, then the Verifier again.
   7. A human merges, then does the Owner steps and any QA scenario left unticked.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
