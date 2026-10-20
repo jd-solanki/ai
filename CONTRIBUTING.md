@@ -60,4 +60,3 @@ Every rule about this repo lives in `/project-context`. Invoke it.
 - Commits: Conventional Commits.
 - A skill change lands straight on `main`, one commit per skill. Write a skill with
   `/writing-for-agents`.
-- An app change, under `apps/`, goes through a pull request so it gets a review.
