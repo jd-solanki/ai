@@ -22,6 +22,7 @@
   th { font-weight: 500; color: var(--muted); font-size: .85rem; text-align: left; padding: .3rem .5rem; }
   td { padding: .45rem .5rem; border-top: 1px solid var(--line); vertical-align: top; }
   .owner, .urgency { white-space: nowrap; }
+  .num { color: var(--muted); font-variant-numeric: tabular-nums; }
 
   .task { display: flex; gap: .6rem; align-items: flex-start; }
   .task .text { flex: 1; }
@@ -36,7 +37,7 @@
   .x { border: 0; background: none; color: var(--muted); cursor: pointer; visibility: hidden; font-size: .9rem; padding: 0 .2rem; }
   tr:hover .x, li:hover .x, .invalid .x { visibility: visible; }
   .done .text { color: var(--muted); }
-  .invalid .text, .invalid .owner, .invalid .urgency { text-decoration: line-through; color: #9ca3af; }
+  .invalid .num, .invalid .text, .invalid .owner, .invalid .urgency { text-decoration: line-through; color: #9ca3af; }
   .invalid .pill { opacity: .4; }
 
   @media (prefers-color-scheme: dark) {
@@ -55,8 +56,9 @@
 
   <h2>Tasks</h2>
   <table>
-    <tr><th>Status</th><th>Task</th><th>Owner</th><th>Urgency</th><th></th></tr>
-    <tr v-for="t in tasks" :key="t.id" :class="[status(t.id), { invalid: invalid[t.id] }]">
+    <tr><th>#</th><th>Status</th><th>Task</th><th>Owner</th><th>Urgency</th><th></th></tr>
+    <tr v-for="(t, i) in tasks" :key="t.id" :class="[status(t.id), { invalid: invalid[t.id] }]">
+      <td class="num">{{ i + 1 }}</td>
       <td><button class="pill" :class="status(t.id)" @click="cycle(t.id)">{{ labels[status(t.id)] }}</button></td>
       <td><a class="text task-link" :href="'#' + t.topic">{{ t.text }}</a></td>
       <td class="owner">{{ t.owner }}</td>
