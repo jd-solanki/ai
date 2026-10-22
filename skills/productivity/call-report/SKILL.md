@@ -1,6 +1,6 @@
 ---
 name: call-report
-description: Turn a call transcript into an HTML call report — a task table on top, then the call as a timeline of topics.
+description: Turn a call transcript into an HTML call report — a task list on top, then the call as a timeline of topics.
 argument-hint: "<transcript path>"
 disable-model-invocation: true
 ---
@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 A call drifts through updates, topics, decisions and side talk in any order. The
 **call report** lays it out as a timeline the reader can act on: one section per
-topic, in the order it was spoken, and one task table on top gathering every task
+topic, in the order it was spoken, and one task list on top gathering every task
 the call produced.
 
 Transcripts are machine-made and wrong in places. Read past the words to what was
@@ -68,7 +68,7 @@ Give each topic:
 - **summary**: what was said and meant, attributed to speakers.
 - **decisions**: what was settled, where anything was.
 - **tasks**: the concrete work the topic created, each one a separate checkable
-  item. Write "None" when it created none.
+  item.
 - **urgency**: for topics with tasks, from what the speakers said about priority.
 - **notes**: anything else worth a label: an outcome, an interruption, where the
   topic continues.
@@ -78,22 +78,23 @@ transcript does not say otherwise.
 
 **Done when:** every minute of the call sits in exactly one topic.
 
-### 4. Gather the task table
+### 4. Gather the task list
 
-Collect the tasks into one table, one row per piece of work, ordered by urgency
-(most urgent first). A row can merge a topic's checklist into one line. Give each
-row an owner and the topic it came from. Parked and unclear items get rows too, so
+Collect the topic tasks into one list, one task per piece of work, ordered by
+urgency (most urgent first). When one piece of work spans several topic tasks,
+make them its `steps`, each keeping the topic it came from. Give each task an
+owner and the topic it came from. Parked and unclear items get tasks too, so
 nothing said in the call goes missing.
 
-Write each row as a **brief**: an agent told "finish task #3 from the report"
-starts from that row. State the work as an instruction in the project's domain
+Write each task as a **brief**: an agent told "finish task #3 from the report"
+starts from it. State the work as an instruction in the project's domain
 terms, and carry every bound the call set on it: constraints, examples, and what
 is left for the agent to propose. "Let operators add a note to a DDI Order, and
 propose where to show it" is a brief; "Propose note options; Muli picks" is a
 minute.
 
-**Done when:** every topic task is covered by a row, every row links to a topic,
-and every row reads as a brief.
+**Done when:** every topic task is a task or a step of one, every task links to a
+topic, and every task reads as a brief.
 
 ### 5. Write the report
 
@@ -106,7 +107,7 @@ reliability, speakers talking to people off the call, garbled stretches.
 
 Check the script parses, then open the report in the default browser.
 
-**Done when:** the report opens, and its tables and timeline show every row and
-topic from steps 3 and 4.
+**Done when:** the report opens, and it shows every task and topic from steps 3
+and 4.
 
 Tell the user the report's path and what lowered your confidence most.

@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <style>
-  :root { --muted: #6b7280; --line: #e5e7eb; --hl: #fef3c7; }
+  :root { --muted: #6b7280; --line: #e5e7eb; --hl: #fef3c7; --card: #f9fafb; }
   body { font: 15px/1.6 Inter, system-ui, sans-serif; max-width: 880px; margin: 2.5rem auto; padding: 0 1rem; color: #1f2937; }
   h1 { font-size: 1.45rem; margin: 0 0 .25rem; }
   h2 { font-size: 1.1rem; margin: 2.5rem 0 .75rem; }
@@ -18,56 +18,77 @@
   .topic ul { margin: .15rem 0; padding-left: 1.2rem; }
   .time { font-variant-numeric: tabular-nums; font-weight: 600; }
 
-  table { border-collapse: collapse; width: 100%; }
-  th { font-weight: 500; color: var(--muted); font-size: .85rem; text-align: left; padding: .3rem .5rem; }
-  td { padding: .45rem .5rem; border-top: 1px solid var(--line); vertical-align: top; }
   .owner, .urgency { white-space: nowrap; }
-  .num { color: var(--muted); font-variant-numeric: tabular-nums; } .num a { color: inherit; }
-  tr { scroll-margin-top: 1rem; } tr:target { background: var(--hl); }
+  .num { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; } a.num { color: inherit; }
+  .to-tasks { position: fixed; top: 1rem; right: 1rem; background: #1f2937; color: #fff; padding: .3rem .8rem; border-radius: 999px; font-size: .85rem; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .7rem .9rem; margin-bottom: .6rem; scroll-margin-top: 1rem; transition: background .6s; }
+  .card:target { background: var(--hl); }
+  .card header { display: flex; gap: .6rem; align-items: center; font-size: .85rem; }
+  .card header .spacer { flex: 1; }
+  .card p.text { margin: .35rem 0; }
+  .card footer { font-size: .85rem; }
+  .bar { height: 4px; background: var(--line); border-radius: 2px; margin: .4rem 0; overflow: hidden; }
+  .bar div { height: 100%; background: #10b981; transition: width .3s; }
 
   .task { display: flex; gap: .6rem; align-items: flex-start; }
   .task .text { flex: 1; }
-  a.task-link { color: inherit; } a.task-link:hover { color: #2563eb; }
   .tasks { list-style: none; padding: 0 !important; margin-top: .3rem !important; }
   .tasks li { padding: .2rem 0; }
+  a.back { font-size: .85rem; white-space: nowrap; }
 
   .pill { font: 500 .75rem Inter, sans-serif; border: 0; border-radius: 999px; padding: .15rem .6rem; cursor: pointer; min-width: 3.6rem; user-select: none; }
   .pill.todo { background: #f3f4f6; color: #4b5563; }
   .pill.wip  { background: #fef3c7; color: #92400e; }
   .pill.done { background: #d1fae5; color: #065f46; }
   .x { border: 0; background: none; color: var(--muted); cursor: pointer; visibility: hidden; font-size: .9rem; padding: 0 .2rem; }
-  tr:hover .x, li:hover .x, .invalid .x { visibility: visible; }
+  .card:hover .x, .invalid .x { visibility: visible; }
   .done .text { color: var(--muted); }
   .invalid .num, .invalid .text, .invalid .owner, .invalid .urgency { text-decoration: line-through; color: #9ca3af; }
   .invalid .pill { opacity: .4; }
 
   @media (prefers-color-scheme: dark) {
-    :root { --muted: #9ca3af; --line: #2d2d2d; --hl: #3b3417; }
+    :root { --muted: #9ca3af; --line: #2d2d2d; --hl: #3b3417; --card: #202024; }
     body { background: #18181b; color: #e4e4e7; } a { color: #93c5fd; }
     .pill.todo { background: #27272a; color: #d4d4d8; }
     .pill.wip { background: #422006; color: #fcd34d; }
     .pill.done { background: #052e16; color: #86efac; }
+    .to-tasks { background: #e4e4e7; color: #18181b; }
   }
 </style>
 </head>
 <body>
 <div id="app">
+  <a class="to-tasks" href="#tasks">↑ Tasks</a>
   <h1>{{ title }}</h1>
   <p class="meta">{{ intro }} {{ recording ? 'Click a time to play the recording from there.' : '' }} Click a status to move it on; hover a task and click ✕ to mark it invalid. Everything is saved in this browser.</p>
   <p class="meta">Transcript: <a :href="'file://' + encodeURI(transcript)">{{ transcript }}</a></p>
 
-  <h2>Tasks</h2>
-  <table>
-    <tr><th>#</th><th>Status</th><th>Task</th><th>Owner</th><th>Urgency</th><th></th></tr>
-    <tr v-for="(t, i) in tasks" :key="t.id" :id="'task-' + (i + 1)" :class="[status(t.id), { invalid: invalid[t.id] }]">
-      <td class="num"><a :href="'#task-' + (i + 1)">#{{ i + 1 }}</a></td>
-      <td><button class="pill" :class="status(t.id)" @click="cycle(t.id)">{{ labels[status(t.id)] }}</button></td>
-      <td><a class="text task-link" :href="'#' + t.topic">{{ t.text }}</a></td>
-      <td class="owner">{{ t.owner }}</td>
-      <td class="urgency">{{ t.urgency }}</td>
-      <td><button class="x" @click="toggleInvalid(t.id)" :title="invalid[t.id] ? 'Mark valid' : 'Mark invalid'">✕</button></td>
-    </tr>
-  </table>
+  <h2 id="tasks">Tasks</h2>
+  <article v-for="(t, i) in tasks" :key="t.id" :id="'task-' + (i + 1)" class="card" :class="[taskStatus(t), { invalid: invalid[t.id] }]">
+    <header>
+      <a class="num" :href="'#task-' + (i + 1)">#{{ i + 1 }}</a>
+      <button class="pill" :class="taskStatus(t)" @click="cycleTask(t)">{{ labels[taskStatus(t)] }}</button>
+      <span class="owner meta">{{ t.owner }}</span>
+      <span class="spacer"></span>
+      <span class="urgency">{{ t.urgency }}</span>
+      <button class="x" @click="toggleInvalid(t.id)" :title="invalid[t.id] ? 'Mark valid' : 'Mark invalid'">✕</button>
+    </header>
+    <p class="text">{{ t.text }}</p>
+    <template v-if="t.steps">
+      <div class="bar"><div :style="{ width: 100 * doneCount(t) / t.steps.length + '%' }"></div></div>
+      <ul class="tasks">
+        <li v-for="(s, j) in t.steps" :key="j" :class="status(t.id + '.' + j)">
+          <div class="task">
+            <button class="pill" :class="status(t.id + '.' + j)" @click="cycle(t.id + '.' + j)">{{ labels[status(t.id + '.' + j)] }}</button>
+            <span class="num">#{{ i + 1 }}.{{ j + 1 }}</span>
+            <span class="text">{{ s.text }}</span>
+          </div>
+        </li>
+      </ul>
+    </template>
+    <footer>From the call: <template v-for="(p, k) in topicsOf(t)" :key="p.id">{{ k ? ', ' : '' }}<a :href="'#' + p.id">↓ {{ p.from }} {{ p.title }}</a></template></footer>
+  </article>
 
   <h2>Timeline</h2>
   <section v-for="p in topics" :key="p.id" :id="p.id" class="topic">
@@ -79,13 +100,13 @@
       </li>
       <li v-for="(text, label) in p.notes" :key="label"><b>{{ label }}:</b> <span v-html="text"></span></li>
       <li v-if="p.decisions"><b>Decisions:</b><ul><li v-for="d in p.decisions" v-html="d"></li></ul></li>
-      <li v-if="p.tasks"><b>Tasks:</b>
-        <ul v-if="p.tasks.length" class="tasks">
-          <li v-for="(text, i) in p.tasks" :key="i" :class="[status(p.id + i), { invalid: invalid[p.id + i] }]">
+      <li><b>Tasks:</b>
+        <ul v-if="refs(p).length" class="tasks">
+          <li v-for="r in refs(p)" :key="r.id" :class="[status(r.id), { invalid: invalid[r.task.id] }]">
             <div class="task">
-              <button class="pill" :class="status(p.id + i)" @click="cycle(p.id + i)">{{ labels[status(p.id + i)] }}</button>
-              <span class="text">{{ text }}</span>
-              <button class="x" @click="toggleInvalid(p.id + i)" :title="invalid[p.id + i] ? 'Mark valid' : 'Mark invalid'">✕</button>
+              <button class="pill" :class="status(r.id)" @click="cycle(r.id)">{{ labels[status(r.id)] }}</button>
+              <span class="text">{{ r.text }}</span>
+              <a class="back" :href="'#task-' + r.n">#{{ r.label }} ↑</a>
             </div>
           </li>
         </ul>
@@ -110,21 +131,24 @@ const RECORDING = '/absolute/path/to/recording.mp4';
 // Absolute path to the transcript the report was made from.
 const TRANSCRIPT = '/absolute/path/to/recording.transcript.md';
 
-// One row per piece of work, most urgent first. Task #N in the table is the Nth row.
+// One task per piece of work, most urgent first. Task #N is the Nth entry; step #N.M is its Mth step.
 // `text` is the brief an agent starts from; `topic` is the `id` of the topic it came from.
+// Optional `steps` split a task into checkable steps; a step's `topic` defaults to its task's.
 const tasks = [
-  { id: 'pricing', topic: 't-pricing', owner: 'Alex', urgency: '🔴 High', text: 'Show the unit price on each line item; when a product has several prices, show their average' },
+  { id: 'pricing', topic: 't-pricing', owner: 'Alex', urgency: '🔴 High', text: 'Show the unit price on each line item; when a product has several prices, show their average',
+    steps: [{ text: 'Show the unit price on each line item' }, { text: 'Average the price when a product has several', topic: 't-pricing-2' }] },
 ];
 
 // One entry per topic, in call order. Strings may hold inline HTML (<b>, <a href="#t-…">).
 // Optional keys: summary (string or array of strings), notes ({ Label: text }),
-// decisions (array), tasks (array; [] renders "None."), urgency.
+// decisions (array), urgency. A topic's tasks come from the `tasks` and steps that name it.
 const topics = [
   { id: 't-pricing', from: '04:10', to: '09:30', conf: 80, urgency: 'High', title: 'Unit price on line items',
     summary: 'Alex wants staff to see what each item sells for.',
     decisions: ['Average the price when one product has several.'],
-    notes: { 'Continues at': '<a href="#t-pricing-2">21:05</a>.' },
-    tasks: ['Show the unit price on each line item.'] },
+    notes: { 'Continues at': '<a href="#t-pricing-2">21:05</a>.' } },
+  { id: 't-pricing-2', from: '21:05', to: '22:40', conf: 70, title: 'Unit price, continued',
+    summary: 'Back to <a href="#t-pricing">unit prices</a>: Alex asks for the average when a product has several.' },
 ];
 
 // ===== App code below. Leave it as it is. =====
@@ -134,6 +158,12 @@ const STORE = 'call-report:' + location.pathname;
 const ORDER = ['todo', 'wip', 'done'];
 const toSeconds = mmss => mmss.split(':').reduce((total, part) => total * 60 + Number(part), 0);
 
+// A step is the only thing with a status; a task without steps is its own single step.
+const stepIds = t => t.steps ? t.steps.map((_, j) => `${t.id}.${j}`) : [t.id];
+const refs = tasks.flatMap((t, i) => (t.steps || [t]).map((s, j) => ({
+  id: stepIds(t)[j], n: i + 1, label: t.steps ? `${i + 1}.${j + 1}` : `${i + 1}`, text: s.text, topic: s.topic || t.topic, task: t,
+})));
+
 Vue.createApp({
   setup() {
     const saved = JSON.parse(localStorage.getItem(STORE) || '{}');
@@ -141,11 +171,23 @@ Vue.createApp({
     const invalid = Vue.reactive(saved.invalid || {});
     Vue.watch([statuses, invalid], () => localStorage.setItem(STORE, JSON.stringify({ statuses, invalid })));
 
+    const status = id => statuses[id] || 'todo';
+    const next = s => ORDER[(ORDER.indexOf(s) + 1) % ORDER.length];
+    const taskStatus = t => {
+      const all = stepIds(t).map(status);
+      return all.every(s => s === 'done') ? 'done' : all.every(s => s === 'todo') ? 'todo' : 'wip';
+    };
+
     return {
       title: TITLE, intro: INTRO, recording: RECORDING, transcript: TRANSCRIPT, tasks, topics, invalid,
       labels: { todo: 'Todo', wip: 'WIP', done: 'Done' },
-      status: id => statuses[id] || 'todo',
-      cycle: id => { statuses[id] = ORDER[(ORDER.indexOf(statuses[id] || 'todo') + 1) % ORDER.length]; },
+      status, taskStatus,
+      cycle: id => { statuses[id] = next(status(id)); },
+      // Moving a task moves every step with it, so a task and its steps never disagree.
+      cycleTask: t => { const to = next(taskStatus(t)); stepIds(t).forEach(id => { statuses[id] = to; }); },
+      doneCount: t => stepIds(t).filter(id => status(id) === 'done').length,
+      refs: p => refs.filter(r => r.topic === p.id),
+      topicsOf: t => [...new Set(refs.filter(r => r.task === t).map(r => r.topic))].map(id => topics.find(p => p.id === id)),
       toggleInvalid: id => { invalid[id] = !invalid[id]; },
       // A media fragment: the browser plays the file from that second.
       timeLink: from => `file://${encodeURI(RECORDING)}#t=${toSeconds(from)}`,
