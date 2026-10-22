@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Call report</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+  :root { --muted: #6b7280; --line: #e5e7eb; --hl: #fef3c7; }
+  body { font: 15px/1.6 Inter, system-ui, sans-serif; max-width: 880px; margin: 2.5rem auto; padding: 0 1rem; color: #1f2937; }
+  h1 { font-size: 1.45rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.1rem; margin: 2.5rem 0 .75rem; }
+  h3 { font-size: 1rem; margin: 0 0 .4rem; }
+  a { color: #2563eb; text-decoration: none; } a:hover { text-decoration: underline; }
+  .meta, .conf { color: var(--muted); font-weight: 400; }
+  .topic { padding: .9rem 1rem; margin: .6rem -1rem; border-radius: 8px; scroll-margin-top: 1rem; transition: background .6s; }
+  .topic:target { background: var(--hl); }
+  .topic ul { margin: .15rem 0; padding-left: 1.2rem; }
+  .time { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th { font-weight: 500; color: var(--muted); font-size: .85rem; text-align: left; padding: .3rem .5rem; }
+  td { padding: .45rem .5rem; border-top: 1px solid var(--line); vertical-align: top; }
+  .owner, .urgency { white-space: nowrap; }
+
+  .task { display: flex; gap: .6rem; align-items: flex-start; }
+  .task .text { flex: 1; }
+  a.task-link { color: inherit; } a.task-link:hover { color: #2563eb; }
+  .tasks { list-style: none; padding: 0 !important; margin-top: .3rem !important; }
+  .tasks li { padding: .2rem 0; }
+
+  .pill { font: 500 .75rem Inter, sans-serif; border: 0; border-radius: 999px; padding: .15rem .6rem; cursor: pointer; min-width: 3.6rem; user-select: none; }
+  .pill.todo { background: #f3f4f6; color: #4b5563; }
+  .pill.wip  { background: #fef3c7; color: #92400e; }
+  .pill.done { background: #d1fae5; color: #065f46; }
+  .x { border: 0; background: none; color: var(--muted); cursor: pointer; visibility: hidden; font-size: .9rem; padding: 0 .2rem; }
+  tr:hover .x, li:hover .x, .invalid .x { visibility: visible; }
+  .done .text { color: var(--muted); }
+  .invalid .text, .invalid .owner, .invalid .urgency { text-decoration: line-through; color: #9ca3af; }
+  .invalid .pill { opacity: .4; }
+
+  @media (prefers-color-scheme: dark) {
+    :root { --muted: #9ca3af; --line: #2d2d2d; --hl: #3b3417; }
+    body { background: #18181b; color: #e4e4e7; } a { color: #93c5fd; }
+    .pill.todo { background: #27272a; color: #d4d4d8; }
+    .pill.wip { background: #422006; color: #fcd34d; }
+    .pill.done { background: #052e16; color: #86efac; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>{{ title }}</h1>
+  <p class="meta">{{ intro }} {{ recording ? 'Click a time to play the recording from there.' : '' }} Click a status to move it on; hover a task and click ✕ to mark it invalid. Everything is saved in this browser.</p>
+
+  <h2>Tasks</h2>
+  <table>
+    <tr><th>Status</th><th>Task</th><th>Owner</th><th>Urgency</th><th></th></tr>
+    <tr v-for="t in tasks" :key="t.id" :class="[status(t.id), { invalid: invalid[t.id] }]">
+      <td><button class="pill" :class="status(t.id)" @click="cycle(t.id)">{{ labels[status(t.id)] }}</button></td>
+      <td><a class="text task-link" :href="'#' + t.topic">{{ t.text }}</a></td>
+      <td class="owner">{{ t.owner }}</td>
+      <td class="urgency">{{ t.urgency }}</td>
+      <td><button class="x" @click="toggleInvalid(t.id)" :title="invalid[t.id] ? 'Mark valid' : 'Mark invalid'">✕</button></td>
+    </tr>
+  </table>
+
+  <h2>Timeline</h2>
+  <section v-for="p in topics" :key="p.id" :id="p.id" class="topic">
+    <h3><a v-if="recording" class="time" :href="timeLink(p.from)">{{ p.from }}</a><span v-else class="time">{{ p.from }}</span>–{{ p.to }} · {{ p.title }} <span class="conf">(confidence: {{ p.conf }}%)</span></h3>
+    <ul>
+      <li v-if="p.summary"><b>Summary:</b>
+        <template v-if="Array.isArray(p.summary)"><ul><li v-for="s in p.summary" v-html="s"></li></ul></template>
+        <span v-else v-html="' ' + p.summary"></span>
+      </li>
+      <li v-for="(text, label) in p.notes" :key="label"><b>{{ label }}:</b> <span v-html="text"></span></li>
+      <li v-if="p.decisions"><b>Decisions:</b><ul><li v-for="d in p.decisions" v-html="d"></li></ul></li>
+      <li v-if="p.tasks"><b>Tasks:</b>
+        <ul v-if="p.tasks.length" class="tasks">
+          <li v-for="(text, i) in p.tasks" :key="i" :class="[status(p.id + i), { invalid: invalid[p.id + i] }]">
+            <div class="task">
+              <button class="pill" :class="status(p.id + i)" @click="cycle(p.id + i)">{{ labels[status(p.id + i)] }}</button>
+              <span class="text">{{ text }}</span>
+              <button class="x" @click="toggleInvalid(p.id + i)" :title="invalid[p.id + i] ? 'Mark valid' : 'Mark invalid'">✕</button>
+            </div>
+          </li>
+        </ul>
+        <span v-else> None.</span>
+      </li>
+      <li v-if="p.urgency"><b>Urgency:</b> {{ p.urgency }}</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+// ===== Fill these in. Replace the sample entries. =====
+
+const TITLE = 'Call with Alex — 1 Jan 2026, 10:00, about 30 min';
+
+// How far to trust the transcript: label reliability, side talk, garbled stretches.
+const INTRO = 'Speaker labels are reliable. The last five minutes are garbled.';
+
+// Absolute path to the recording, or '' when there is none.
+const RECORDING = '/absolute/path/to/recording.mp4';
+
+// One row per piece of work, most urgent first. `topic` is a topic's `id`.
+const tasks = [
+  { id: 'pricing', topic: 't-pricing', owner: 'Alex', urgency: '🔴 High', text: 'Show the unit price on each line item' },
+];
+
+// One entry per topic, in call order. Strings may hold inline HTML (<b>, <a href="#t-…">).
+// Optional keys: summary (string or array of strings), notes ({ Label: text }),
+// decisions (array), tasks (array; [] renders "None."), urgency.
+const topics = [
+  { id: 't-pricing', from: '04:10', to: '09:30', conf: 80, urgency: 'High', title: 'Unit price on line items',
+    summary: 'Alex wants staff to see what each item sells for.',
+    decisions: ['Average the price when one product has several.'],
+    notes: { 'Continues at': '<a href="#t-pricing-2">21:05</a>.' },
+    tasks: ['Show the unit price on each line item.'] },
+];
+
+// ===== App code below. Leave it as it is. =====
+
+document.title = TITLE;
+const STORE = 'call-report:' + location.pathname;
+const ORDER = ['todo', 'wip', 'done'];
+const toSeconds = mmss => mmss.split(':').reduce((total, part) => total * 60 + Number(part), 0);
+
+Vue.createApp({
+  setup() {
+    const saved = JSON.parse(localStorage.getItem(STORE) || '{}');
+    const statuses = Vue.reactive(saved.statuses || {});
+    const invalid = Vue.reactive(saved.invalid || {});
+    Vue.watch([statuses, invalid], () => localStorage.setItem(STORE, JSON.stringify({ statuses, invalid })));
+
+    return {
+      title: TITLE, intro: INTRO, recording: RECORDING, tasks, topics, invalid,
+      labels: { todo: 'Todo', wip: 'WIP', done: 'Done' },
+      status: id => statuses[id] || 'todo',
+      cycle: id => { statuses[id] = ORDER[(ORDER.indexOf(statuses[id] || 'todo') + 1) % ORDER.length]; },
+      toggleInvalid: id => { invalid[id] = !invalid[id]; },
+      // A media fragment: the browser plays the file from that second.
+      timeLink: from => `file://${encodeURI(RECORDING)}#t=${toSeconds(from)}`,
+    };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>
