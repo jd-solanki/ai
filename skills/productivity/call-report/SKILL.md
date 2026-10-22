@@ -85,14 +85,21 @@ Collect the tasks into one table, one row per piece of work, ordered by urgency
 row an owner and the topic it came from. Parked and unclear items get rows too, so
 nothing said in the call goes missing.
 
-**Done when:** every topic task is covered by a row, and every row links to a
-topic.
+Write each row as a **brief**: an agent told "finish task #3 from the report"
+starts from that row. State the work as an instruction in the project's domain
+terms, and carry every bound the call set on it: constraints, examples, and what
+is left for the agent to propose. "Let operators add a note to a DDI Order, and
+propose where to show it" is a brief; "Propose note options; Muli picks" is a
+minute.
+
+**Done when:** every topic task is covered by a row, every row links to a topic,
+and every row reads as a brief.
 
 ### 5. Write the report
 
 Copy [`template.html`](template.html) to `call-report.html` beside the transcript.
-Fill in the marked constants: the title, the intro, the recording path, `tasks` and
-`topics`. Replace the sample entries; keep the app code as it is.
+Fill in the marked constants: the title, the intro, the recording and transcript
+paths, `tasks` and `topics`. Replace the sample entries; keep the app code as it is.
 
 The intro is one or two sentences on how far to trust the transcript: label
 reliability, speakers talking to people off the call, garbled stretches.
