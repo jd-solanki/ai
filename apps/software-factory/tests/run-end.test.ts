@@ -597,7 +597,7 @@ test("a fix run whose last subagent finishes during the turn on the first one's 
   assert.deepEqual(run.closed, ['w7:t3'])
 })
 
-test('a session that exits while its clean stop waits for another turn crashes the run once', async () => {
+test('a session that exits while its Stop waits for another turn crashes the run once', async () => {
   const turnWindow = Promise.withResolvers<void>()
   const run = factory({ turnWindow: turnWindow.promise })
   const stopped = await run.report('Stop', { background_tasks: [] })

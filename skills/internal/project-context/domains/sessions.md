@@ -11,7 +11,7 @@ A herdr workspace with a pane at a served repo's clone, where that repo's runs o
 _Avoid_: run workspace, project workspace
 
 **Clean stop**:
-A Stop with no background work left in the session, and no turn after it.
+A Stop with no background work left in the session, and neither a turn nor an exit in the wait after it.
 _Avoid_: done, finished
 
 **Crash**:
