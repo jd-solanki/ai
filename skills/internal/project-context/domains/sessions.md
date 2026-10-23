@@ -34,8 +34,6 @@ _Avoid_: failure
   title. A session writes no meta file for static code to read.
 - A run ends at its clean stop: static code closes the run's tab, releases the claim
   and hands the work item on. A turn that ends on a question in the terminal is a clean stop too.
-- Static code answers a Stop with no background work at once, then waits five seconds: a turn
-  the session starts in them keeps the run.
 - The factory server alone decides how a run ends. A session's hooks only report
   UserPromptSubmit, Stop, StopFailure and SessionEnd to it.
 - A crash releases the claim and asks whoever applied the trigger label to apply it again.
@@ -77,8 +75,9 @@ _Avoid_: failure
   needs goes on the work item, and a re-trigger resumes from the worktree.
 - A clean stop waits for another turn because `background_tasks` lists only running work: a
   subagent that finished during the turn shows nowhere, yet its queued result starts the next
-  turn once the Stop hook returns. jd-solanki/ai#30 holds three runs it ended early. The wait
-  comes after the reply because the session takes no turn while its Stop hook runs.
+  turn once the Stop hook returns. jd-solanki/ai#30 holds three runs it ended early. Static code
+  answers the Stop first and waits after, because the session takes no turn while its Stop hook
+  runs.
 - The server owns a run's end so one place picks the release and the crash in tested code.
   The cost: an end reported while the server is down, or after it restarted, leaves the claim
   held, because the server keeps its runs in memory.

@@ -110,11 +110,8 @@ _Avoid_: result, review status
   crash hands nothing on. A run that hands its work item to no agent waits on whoever applied
   its trigger label: a pull request marked ready, a next step GitHub does not show, a crash or
   a failed launch.
-- A run hands its work item on only when its stage's done condition holds on GitHub, and waits
-  otherwise. The Implementer's is an open draft pull request from the spec branch, a review or
-  QA run's is its verdict, the Fixer's is a resolution or a reply since its claim on every thread
-  the last review or QA round opened or replied to, and the Upgrader's is its own comment on the
-  pull request since its claim, written after its push.
+- A run hands its work item on only once GitHub shows its stage's work delivered, and waits
+  otherwise.
 - A review run's verdict is the one `/review-pr` writes into its summary comment, and a QA run's
   the one `/verify-pr` writes into its QA comment.
 - A pull request is marked ready only after a dry review of its current head and, when its body
@@ -179,12 +176,9 @@ _Avoid_: result, review status
   threads: the Tasks heading's mark ignores Unproven findings and failed checks, and a thread
   the Reviewer accepts after a Fixer's `blocked` reply stays unresolved.
 - A Fixer run with no commits still goes to the Reviewer: its `blocked` replies need judging.
-- Each stage checks its own done condition because a clean stop says only that the session went
-  idle: three runs in jd-solanki/ai#30 stopped clean before delivering. The Implementer's draft
-  check caught two, and the Fixer's went on to a review of an unfixed head.
-- The Fixer's round is read off the label timeline, from the last `agent:reviewing` or
-  `agent:verifying`, because GitHub files each reply as a review of its own, and a blocked thread
-  an earlier round accepted stays unresolved.
+- Each stage checks GitHub for its delivered work because a clean stop says only that the session
+  went idle: three runs in jd-solanki/ai#30 stopped clean before delivering. The Implementer's
+  draft check caught two, and the Fixer's went on to a review of an unfixed head.
 - Waiting on a human is an assignment and `agent:handed-back`, which queue the work item on
   GitHub, where the human reads it from any device: every factory write runs as the factory
   owner, so the factory's mention never notifies the owner. What static code tells them goes
