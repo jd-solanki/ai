@@ -218,7 +218,7 @@ _Avoid_: result, review status
   review handed back to review whenever its reviewed commit can't be read would loop unwatched. A
   summary with no readable commit waits on a human. `apps/software-factory/src/hand-off.ts:reviewedHead`
 - **A file-level review comment opens a review of its own.** GitHub files a `subject_type: file`
-  comment apart from the review it was posted with, so the Fixer's "threads of the last review"
+  comment apart from the review it was posted with, so /review-pr's "threads of the last review"
   would miss the rest. Every QA thread sits on a changed line. `skills/in-progress/verify-pr/SKILL.md`
 
 ## Where it lives
