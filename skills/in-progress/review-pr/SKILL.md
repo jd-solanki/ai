@@ -89,7 +89,8 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
 - **The round is read off the pull request.** No summary comment means a first round. One means a
   later round, and the threads of the last review are its task list.
 - **A thread's state is the implementer's report.** Resolved claims `done`. Unresolved with a
-  reply claims `blocked`. Unresolved and silent is open.
+  reply claims `blocked`. Unresolved and silent is open. A human's reply that declines the task
+  makes it `declined`, in any thread state: the human's call closes it unfixed.
 - **The closing round files what is left.** A round that closes the review, dry or ended, files
   every listed nitpick and every Unproven finding as one issue on the pull request's repository,
   labelled `issue:follow-up` and titled with a Conventional Commit subject, and links it from the
@@ -116,9 +117,9 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 
 <the score's one line of reason>
 
-### <state mark> Tasks (<fixed>/<all> fixed)
+### <state mark> Tasks (<fixed or declined>/<all> done)
 
-- [<x once fixed, else a space>] 🟠 `<id>` · `<file:line>` · <the Problem, in a line> · <open, fixed or broken> · <link to its thread>
+- [<x once fixed or declined, else a space>] 🟠 `<id>` · `<file:line>` · <the Problem, in a line> · <open, fixed, declined or broken> · <link to its thread>
 
 <details><summary>❓ Unproven (<count>)</summary>
 
@@ -136,7 +137,7 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 Emoji go on headings and severities only, one meaning each: 🔴 blocker, 🟠 major, 🟡 minor. A
 reader scanning finds a section by its mark. A section with nothing in it is left out, `Tasks`
 excepted. The Tasks heading's state mark is the review's state: ☑️ while a task is open, ✅ once
-every task is fixed, 🛑 once the review has ended.
+every task is fixed or declined, 🛑 once the review has ended.
 
 ## Step 1 — Probe
 
@@ -296,8 +297,8 @@ round already settled.
 A later round's probe is three facts. Write the fix diff to `[scratchpad]/range.diff`, start the
 check scripts in the background, and record the sandbox recipe. These are the checks of this
 round, run once, in the repository: the verifier reads them and runs none itself. Steps 4 and 5
-of the first probe are settled and stay settled. Write the last task list to
-`[scratchpad]/tasks.md`: on a pull request it is the threads of the last review, and the fix diff
+of the first probe are settled and stay settled. Write the last task list, its declined tasks left
+out, to `[scratchpad]/tasks.md`: on a pull request it is the threads of the last review, and the fix diff
 starts at that review's `commit_id`.
 
 Call the same script with `repo`, `scratch`, `spec` and:
