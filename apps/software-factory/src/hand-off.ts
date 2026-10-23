@@ -57,6 +57,7 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
     return { wait: 'this run left no QA verdict on the pull request' }
   },
   // The Upgrader says what it changed as its last step, after its push.
+  // shortcut: compares this machine's clock with GitHub's, as readComment does, read the claim off the timeline if a run ever misreads.
   'agent:upgrade': async (work, gh) => {
     const comments = await ownComments(work, gh)
     if (!comments.some(({ updated_at }) => Date.parse(updated_at) >= Date.parse(work.claimedAt)))
@@ -73,7 +74,7 @@ const ROUND_LABELS = ['agent:reviewing', 'agent:verifying']
 // shortcut: reads the newest 100 threads and their newest 100 comments, page through them if a pull request outgrows that.
 async function countOpenThreads(work: WorkItem, gh: Gh) {
   const claimed = Date.parse(work.claimedAt)
-  const labeled: { label: string; created_at: string }[] = lines(
+  const labeled: { label: string; created_at: string }[] = jsonLines(
     await read(gh, [
       'api',
       `repos/${work.repo}/issues/${work.number}/timeline`,
@@ -88,7 +89,12 @@ async function countOpenThreads(work: WorkItem, gh: Gh) {
     )
     .at(-1)
   const roundStart = lastRound ? Date.parse(lastRound.created_at) : 0
-  const threads: { isResolved: boolean; comments: string[] }[] = lines(
+  // A retried Fixer counts what the round's earlier Fixer runs answered.
+  const firstFix = labeled.find(
+    ({ label, created_at }) => label === 'agent:fixing' && Date.parse(created_at) >= roundStart,
+  )
+  const fixedSince = firstFix ? Date.parse(firstFix.created_at) : claimed
+  const threads: { isResolved: boolean; comments: string[] }[] = jsonLines(
     await read(gh, [
       'api',
       'graphql',
@@ -102,8 +108,8 @@ async function countOpenThreads(work: WorkItem, gh: Gh) {
   )
   return threads.filter(({ isResolved, comments }) => {
     const written = comments.map(Date.parse)
-    const inRound = written.some((at) => at >= roundStart && at < claimed)
-    return !isResolved && inRound && !written.some((at) => at >= claimed)
+    const inRound = written.some((at) => at >= roundStart && at < fixedSince)
+    return !isResolved && inRound && !written.some((at) => at >= fixedSince)
   }).length
 }
 
@@ -213,12 +219,13 @@ async function ownComments(work: WorkItem, gh: Gh) {
     '--jq',
     '.[] | {id, login: .user.login, updated_at, body} | tojson',
   ])
-  const listed: { id: number; login: string; updated_at: string; body: string }[] = lines(comments)
+  const listed: { id: number; login: string; updated_at: string; body: string }[] =
+    jsonLines(comments)
   return listed.filter(({ login }) => login === me)
 }
 
 // What `gh --jq '… | tojson'` prints: one JSON value per line.
-const lines = (stdout: string) =>
+const jsonLines = (stdout: string) =>
   stdout
     .split('\n')
     .filter(Boolean)

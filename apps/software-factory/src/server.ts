@@ -33,7 +33,7 @@ createServer(async (req, res) => {
       })
   // A run report's path holds its token, so it is logged as a run report, not by its path.
   const source = isRunReport ? 'run report' : req.headers['x-github-delivery']
-  const log = ({ status, body }: { status: number; body?: string }) =>
+  const log = ({ status, body }: typeof reply) =>
     console.log(new Date().toISOString(), source, status, body)
   log(reply)
   res.writeHead(reply.status).end(reply.body)

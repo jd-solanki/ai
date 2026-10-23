@@ -465,6 +465,18 @@ test('a fix run that resolved or answered every thread of the last round hands i
   ])
 })
 
+test('a retried fix run counts the replies an earlier fix run of the same round wrote', async () => {
+  const run = fix(
+    [...rounds.slice(0, -1), labeled('agent:fixing', '2000-01-02T01:00:00Z')],
+    thread(false, lastRoundThread, '2000-01-02T01:30:00Z'),
+  )
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:fixing`,
+    `pr edit ${pull} --add-label agent:review`,
+  ])
+})
+
 test('a fix run that left a thread of the last round unresolved and unanswered waits on whoever applied its label', async () => {
   const qaFailure = '2000-01-02T01:05:00Z'
   const run = fix(
@@ -562,16 +574,23 @@ const released = `pr edit ${pull} --remove-label agent:fixing`
 const crashed = (why: string) =>
   told(pull, 'pr', `the agent:fix run ${why} before it finished. Apply agent:fix again to retry.`)
 
-// jd-solanki/ai#30: a subagent that finished during the last turn is in no background task, and its queued result starts the next turn.
-test('a clean stop the session follows with another turn keeps the run', async () => {
+// Replays delivery-acknowledgement#91 from jd-solanki/ai#30; #37 and #87 there ran the same way.
+test("a fix run whose last subagent finishes during the turn on the first one's report keeps going", async () => {
   const turnWindow = Promise.withResolvers<void>()
   const run = factory({ turnWindow: turnWindow.promise })
+  const reviewers = [
+    { type: 'subagent', status: 'running', description: 'Standards review' },
+    { type: 'subagent', status: 'running', description: 'Spec review' },
+  ]
+  await run.report('Stop', { background_tasks: reviewers })
+  await run.report('UserPromptSubmit', { prompt: '<task-notification> Standards review finished' })
+  // The spec review finished during that turn, so its Stop lists no background task while its result sits queued.
   const stopped = await run.report('Stop', { background_tasks: [] })
   assert.deepEqual(
     [stopped.status, stopped.body],
     [202, 'agent:fix app#12: Ends unless the session takes another turn'],
   )
-  await run.report('UserPromptSubmit', { prompt: '<task-notification>' })
+  await run.report('UserPromptSubmit', { prompt: '<task-notification> Spec review finished' })
   turnWindow.resolve()
   assert.deepEqual(await stopped.ended, {
     status: 200,
@@ -580,7 +599,7 @@ test('a clean stop the session follows with another turn keeps the run', async (
   assert.deepEqual(run.writes, [])
   assert.deepEqual(run.closed, [])
 
-  // That turn's clean stop, with no turn after it, ends the run.
+  // The turn on the spec review pushes the fixes, and its clean stop, with no turn after it, ends the run.
   await run.end()
   assert.deepEqual(run.writes, [released, `pr edit ${pull} --add-label agent:review`])
   assert.deepEqual(run.closed, ['w7:t3'])

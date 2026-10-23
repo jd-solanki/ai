@@ -82,9 +82,10 @@ async function endRun(
   // The API error behind a StopFailure goes to the server's log only, not to the work item.
   const ghInClone = (args: string[]) => gh(args, run.cwd)
   const crashed = hook === 'StopFailure' ? `Crashed: ${body.toString().trim()}` : 'Crashed'
-  const { outcomes, did } = Object.hasOwn(CRASHES, hook)
+  const why = Object.hasOwn(CRASHES, hook) ? CRASHES[hook] : undefined
+  const { outcomes, did } = why
     ? {
-        outcomes: await crash(run, CRASHES[hook], ghInClone),
+        outcomes: await crash(run, why, ghInClone),
         did: crashed,
       }
     : await handOff(run, ghInClone)
