@@ -176,9 +176,10 @@ _Avoid_: result, review status
   threads: the Tasks heading's mark ignores Unproven findings and failed checks, and a thread
   the Reviewer accepts after a Fixer's `blocked` reply stays unresolved.
 - A Fixer run with no commits still goes to the Reviewer: its `blocked` replies need judging.
-- Each stage checks GitHub for its delivered work because a clean stop says only that the session
-  went idle: three runs in jd-solanki/ai#30 stopped clean before delivering. The Implementer's
-  draft check caught two, and the Fixer's went on to a review of an unfixed head.
+- Each stage checks GitHub for its delivered work because a run can still end before its session
+  delivers: three runs in jd-solanki/ai#30 ended at a Stop with no background tasks while a queued
+  result was still to start a turn. The Implementer's draft check caught two, and the Fixer's went
+  on to a review of an unfixed head.
 - Waiting on a human is an assignment and `agent:handed-back`, which queue the work item on
   GitHub, where the human reads it from any device: every factory write runs as the factory
   owner, so the factory's mention never notifies the owner. What static code tells them goes

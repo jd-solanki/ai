@@ -73,11 +73,11 @@ _Avoid_: failure
   already keeps on the work item.
 - A terminal question ends the run because a session is told nobody answers there: what it
   needs goes on the work item, and a re-trigger resumes from the worktree.
-- A clean stop waits for another turn because `background_tasks` lists only running work: a
-  subagent that finished during the turn shows nowhere, yet its queued result starts the next
-  turn once the Stop hook returns. jd-solanki/ai#30 holds three runs it ended early. Static code
-  answers the Stop first and waits after, because the session takes no turn while its Stop hook
-  runs.
+- A Stop with no background work waits for another turn before it counts as clean, because
+  `background_tasks` lists only running work: a subagent that finished during the turn shows
+  nowhere, yet its queued result starts the next turn once the Stop hook returns.
+  jd-solanki/ai#30 holds three runs it ended early. Static code answers the Stop first and
+  waits after, because the session takes no turn while its Stop hook runs.
 - The server owns a run's end so one place picks the release and the crash in tested code.
   The cost: an end reported while the server is down, or after it restarted, leaves the claim
   held, because the server keeps its runs in memory.
