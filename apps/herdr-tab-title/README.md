@@ -25,3 +25,7 @@ The repository comes from the working directory of the tab's focused pane, read 
 If the tab keeps its `#123` label, the lookup failed. `herdr plugin log list --plugin jd-solanki.herdr-tab-title` shows why: `gh` not found or not logged in, no git remote in that directory, or no such issue.
 
 On a machine reached with `herdr --remote`, the plugin runs on that machine, so `gh` must be set up there.
+
+## Develop
+
+Run the tests with `pnpm --filter herdr-tab-title test:unit`.
