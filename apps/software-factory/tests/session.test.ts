@@ -133,6 +133,15 @@ test('claudeArgs has each run-ending hook report to the factory server under the
   assert.notEqual(review().token, launched.token)
 })
 
+test("claudeArgs has a turn's start report to the factory server without reaching the session", () => {
+  const launched = review()
+  const hooks = JSON.parse(flag(launched.args, '--settings') ?? '').hooks
+  assert.equal(
+    hooks.UserPromptSubmit[0].hooks[0].command,
+    `curl -sS -o /dev/null --data-binary @- http://localhost:3456/runs/${launched.token}/UserPromptSubmit`,
+  )
+})
+
 // Stubs on PATH: herdr logs each call and runs the typed command through sh, claude exits before its hooks load, curl logs its report.
 // herdr reports a resolved cwd, and macOS's tmpdir is a symlink.
 const bin = realpathSync(mkdtempSync(join(tmpdir(), 'software-factory-bin-')))

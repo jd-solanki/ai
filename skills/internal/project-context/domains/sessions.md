@@ -11,7 +11,7 @@ A herdr workspace with a pane at a served repo's clone, where that repo's runs o
 _Avoid_: run workspace, project workspace
 
 **Clean stop**:
-A Stop with no background work left in the session.
+A Stop with no background work left in the session, and neither a turn nor an exit in the wait after it.
 _Avoid_: done, finished
 
 **Crash**:
@@ -34,8 +34,8 @@ _Avoid_: failure
   title. A session writes no meta file for static code to read.
 - A run ends at its clean stop: static code closes the run's tab, releases the claim
   and hands the work item on. A turn that ends on a question in the terminal is a clean stop too.
-- The factory server alone decides how a run ends. A session's hooks only report Stop,
-  StopFailure and SessionEnd to it.
+- The factory server alone decides how a run ends. A session's hooks only report
+  UserPromptSubmit, Stop, StopFailure and SessionEnd to it.
 - A crash releases the claim and asks whoever applied the trigger label to apply it again.
 - A session writes on GitHub only what its skill and its trigger's instructions write. What a
   human must do or decide goes in there, mentioning them.
@@ -73,6 +73,11 @@ _Avoid_: failure
   already keeps on the work item.
 - A terminal question ends the run because a session is told nobody answers there: what it
   needs goes on the work item, and a re-trigger resumes from the worktree.
+- A Stop with no background work waits for another turn before it counts as clean, because
+  `background_tasks` lists only running work: a subagent that finished during the turn shows
+  nowhere, yet its queued result starts the next turn once the Stop hook returns.
+  jd-solanki/ai#30 holds three runs it ended early. Static code answers the Stop first and
+  waits after, because the session takes no turn while its Stop hook runs.
 - The server owns a run's end so one place picks the release and the crash in tested code.
   The cost: an end reported while the server is down, or after it restarted, leaves the claim
   held, because the server keeps its runs in memory.
@@ -90,8 +95,11 @@ _Avoid_: failure
 ## Fences
 
 - **Stop alone is not a clean stop.** Stop fires after every turn, so a turn that ends on a
-  wait for subagents or a background shell looks like the end of the run. A turn that dies
-  on an API error never reaches Stop at all. `apps/software-factory/src/run-end.ts:handleRunReport`
+  wait for subagents or a background shell looks like the end of the run, and so does one whose
+  last subagent finished during it. A turn that dies on an API error never reaches Stop at all.
+  `apps/software-factory/src/run-end.ts:handleRunReport`
+- **A UserPromptSubmit hook's output joins the prompt.** Claude Code adds its stdout to the
+  session's context, so that hook drops the server's reply. `apps/software-factory/src/session.ts:hooks`
 - **Closing a run's tab fires its SessionEnd.** herdr's close ends the session with
   reason `other`, the same as a crash, so the server ignores an end from a run it already
   released. `apps/software-factory/src/run-end.ts:handleRunReport`

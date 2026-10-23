@@ -25,12 +25,15 @@ function launch(label: string) {
   return launched
 }
 
-// `github` answers the factory's reads, as `gh` would print them.
+// `github` answers the factory's reads, as `gh` would print them: by default, for a pull request with no review threads.
+// `turnWindow` settles when a clean stop's wait for another turn is over.
 function factory({
   label = 'agent:fix',
   closes = true,
-  github = (_args: string[]): string | undefined => '',
+  github = (args: string[]): string | undefined =>
+    args[1] === 'graphql' ? '{"labeled":[],"threads":[]}' : '',
   refuses = (_args: string[]): boolean => false,
+  turnWindow = Promise.resolve(),
 } = {}) {
   const run = launch(label)
   const runs: Runs = new Map([[run.token, { ...run, tab: 'w7:t3', cwd: '/repos/acme/app' }]])
@@ -70,6 +73,7 @@ function factory({
           }
           return { ok: closes, output: closes ? '' : 'herdr is down' }
         },
+        sleep: () => turnWindow,
       },
     )
   return {
@@ -79,7 +83,11 @@ function factory({
     closed,
     sessionEnds,
     report,
-    end: () => report('Stop', { background_tasks: [] }),
+    // A clean stop with no turn after it.
+    end: async () => {
+      const stopped = await report('Stop', { background_tasks: [] })
+      return (await stopped.ended) ?? stopped
+    },
   }
 }
 
@@ -104,26 +112,42 @@ const comments =
   'api repos/acme/app/issues/12/comments --paginate --jq .[] | {id, login: .user.login, updated_at, body} | tojson'
 const scenarios =
   '## QA steps\n\n- [ ] **Saving shows a toast**\n  1. Click Save → a toast appears.\n\n## Notes\n'
-// `body` is the pull request body a dry review leaves.
+// `body` is the pull request body a dry review leaves, `said` what the factory's login wrote on it.
 const pullRequestReads =
-  (body: string, said: string[]) =>
+  (body: string, said: string[], head = 'abc1234def\n') =>
   (args: string[]): string | undefined =>
     ({
       'api user --jq .login': 'factory\n',
       [comments]: said.join('\n'),
       [`pr view ${pull} --json body --jq .body`]: body,
-      [`pr view ${pull} --json headRefOid --jq .headRefOid`]: 'abc1234def\n',
+      [`pr view ${pull} --json headRefOid --jq .headRefOid`]: head,
     })[args.join(' ')]
 const pullRequest = (label: string, body: string, ...said: string[]) =>
   factory({ label, github: pullRequestReads(body, said) })
 const review = (...said: string[]) => pullRequest('agent:review', '', ...said)
 const verify = (...said: string[]) => pullRequest('agent:verify', scenarios, ...said)
-const upgrade = (head: string) =>
+const upgrade = (head: string, ...said: string[]) =>
+  factory({ label: 'agent:upgrade', github: pullRequestReads('', said, head) })
+const upgraderSaid = (updated_at: string, login = 'factory') =>
+  JSON.stringify({ id: 8, login, updated_at, body: 'Nothing here uses what vite 7 changed.' })
+// `timeline` is the pull request's labeled events, `threads` its review threads.
+const fix = (
+  timeline: { label: string; createdAt: string }[],
+  ...threads: { isResolved: boolean; comments: { at: string; login: string }[] }[]
+) =>
   factory({
-    label: 'agent:upgrade',
     github: (args) =>
-      args.join(' ') === `pr view ${pull} --json headRefOid --jq .headRefOid` ? head : undefined,
+      args[1] === 'graphql'
+        ? JSON.stringify({ labeled: timeline, threads })
+        : args.join(' ') === 'api user --jq .login'
+          ? 'factory\n'
+          : undefined,
   })
+const labeled = (label: string, createdAt: string) => ({ label, createdAt })
+const thread = (isResolved: boolean, ...comments: string[]) => ({
+  isResolved,
+  comments: comments.map((at) => ({ at, login: 'factory' })),
+})
 
 const fresh = '2999-01-01T00:00:00Z'
 const told = (url: string, kind: string, message: string) => [
@@ -411,23 +435,112 @@ test('an implement run that opened no draft waits on whoever applied its label',
   )
 })
 
+// A review round opened threads at 00:05 on day 1, and the Fixer answered one as blocked; the next round, claimed on day 2, opened and reopened threads.
+const earlierRound = '2000-01-01T00:00:00Z'
+const earlierRoundThread = '2000-01-01T00:05:00Z'
+const blockedReply = '2000-01-01T12:00:00Z'
+const lastRound = '2000-01-02T00:00:00Z'
+const lastRoundThread = '2000-01-02T00:05:00Z'
+const rounds = [
+  labeled('agent:reviewing', earlierRound),
+  labeled('agent:fixing', '2000-01-01T01:00:00Z'),
+  labeled('agent:reviewing', lastRound),
+  // A review applied after this run's claim started no round of its own.
+  labeled('agent:reviewing', fresh),
+]
+
+test('a fix run that resolved or answered every thread of the last round hands it to the Reviewer', async () => {
+  const run = fix(
+    rounds,
+    thread(true, lastRoundThread),
+    thread(false, lastRoundThread, fresh),
+    // A blocked thread the last round accepted stays unresolved.
+    thread(false, earlierRoundThread, blockedReply),
+  )
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:fixing`,
+    `pr edit ${pull} --add-label agent:review`,
+  ])
+})
+
+test('a retried fix run counts the replies an earlier fix run of the same round wrote', async () => {
+  const run = fix(
+    [...rounds.slice(0, -1), labeled('agent:fixing', '2000-01-02T01:00:00Z')],
+    thread(false, lastRoundThread, '2000-01-02T01:30:00Z'),
+  )
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:fixing`,
+    `pr edit ${pull} --add-label agent:review`,
+  ])
+})
+
+test('a fix run ignores a thread another account opened during the round and hands it to the Reviewer', async () => {
+  const run = fix(rounds, {
+    isResolved: false,
+    comments: [{ at: '2000-01-02T00:30:00Z', login: 'ci-bot' }],
+  })
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:fixing`,
+    `pr edit ${pull} --add-label agent:review`,
+  ])
+})
+
+test('a fix run that left a thread of the last round unresolved and unanswered waits on whoever applied its label', async () => {
+  const qaFailure = '2000-01-02T01:05:00Z'
+  const run = fix(
+    [...rounds.slice(0, -1), labeled('agent:verifying', '2000-01-02T01:00:00Z')],
+    thread(false, qaFailure),
+    // A thread fixed earlier, reopened with a reply.
+    thread(false, earlierRoundThread, qaFailure),
+    thread(true, qaFailure),
+  )
+  await run.end()
+  assert.deepEqual(
+    run.writes,
+    waits(
+      pull,
+      'pr',
+      'agent:fix',
+      "this run left 2 of the last round's threads unresolved with no reply",
+    ),
+  )
+})
+
 test('an upgrade run hands new commits to the Reviewer and marks an untouched update ready', async () => {
-  const moved = upgrade('def\n')
+  const moved = upgrade('def\n', upgraderSaid(fresh))
   await moved.end()
   assert.deepEqual(moved.writes, [
     `pr edit ${pull} --remove-label agent:upgrading`,
     `pr edit ${pull} --add-label agent:review`,
   ])
 
-  const untouched = upgrade('abc\n')
+  const untouched = upgrade('abc\n', upgraderSaid(fresh))
   await untouched.end()
   assert.deepEqual(untouched.writes, markedReady('agent:upgrade'))
+})
+
+test('an upgrade run that said nothing on the pull request since its claim waits on whoever applied its label', async () => {
+  for (const said of [
+    [],
+    [upgraderSaid('2000-01-01T00:00:00Z')],
+    [upgraderSaid(fresh, 'mallory')],
+  ]) {
+    const run = upgrade('abc\n', ...said)
+    await run.end()
+    assert.deepEqual(
+      run.writes,
+      waits(pull, 'pr', 'agent:upgrade', 'this run left no comment saying what it changed'),
+    )
+  }
 })
 
 test('a run whose next step cannot be read waits on whoever applied its label', async () => {
   const run = factory({ label: 'agent:upgrade', github: () => undefined })
   await run.end()
-  assert.deepEqual(run.writes, waits(pull, 'pr', 'agent:upgrade', 'gh pr view failed: HTTP 502'))
+  assert.deepEqual(run.writes, waits(pull, 'pr', 'agent:upgrade', 'gh api user failed: HTTP 502'))
 })
 
 test('a hand-off GitHub refuses waits on whoever applied the label', async () => {
@@ -471,6 +584,47 @@ test('a stop with background work left keeps the run', async () => {
 const released = `pr edit ${pull} --remove-label agent:fixing`
 const crashed = (why: string) =>
   told(pull, 'pr', `the agent:fix run ${why} before it finished. Apply agent:fix again to retry.`)
+
+// Replays delivery-acknowledgement#91 from jd-solanki/ai#30; #37 and #87 there ran the same way.
+test("a fix run whose last subagent finishes during the turn on the first one's report keeps going", async () => {
+  const turnWindow = Promise.withResolvers<void>()
+  const run = factory({ turnWindow: turnWindow.promise })
+  const reviewers = [
+    { type: 'subagent', status: 'running', description: 'Standards review' },
+    { type: 'subagent', status: 'running', description: 'Spec review' },
+  ]
+  await run.report('Stop', { background_tasks: reviewers })
+  await run.report('UserPromptSubmit', { prompt: '<task-notification> Standards review finished' })
+  // The spec review finished during that turn, so its Stop lists no background task while its result sits queued.
+  const stopped = await run.report('Stop', { background_tasks: [] })
+  assert.deepEqual(
+    [stopped.status, stopped.body],
+    [202, 'agent:fix app#12: Ends unless the session takes another turn'],
+  )
+  await run.report('UserPromptSubmit', { prompt: '<task-notification> Spec review finished' })
+  turnWindow.resolve()
+  assert.deepEqual(await stopped.ended, {
+    status: 200,
+    body: 'agent:fix app#12: Took another turn',
+  })
+  assert.deepEqual(run.writes, [])
+  assert.deepEqual(run.closed, [])
+
+  // The turn on the spec review pushes the fixes, and its clean stop, with no turn after it, ends the run.
+  await run.end()
+  assert.deepEqual(run.writes, [released, `pr edit ${pull} --add-label agent:review`])
+  assert.deepEqual(run.closed, ['w7:t3'])
+})
+
+test('a session that exits while its Stop waits for another turn crashes the run once', async () => {
+  const turnWindow = Promise.withResolvers<void>()
+  const run = factory({ turnWindow: turnWindow.promise })
+  const stopped = await run.report('Stop', { background_tasks: [] })
+  await run.report('SessionEnd', { reason: 'other' })
+  turnWindow.resolve()
+  assert.deepEqual(await stopped.ended, { status: 200, body: 'agent:fix app#12: Already ended' })
+  assert.deepEqual(run.writes, [released, ...crashed('exited')])
+})
 
 test('a session that exits before a clean stop crashes the run', async () => {
   const run = factory()

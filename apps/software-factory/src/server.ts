@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { buffer } from 'node:stream/consumers'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { handleRunReport, type Runs } from './run-end.ts'
 import { closeTab, gh, PORT, startSession } from './session.ts'
 import { findFactoryUp, handleWebhook } from './webhook.ts'
@@ -20,8 +21,8 @@ createServer(async (req, res) => {
   if (req.method === 'HEAD') return res.end()
   const body = await buffer(req)
   const isRunReport = req.url?.startsWith('/runs/')
-  const { status, body: outcome } = isRunReport
-    ? await handleRunReport(req.url ?? '', body, { runs, gh, closeTab })
+  const reply: Awaited<ReturnType<typeof handleRunReport>> = isRunReport
+    ? await handleRunReport(req.url ?? '', body, { runs, gh, closeTab, sleep })
     : await handleWebhook(req.headers, body, {
         secret,
         reposDir,
@@ -32,8 +33,12 @@ createServer(async (req, res) => {
       })
   // A run report's path holds its token, so it is logged as a run report, not by its path.
   const source = isRunReport ? 'run report' : req.headers['x-github-delivery']
-  console.log(new Date().toISOString(), source, status, outcome)
-  res.writeHead(status).end(outcome)
+  const log = ({ status, body }: typeof reply) =>
+    console.log(new Date().toISOString(), source, status, body)
+  log(reply)
+  res.writeHead(reply.status).end(reply.body)
+  // A clean stop ends its run after the reply, once the session has had its chance to take another turn.
+  void reply.ended?.then(log)
 }).listen(PORT, () =>
   spawn('pnpm', ['--silent', '--workspace-root', 'factory:check'], { stdio: 'inherit' }),
 )

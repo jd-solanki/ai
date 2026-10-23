@@ -35,7 +35,7 @@ const TRIGGERS = [
     skill: 'implement',
     effort: 'medium',
     instructions:
-      "The work is the unresolved threads of the pull request's last review. Check the pull request out detached: its branch may be checked out in another worktree. Before fixing a thread, confirm its problem still holds in the current code: one that no longer does, or that you cannot fix, gets a reply saying why, naming anything a human must do or decide, and stays unresolved. Each fix is its own commit, with a Conventional Commit subject naming the fix and no Closes footer. Push to the pull request's branch and resolve each thread you fixed.",
+      "The work is the unresolved threads the pull request's last review or QA round opened or replied to. Check the pull request out detached: its branch may be checked out in another worktree. Before fixing a thread, confirm its problem still holds in the current code: one that no longer does, or that you cannot fix, gets a reply saying why, naming anything a human must do or decide, and stays unresolved. Each fix is its own commit, with a Conventional Commit subject naming the fix and no Closes footer. Push to the pull request's branch and resolve each thread you fixed.",
   },
   {
     event: 'pull_request',
@@ -45,7 +45,7 @@ const TRIGGERS = [
     skill: 'implement',
     effort: 'medium',
     instructions:
-      "The work is upgrading the code for the dependency update this pull request makes: leave the code as it would read had it been written against the new versions. The release notes in the pull request body are the spec; follow their links where they defer to a migration guide. Check the pull request out detached: its branch may be checked out in another worktree. Each change is its own commit, with a Conventional Commit subject; an update the code needs nothing from gets no commit. Search this repository's open issues and pull requests for the upstream issues and pull requests the release notes name. Comment on each match, not on this pull request, linking this pull request and saying what the release changes for it. A commit that does an open issue's work ends with Closes <owner>/<repo>#<n>, so the merge closes it; never close one yourself, and an issue the release does not make doable gets a comment at most. Say on this pull request what you changed or why nothing needed to, and push your commits to the pull request's branch.",
+      "The work is upgrading the code for the dependency update this pull request makes: leave the code as it would read had it been written against the new versions. The release notes in the pull request body are the spec; follow their links where they defer to a migration guide. Check the pull request out detached: its branch may be checked out in another worktree. Each change is its own commit, with a Conventional Commit subject; an update the code needs nothing from gets no commit. Search this repository's open issues and pull requests for the upstream issues and pull requests the release notes name. Comment on each match, not on this pull request, linking this pull request and saying what the release changes for it. A commit that does an open issue's work ends with Closes <owner>/<repo>#<n>, so the merge closes it; never close one yourself, and an issue the release does not make doable gets a comment at most. Push your commits to the pull request's branch, then, as your last step, comment on this pull request with what you changed or why nothing needed to.",
   },
   {
     event: 'pull_request',
@@ -182,18 +182,20 @@ export function claudeArgs(
 
 // The server decides how a run ends: each hook only hands it the hook's input.
 function hooks(token: string) {
-  const report = (hook: string) => [
+  const report = (hook: string, curlFlags = '-sS') => [
     {
       hooks: [
         {
           type: 'command',
-          command: `curl -sS --data-binary @- http://localhost:${PORT}/runs/${token}/${hook}`,
+          command: `curl ${curlFlags} --data-binary @- http://localhost:${PORT}/runs/${token}/${hook}`,
           timeout: 60,
         },
       ],
     },
   ]
   return {
+    // A turn's start keeps a clean stop from ending the run. Its hook's output joins the prompt, so the reply is dropped.
+    UserPromptSubmit: report('UserPromptSubmit', '-sS -o /dev/null'),
     Stop: report('Stop'),
     StopFailure: report('StopFailure'),
     SessionEnd: report('SessionEnd'),

@@ -110,6 +110,8 @@ _Avoid_: result, review status
   crash hands nothing on. A run that hands its work item to no agent waits on whoever applied
   its trigger label: a pull request marked ready, a next step GitHub does not show, a crash or
   a failed launch.
+- A run hands its work item on only once GitHub shows its stage's work delivered, and waits
+  otherwise.
 - A review run's verdict is the one `/review-pr` writes into its summary comment, and a QA run's
   the one `/verify-pr` writes into its QA comment.
 - A pull request is marked ready only after a dry review of its current head and, when its body
@@ -174,6 +176,10 @@ _Avoid_: result, review status
   threads: the Tasks heading's mark ignores Unproven findings and failed checks, and a thread
   the Reviewer accepts after a Fixer's `blocked` reply stays unresolved.
 - A Fixer run with no commits still goes to the Reviewer: its `blocked` replies need judging.
+- Each stage checks GitHub for its delivered work because a run can still end before its session
+  delivers: three runs in jd-solanki/ai#30 ended at a Stop with no background tasks while a queued
+  result was still to start a turn. The Implementer's draft check caught two, and the Fixer's went
+  on to a review of an unfixed head.
 - Waiting on a human is an assignment and `agent:handed-back`, which queue the work item on
   GitHub, where the human reads it from any device: every factory write runs as the factory
   owner, so the factory's mention never notifies the owner. What static code tells them goes
@@ -213,7 +219,7 @@ _Avoid_: result, review status
   review handed back to review whenever its reviewed commit can't be read would loop unwatched. A
   summary with no readable commit waits on a human. `apps/software-factory/src/hand-off.ts:reviewedHead`
 - **A file-level review comment opens a review of its own.** GitHub files a `subject_type: file`
-  comment apart from the review it was posted with, so the Fixer's "threads of the last review"
+  comment apart from the review it was posted with, so /review-pr's "threads of the last review"
   would miss the rest. Every QA thread sits on a changed line. `skills/in-progress/verify-pr/SKILL.md`
 
 ## Where it lives
