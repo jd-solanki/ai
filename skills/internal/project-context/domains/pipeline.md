@@ -60,6 +60,10 @@ _Avoid_: result, review status
   them onto the update's branch, static code hands it to the Reviewer, and stage 5 follows.
   With none, static code marks the pull request ready for review. Renovate's body stays: it carries the
   Upgrader's spec.
+- `/merge-renovate-prs` lands a repository's dependency updates in one session: it applies
+  `agent:upgrade` where none ran, shows one plan, and merges only what the human approves there,
+  one pull request at a time on green CI for a head up to date with the base branch. Approving
+  that plan is the human's merge: they read every update in it before anything lands.
 - The Upgrader matches the upstream issues and pull requests the release notes name against the
   repository's open issues and pull requests, and comments on each match. A commit that does an
   open issue's work carries `Closes <owner>/<repo>#<n>`; an issue the release does not make
