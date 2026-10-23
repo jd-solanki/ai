@@ -125,12 +125,30 @@ const pullRequest = (label: string, body: string, ...said: string[]) =>
   factory({ label, github: pullRequestReads(body, said) })
 const review = (...said: string[]) => pullRequest('agent:review', '', ...said)
 const verify = (...said: string[]) => pullRequest('agent:verify', scenarios, ...said)
-const upgrade = (head: string) =>
+// `said` is what the factory's login wrote on the pull request.
+const upgrade = (head: string, ...said: string[]) =>
   factory({
     label: 'agent:upgrade',
     github: (args) =>
-      args.join(' ') === `pr view ${pull} --json headRefOid --jq .headRefOid` ? head : undefined,
+      ({
+        'api user --jq .login': 'factory\n',
+        [comments]: said.join('\n'),
+        [`pr view ${pull} --json headRefOid --jq .headRefOid`]: head,
+      })[args.join(' ')],
   })
+const upgraderSaid = (updated_at: string, login = 'factory') =>
+  JSON.stringify({ id: 8, login, updated_at, body: 'Nothing here uses what vite 7 changed.' })
+// `timeline` is the pull request's labeled events, `threads` its review threads.
+const fix = (timeline: string[], ...threads: { isResolved: boolean; comments: string[] }[]) =>
+  factory({
+    github: (args) =>
+      ({
+        'repos/acme/app/issues/12/timeline': timeline.join('\n'),
+        graphql: threads.map((thread) => JSON.stringify(thread)).join('\n'),
+      })[args[1] ?? ''],
+  })
+const labeled = (label: string, created_at: string) => JSON.stringify({ label, created_at })
+const thread = (isResolved: boolean, ...comments: string[]) => ({ isResolved, comments })
 
 const fresh = '2999-01-01T00:00:00Z'
 const told = (url: string, kind: string, message: string) => [
@@ -418,23 +436,88 @@ test('an implement run that opened no draft waits on whoever applied its label',
   )
 })
 
+// A review round opened threads at 00:05 on day 1, and the Fixer answered one as blocked; the next round, claimed on day 2, opened and reopened threads.
+const earlierRound = '2000-01-01T00:00:00Z'
+const earlierRoundThread = '2000-01-01T00:05:00Z'
+const blockedReply = '2000-01-01T12:00:00Z'
+const lastRound = '2000-01-02T00:00:00Z'
+const lastRoundThread = '2000-01-02T00:05:00Z'
+const rounds = [
+  labeled('agent:reviewing', earlierRound),
+  labeled('agent:fixing', '2000-01-01T01:00:00Z'),
+  labeled('agent:reviewing', lastRound),
+  // A review applied after this run's claim started no round of its own.
+  labeled('agent:reviewing', fresh),
+]
+
+test('a fix run that resolved or answered every thread of the last round hands it to the Reviewer', async () => {
+  const run = fix(
+    rounds,
+    thread(true, lastRoundThread),
+    thread(false, lastRoundThread, fresh),
+    // A blocked thread the last round accepted stays unresolved.
+    thread(false, earlierRoundThread, blockedReply),
+  )
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:fixing`,
+    `pr edit ${pull} --add-label agent:review`,
+  ])
+})
+
+test('a fix run that left a thread of the last round unresolved and unanswered waits on whoever applied its label', async () => {
+  const qaFailure = '2000-01-02T01:05:00Z'
+  const run = fix(
+    [...rounds.slice(0, -1), labeled('agent:verifying', '2000-01-02T01:00:00Z')],
+    thread(false, qaFailure),
+    // A thread fixed earlier, reopened with a reply.
+    thread(false, earlierRoundThread, qaFailure),
+    thread(true, qaFailure),
+  )
+  await run.end()
+  assert.deepEqual(
+    run.writes,
+    waits(
+      pull,
+      'pr',
+      'agent:fix',
+      "this run left 2 of the last round's threads unresolved with no reply",
+    ),
+  )
+})
+
 test('an upgrade run hands new commits to the Reviewer and marks an untouched update ready', async () => {
-  const moved = upgrade('def\n')
+  const moved = upgrade('def\n', upgraderSaid(fresh))
   await moved.end()
   assert.deepEqual(moved.writes, [
     `pr edit ${pull} --remove-label agent:upgrading`,
     `pr edit ${pull} --add-label agent:review`,
   ])
 
-  const untouched = upgrade('abc\n')
+  const untouched = upgrade('abc\n', upgraderSaid(fresh))
   await untouched.end()
   assert.deepEqual(untouched.writes, markedReady('agent:upgrade'))
+})
+
+test('an upgrade run that said nothing on the pull request since its claim waits on whoever applied its label', async () => {
+  for (const said of [
+    [],
+    [upgraderSaid('2000-01-01T00:00:00Z')],
+    [upgraderSaid(fresh, 'mallory')],
+  ]) {
+    const run = upgrade('abc\n', ...said)
+    await run.end()
+    assert.deepEqual(
+      run.writes,
+      waits(pull, 'pr', 'agent:upgrade', 'this run left no comment saying what it changed'),
+    )
+  }
 })
 
 test('a run whose next step cannot be read waits on whoever applied its label', async () => {
   const run = factory({ label: 'agent:upgrade', github: () => undefined })
   await run.end()
-  assert.deepEqual(run.writes, waits(pull, 'pr', 'agent:upgrade', 'gh pr view failed: HTTP 502'))
+  assert.deepEqual(run.writes, waits(pull, 'pr', 'agent:upgrade', 'gh api user failed: HTTP 502'))
 })
 
 test('a hand-off GitHub refuses waits on whoever applied the label', async () => {

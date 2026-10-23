@@ -38,7 +38,12 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
     return { wait: 'this run left no review verdict on the pull request' }
   },
   // A fix after QA goes back through review too, so no fix reaches ready unreviewed.
-  'agent:fix': async () => ({ to: 'agent:review' }),
+  'agent:fix': async (work, gh) => {
+    const open = await countOpenThreads(work, gh)
+    return open
+      ? { wait: `this run left ${open} of the last round's threads unresolved with no reply` }
+      : { to: 'agent:review' }
+  },
   'agent:verify': async (work, gh) => {
     const verdict = await readVerdict(work, gh, 'verify-pr:report')
     if (verdict === 'pass') {
@@ -51,8 +56,55 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
       return { wait: 'QA ended with scenarios still failing, so you decide what happens to them' }
     return { wait: 'this run left no QA verdict on the pull request' }
   },
-  'agent:upgrade': async (work, gh) =>
-    (await currentHead(work, gh)) === work.head ? { ready: true } : { to: 'agent:review' },
+  // The Upgrader says what it changed as its last step, after its push.
+  'agent:upgrade': async (work, gh) => {
+    const comments = await ownComments(work, gh)
+    if (!comments.some(({ updated_at }) => Date.parse(updated_at) >= Date.parse(work.claimedAt)))
+      return { wait: 'this run left no comment saying what it changed' }
+    return (await currentHead(work, gh)) === work.head ? { ready: true } : { to: 'agent:review' }
+  },
+}
+
+// The working labels of the runs that open threads for the Fixer: a review round and a QA run.
+const ROUND_LABELS = ['agent:reviewing', 'agent:verifying']
+
+// The Fixer's work is the threads the last round opened or replied to. /review-pr reads a resolved one as done, an answered one as blocked, and the rest as open.
+// The round is read off the label timeline: each reply is a review of its own, and a blocked thread an earlier round accepted stays unresolved.
+// shortcut: reads the newest 100 threads and their newest 100 comments, page through them if a pull request outgrows that.
+async function countOpenThreads(work: WorkItem, gh: Gh) {
+  const claimed = Date.parse(work.claimedAt)
+  const labeled: { label: string; created_at: string }[] = lines(
+    await read(gh, [
+      'api',
+      `repos/${work.repo}/issues/${work.number}/timeline`,
+      '--paginate',
+      '--jq',
+      '.[] | select(.event == "labeled") | {label: .label.name, created_at} | tojson',
+    ]),
+  )
+  const lastRound = labeled
+    .filter(
+      ({ label, created_at }) => ROUND_LABELS.includes(label) && Date.parse(created_at) < claimed,
+    )
+    .at(-1)
+  const roundStart = lastRound ? Date.parse(lastRound.created_at) : 0
+  const threads: { isResolved: boolean; comments: string[] }[] = lines(
+    await read(gh, [
+      'api',
+      'graphql',
+      '-f',
+      `url=${work.url}`,
+      '-f',
+      'query=query($url: URI!) { resource(url: $url) { ... on PullRequest { reviewThreads(last: 100) { nodes { isResolved comments(last: 100) { nodes { createdAt } } } } } } }',
+      '--jq',
+      '.data.resource.reviewThreads.nodes[] | {isResolved, comments: [.comments.nodes[].createdAt]} | tojson',
+    ]),
+  )
+  return threads.filter(({ isResolved, comments }) => {
+    const written = comments.map(Date.parse)
+    const inRound = written.some((at) => at >= roundStart && at < claimed)
+    return !isResolved && inRound && !written.some((at) => at >= claimed)
+  }).length
 }
 
 const UNREAD_HEAD =
@@ -161,14 +213,16 @@ async function ownComments(work: WorkItem, gh: Gh) {
     '--jq',
     '.[] | {id, login: .user.login, updated_at, body} | tojson',
   ])
-  return comments
+  const listed: { id: number; login: string; updated_at: string; body: string }[] = lines(comments)
+  return listed.filter(({ login }) => login === me)
+}
+
+// What `gh --jq '… | tojson'` prints: one JSON value per line.
+const lines = (stdout: string) =>
+  stdout
     .split('\n')
     .filter(Boolean)
-    .map((line): { id: number; login: string; updated_at: string; body: string } =>
-      JSON.parse(line),
-    )
-    .filter(({ login }) => login === me)
-}
+    .map((line) => JSON.parse(line))
 
 // A dry review's body was just rewritten by /create-pr, so a QA scenario left in it is one the Verifier can run.
 async function hasQaScenarios(work: WorkItem, gh: Gh) {

@@ -212,7 +212,9 @@ flowchart LR
   I["agent:implement<br/>on a spec"] -->|"draft PR"| R["agent:review"]
   A["agent:upgrade<br/>on a Renovate PR"] -->|"commits on its branch"| R
   A -->|"nothing to change"| D
-  R -->|"tasks"| X["agent:fix"] --> R
+  A -->|"no comment"| H
+  R -->|"tasks"| X["agent:fix"] -->|"every thread answered"| R
+  X -->|"a thread left open"| H
   R -->|"dry of the head, with QA scenarios"| V["agent:verify"]
   R -->|"dry of the head, none"| D["PR ready for review"]
   R -->|"dry of an older head"| R
@@ -226,7 +228,7 @@ flowchart LR
 ```
 
 The review's verdict is a marker in its summary comment, written by `/review-pr`, and QA's is one in its QA comment, written by `/verify-pr`, so each served repo needs the skills that write them.
-A run that hands its work item to no agent waits on you: a PR marked ready, or a run whose next step GitHub doesn't show, such as a review with no verdict of its own. The work item gets `agent:handed-back` and is assigned to whoever applied the label, and the factory's one comment on it says what is left.
+A run that hands its work item to no agent waits on you: a PR marked ready, or a run whose next step GitHub doesn't show, such as a review with no verdict of its own or a fix that left a thread unanswered. The work item gets `agent:handed-back` and is assigned to whoever applied the label, and the factory's one comment on it says what is left.
 Search `is:open label:agent:handed-back assignee:@me` on GitHub, or save it as a GitHub Mobile shortcut, for everything waiting on you.
 
 When a run starts, the server swaps the trigger label, and any `agent:handed-back`, for its `…ing` label.
