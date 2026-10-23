@@ -133,14 +133,21 @@ const upgraderSaid = (updated_at: string, login = 'factory') =>
 // `timeline` is the pull request's labeled events, `threads` its review threads.
 const fix = (
   timeline: { label: string; createdAt: string }[],
-  ...threads: { isResolved: boolean; comments: string[] }[]
+  ...threads: { isResolved: boolean; comments: { at: string; login: string }[] }[]
 ) =>
   factory({
     github: (args) =>
-      args[1] === 'graphql' ? JSON.stringify({ labeled: timeline, threads }) : undefined,
+      args[1] === 'graphql'
+        ? JSON.stringify({ labeled: timeline, threads })
+        : args.join(' ') === 'api user --jq .login'
+          ? 'factory\n'
+          : undefined,
   })
 const labeled = (label: string, createdAt: string) => ({ label, createdAt })
-const thread = (isResolved: boolean, ...comments: string[]) => ({ isResolved, comments })
+const thread = (isResolved: boolean, ...comments: string[]) => ({
+  isResolved,
+  comments: comments.map((at) => ({ at, login: 'factory' })),
+})
 
 const fresh = '2999-01-01T00:00:00Z'
 const told = (url: string, kind: string, message: string) => [
@@ -462,6 +469,18 @@ test('a retried fix run counts the replies an earlier fix run of the same round 
     [...rounds.slice(0, -1), labeled('agent:fixing', '2000-01-02T01:00:00Z')],
     thread(false, lastRoundThread, '2000-01-02T01:30:00Z'),
   )
+  await run.end()
+  assert.deepEqual(run.writes, [
+    `pr edit ${pull} --remove-label agent:fixing`,
+    `pr edit ${pull} --add-label agent:review`,
+  ])
+})
+
+test('a fix run ignores a thread another account opened during the round and hands it to the Reviewer', async () => {
+  const run = fix(rounds, {
+    isResolved: false,
+    comments: [{ at: '2000-01-02T00:30:00Z', login: 'ci-bot' }],
+  })
   await run.end()
   assert.deepEqual(run.writes, [
     `pr edit ${pull} --remove-label agent:fixing`,

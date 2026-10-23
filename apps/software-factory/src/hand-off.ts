@@ -70,6 +70,7 @@ const ROUND_LABELS = ['agent:reviewing', 'agent:verifying']
 
 // The Fixer's work is the threads the last round opened or replied to. /review-pr reads a resolved one as done, an answered one as blocked, and the rest as open.
 // The round is read off the label timeline: each reply is a review of its own, and a blocked thread an earlier round accepted stays unresolved.
+// Only comments by the factory's own login place a thread in the round, so a bot's or another reviewer's thread is not the Fixer's work; a reply from anyone still answers one.
 // shortcut: reads the newest 100 labels, threads and comments per thread, page through them if a pull request outgrows that.
 async function countOpenThreads(work: WorkItem, gh: Gh) {
   const {
@@ -77,7 +78,7 @@ async function countOpenThreads(work: WorkItem, gh: Gh) {
     threads,
   }: {
     labeled: { label: string; createdAt: string }[]
-    threads: { isResolved: boolean; comments: string[] }[]
+    threads: { isResolved: boolean; comments: { at: string; login: string }[] }[]
   } = JSON.parse(
     await read(gh, [
       'api',
@@ -85,11 +86,12 @@ async function countOpenThreads(work: WorkItem, gh: Gh) {
       '-f',
       `url=${work.url}`,
       '-f',
-      'query=query($url: URI!) { resource(url: $url) { ... on PullRequest { timelineItems(itemTypes: [LABELED_EVENT], last: 100) { nodes { ... on LabeledEvent { createdAt label { name } } } } reviewThreads(last: 100) { nodes { isResolved comments(last: 100) { nodes { createdAt } } } } } } }',
+      'query=query($url: URI!) { resource(url: $url) { ... on PullRequest { timelineItems(itemTypes: [LABELED_EVENT], last: 100) { nodes { ... on LabeledEvent { createdAt label { name } } } } reviewThreads(last: 100) { nodes { isResolved comments(last: 100) { nodes { createdAt author { login } } } } } } } }',
       '--jq',
-      '.data.resource | {labeled: [.timelineItems.nodes[] | {label: .label.name, createdAt}], threads: [.reviewThreads.nodes[] | {isResolved, comments: [.comments.nodes[].createdAt]}]}',
+      '.data.resource | {labeled: [.timelineItems.nodes[] | {label: .label.name, createdAt}], threads: [.reviewThreads.nodes[] | {isResolved, comments: [.comments.nodes[] | {at: .createdAt, login: .author.login}]}]}',
     ]),
   )
+  const me = (await read(gh, ['api', 'user', '--jq', '.login'])).trim()
   const claimed = Date.parse(work.claimedAt)
   const labels = labeled.map(({ label, createdAt }) => ({ label, at: Date.parse(createdAt) }))
   const roundStart =
@@ -98,8 +100,11 @@ async function countOpenThreads(work: WorkItem, gh: Gh) {
   const fixedSince =
     labels.find(({ label, at }) => label === 'agent:fixing' && at >= roundStart)?.at ?? claimed
   return threads.filter(({ isResolved, comments }) => {
-    const written = comments.map(Date.parse)
-    const inRound = written.some((at) => at >= roundStart && at < fixedSince)
+    const written = comments.map(({ at }) => Date.parse(at))
+    const inRound = comments.some(
+      ({ at, login }) =>
+        login === me && Date.parse(at) >= roundStart && Date.parse(at) < fixedSince,
+    )
     return !isResolved && inRound && !written.some((at) => at >= fixedSince)
   }).length
 }
