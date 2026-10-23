@@ -118,7 +118,7 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 
 ### <state mark> Tasks (<fixed>/<all> fixed)
 
-- 🟠 `<id>` · `<file:line>` · <the Problem, in a line> · <open, fixed or broken> · <link to its thread>
+- [<x once fixed, else a space>] 🟠 `<id>` · `<file:line>` · <the Problem, in a line> · <open, fixed or broken> · <link to its thread>
 
 <details><summary>❓ Unproven (<count>)</summary>
 
