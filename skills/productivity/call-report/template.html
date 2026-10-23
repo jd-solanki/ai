@@ -24,6 +24,8 @@
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .7rem .9rem; margin-bottom: .6rem; scroll-margin-top: 1rem; transition: background .6s; }
   .card:target { background: var(--hl); }
+  .tasks-h { display: flex; justify-content: space-between; align-items: center; } .tasks-h span { display: flex; gap: .4rem; }
+  .pill.on { box-shadow: 0 0 0 2px currentColor; }
   .card header { display: flex; gap: .6rem; align-items: center; font-size: .85rem; }
   .card header .spacer { flex: 1; }
   .card p.text { margin: .35rem 0; }
@@ -64,8 +66,10 @@
   <p class="meta">{{ intro }} {{ recording ? 'Click a time to play the recording from there.' : '' }} Click a status to move it on; hover a task and click ✕ to mark it invalid. Everything is saved in this browser.</p>
   <p class="meta">Transcript: <a :href="'file://' + encodeURI(transcript)">{{ transcript }}</a></p>
 
-  <h2 id="tasks">Tasks</h2>
-  <article v-for="(t, i) in tasks" :key="t.id" :id="'task-' + (i + 1)" class="card" :class="[taskStatus(t), { invalid: invalid[t.id] }]">
+  <h2 id="tasks" class="tasks-h">Tasks
+    <span><button v-for="s in order" class="pill" :class="[s, { on: filter === s }]" @click="filter = filter === s ? '' : s" :title="filter === s ? 'Show all tasks' : 'Show only ' + labels[s] + ' tasks'">{{ labels[s] }} ({{ count(s) }})</button></span>
+  </h2>
+  <article v-for="(t, i) in tasks" v-show="!filter || shown(t, filter)" :key="t.id" :id="'task-' + (i + 1)" class="card" :class="[taskStatus(t), { invalid: invalid[t.id] }]">
     <header>
       <a class="num" :href="'#task-' + (i + 1)">#{{ i + 1 }}</a>
       <button class="pill" :class="taskStatus(t)" @click="cycleTask(t)">{{ labels[taskStatus(t)] }}</button>
@@ -178,10 +182,15 @@ Vue.createApp({
       return all.every(s => s === 'done') ? 'done' : all.every(s => s === 'todo') ? 'todo' : 'wip';
     };
 
+    // Filters whole cards by their status; a shown card keeps all its steps. Invalid cards show only unfiltered.
+    const filter = Vue.ref('');
+    const shown = (t, s) => !invalid[t.id] && taskStatus(t) === s;
+
     return {
       title: TITLE, intro: INTRO, recording: RECORDING, transcript: TRANSCRIPT, tasks, topics, invalid,
       labels: { todo: 'Todo', wip: 'WIP', done: 'Done' },
-      status, taskStatus,
+      status, taskStatus, filter, shown, order: ORDER,
+      count: s => tasks.filter(t => shown(t, s)).length,
       cycle: id => { statuses[id] = next(status(id)); },
       // Moving a task moves every step with it, so a task and its steps never disagree.
       cycleTask: t => { const to = next(taskStatus(t)); stepIds(t).forEach(id => { statuses[id] = to; }); },
