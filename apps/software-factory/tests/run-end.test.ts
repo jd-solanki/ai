@@ -26,11 +26,13 @@ function launch(label: string) {
 }
 
 // `github` answers the factory's reads, as `gh` would print them.
+// `turnWindow` settles when a clean stop's wait for another turn is over.
 function factory({
   label = 'agent:fix',
   closes = true,
   github = (_args: string[]): string | undefined => '',
   refuses = (_args: string[]): boolean => false,
+  turnWindow = Promise.resolve(),
 } = {}) {
   const run = launch(label)
   const runs: Runs = new Map([[run.token, { ...run, tab: 'w7:t3', cwd: '/repos/acme/app' }]])
@@ -70,6 +72,7 @@ function factory({
           }
           return { ok: closes, output: closes ? '' : 'herdr is down' }
         },
+        sleep: () => turnWindow,
       },
     )
   return {
@@ -79,7 +82,11 @@ function factory({
     closed,
     sessionEnds,
     report,
-    end: () => report('Stop', { background_tasks: [] }),
+    // A clean stop with no turn after it.
+    end: async () => {
+      const stopped = await report('Stop', { background_tasks: [] })
+      return (await stopped.ended) ?? stopped
+    },
   }
 }
 
@@ -471,6 +478,40 @@ test('a stop with background work left keeps the run', async () => {
 const released = `pr edit ${pull} --remove-label agent:fixing`
 const crashed = (why: string) =>
   told(pull, 'pr', `the agent:fix run ${why} before it finished. Apply agent:fix again to retry.`)
+
+// jd-solanki/ai#30: a subagent that finished during the last turn is in no background task, and its queued result starts the next turn.
+test('a clean stop the session follows with another turn keeps the run', async () => {
+  const turnWindow = Promise.withResolvers<void>()
+  const run = factory({ turnWindow: turnWindow.promise })
+  const stopped = await run.report('Stop', { background_tasks: [] })
+  assert.deepEqual(
+    [stopped.status, stopped.body],
+    [202, 'agent:fix app#12: Ends unless the session takes another turn'],
+  )
+  await run.report('UserPromptSubmit', { prompt: '<task-notification>' })
+  turnWindow.resolve()
+  assert.deepEqual(await stopped.ended, {
+    status: 200,
+    body: 'agent:fix app#12: Took another turn',
+  })
+  assert.deepEqual(run.writes, [])
+  assert.deepEqual(run.closed, [])
+
+  // That turn's clean stop, with no turn after it, ends the run.
+  await run.end()
+  assert.deepEqual(run.writes, [released, `pr edit ${pull} --add-label agent:review`])
+  assert.deepEqual(run.closed, ['w7:t3'])
+})
+
+test('a session that exits while its clean stop waits for another turn crashes the run once', async () => {
+  const turnWindow = Promise.withResolvers<void>()
+  const run = factory({ turnWindow: turnWindow.promise })
+  const stopped = await run.report('Stop', { background_tasks: [] })
+  await run.report('SessionEnd', { reason: 'other' })
+  turnWindow.resolve()
+  assert.deepEqual(await stopped.ended, { status: 200, body: 'agent:fix app#12: Already ended' })
+  assert.deepEqual(run.writes, [released, ...crashed('exited')])
+})
 
 test('a session that exits before a clean stop crashes the run', async () => {
   const run = factory()

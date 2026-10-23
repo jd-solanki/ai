@@ -182,18 +182,20 @@ export function claudeArgs(
 
 // The server decides how a run ends: each hook only hands it the hook's input.
 function hooks(token: string) {
-  const report = (hook: string) => [
+  const report = (hook: string, curlFlags = '-sS') => [
     {
       hooks: [
         {
           type: 'command',
-          command: `curl -sS --data-binary @- http://localhost:${PORT}/runs/${token}/${hook}`,
+          command: `curl ${curlFlags} --data-binary @- http://localhost:${PORT}/runs/${token}/${hook}`,
           timeout: 60,
         },
       ],
     },
   ]
   return {
+    // A turn's start keeps a clean stop from ending the run. Its hook's output joins the prompt, so the reply is dropped.
+    UserPromptSubmit: report('UserPromptSubmit', '-sS -o /dev/null'),
     Stop: report('Stop'),
     StopFailure: report('StopFailure'),
     SessionEnd: report('SessionEnd'),
