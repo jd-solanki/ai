@@ -22,10 +22,10 @@ type Reply = { status: number; body?: string }
 const NEXT_TURN_WAIT_MS = 5000
 
 // Why a run crashed, by the hook that reported its session ending before a clean stop.
-const CRASHES: Record<string, string> = {
-  StopFailure: 'stopped on an API error before it finished',
-  SessionEnd: 'exited before it finished',
-}
+const CRASHES = new Map([
+  ['StopFailure', 'stopped on an API error before it finished'],
+  ['SessionEnd', 'exited before it finished'],
+])
 
 // A run ends at its clean stop, handing its work item on, or crashes when its session ends any other way.
 // shortcut: a report sent while the server is down, or a session killed with no SessionEnd, leaves the claim held, poll herdr for run tabs if that happens.
@@ -43,7 +43,7 @@ export async function handleRunReport(
     run.cleanStop = undefined
     return { status: 200, body: `${run.name}: Started a turn` }
   }
-  if (Object.hasOwn(CRASHES, hook)) return endRun({ token, run, hook, body }, factory)
+  if (CRASHES.has(hook)) return endRun({ token, run, hook, body }, factory)
   if (hook !== 'Stop') return { status: 404, body: `Not a run report: ${hook}` }
 
   let backgroundTasks: unknown
@@ -60,7 +60,7 @@ export async function handleRunReport(
   const cleanStop = Symbol('clean stop')
   run.cleanStop = cleanStop
   const ended = factory.sleep(NEXT_TURN_WAIT_MS).then((): Reply | Promise<Reply> => {
-    if (factory.runs.get(token) !== run) return { status: 200, body: `${run.name}: Already ended` }
+    if (!factory.runs.has(token)) return { status: 200, body: `${run.name}: Already ended` }
     if (run.cleanStop !== cleanStop) return { status: 200, body: `${run.name}: Took another turn` }
     return endRun({ token, run, hook, body }, factory)
   })
@@ -82,7 +82,7 @@ async function endRun(
   // The API error behind a StopFailure goes to the server's log only, not to the work item.
   const ghInClone = (args: string[]) => gh(args, run.cwd)
   const crashed = hook === 'StopFailure' ? `Crashed: ${body.toString().trim()}` : 'Crashed'
-  const why = Object.hasOwn(CRASHES, hook) ? CRASHES[hook] : undefined
+  const why = CRASHES.get(hook)
   const { outcomes, did } = why
     ? {
         outcomes: await crash(run, why, ghInClone),

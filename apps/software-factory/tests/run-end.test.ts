@@ -25,12 +25,13 @@ function launch(label: string) {
   return launched
 }
 
-// `github` answers the factory's reads, as `gh` would print them.
+// `github` answers the factory's reads, as `gh` would print them: by default, for a pull request with no review threads.
 // `turnWindow` settles when a clean stop's wait for another turn is over.
 function factory({
   label = 'agent:fix',
   closes = true,
-  github = (_args: string[]): string | undefined => '',
+  github = (args: string[]): string | undefined =>
+    args[1] === 'graphql' ? '{"labeled":[],"threads":[]}' : '',
   refuses = (_args: string[]): boolean => false,
   turnWindow = Promise.resolve(),
 } = {}) {
@@ -111,43 +112,34 @@ const comments =
   'api repos/acme/app/issues/12/comments --paginate --jq .[] | {id, login: .user.login, updated_at, body} | tojson'
 const scenarios =
   '## QA steps\n\n- [ ] **Saving shows a toast**\n  1. Click Save → a toast appears.\n\n## Notes\n'
-// `body` is the pull request body a dry review leaves.
+// `body` is the pull request body a dry review leaves, `said` what the factory's login wrote on it.
 const pullRequestReads =
-  (body: string, said: string[]) =>
+  (body: string, said: string[], head = 'abc1234def\n') =>
   (args: string[]): string | undefined =>
     ({
       'api user --jq .login': 'factory\n',
       [comments]: said.join('\n'),
       [`pr view ${pull} --json body --jq .body`]: body,
-      [`pr view ${pull} --json headRefOid --jq .headRefOid`]: 'abc1234def\n',
+      [`pr view ${pull} --json headRefOid --jq .headRefOid`]: head,
     })[args.join(' ')]
 const pullRequest = (label: string, body: string, ...said: string[]) =>
   factory({ label, github: pullRequestReads(body, said) })
 const review = (...said: string[]) => pullRequest('agent:review', '', ...said)
 const verify = (...said: string[]) => pullRequest('agent:verify', scenarios, ...said)
-// `said` is what the factory's login wrote on the pull request.
 const upgrade = (head: string, ...said: string[]) =>
-  factory({
-    label: 'agent:upgrade',
-    github: (args) =>
-      ({
-        'api user --jq .login': 'factory\n',
-        [comments]: said.join('\n'),
-        [`pr view ${pull} --json headRefOid --jq .headRefOid`]: head,
-      })[args.join(' ')],
-  })
+  factory({ label: 'agent:upgrade', github: pullRequestReads('', said, head) })
 const upgraderSaid = (updated_at: string, login = 'factory') =>
   JSON.stringify({ id: 8, login, updated_at, body: 'Nothing here uses what vite 7 changed.' })
 // `timeline` is the pull request's labeled events, `threads` its review threads.
-const fix = (timeline: string[], ...threads: { isResolved: boolean; comments: string[] }[]) =>
+const fix = (
+  timeline: { label: string; createdAt: string }[],
+  ...threads: { isResolved: boolean; comments: string[] }[]
+) =>
   factory({
     github: (args) =>
-      ({
-        'repos/acme/app/issues/12/timeline': timeline.join('\n'),
-        graphql: threads.map((thread) => JSON.stringify(thread)).join('\n'),
-      })[args[1] ?? ''],
+      args[1] === 'graphql' ? JSON.stringify({ labeled: timeline, threads }) : undefined,
   })
-const labeled = (label: string, created_at: string) => JSON.stringify({ label, created_at })
+const labeled = (label: string, createdAt: string) => ({ label, createdAt })
 const thread = (isResolved: boolean, ...comments: string[]) => ({ isResolved, comments })
 
 const fresh = '2999-01-01T00:00:00Z'
