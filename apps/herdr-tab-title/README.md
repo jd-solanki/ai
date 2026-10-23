@@ -28,4 +28,4 @@ On a machine reached with `herdr --remote`, the plugin runs on that machine, so 
 
 ## Develop
 
-Run the tests with `pnpm --filter herdr-tab-title test:unit`.
+Run the tests with `pnpm --filter herdr-tab-title test`.
