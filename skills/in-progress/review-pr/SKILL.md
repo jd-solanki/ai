@@ -93,9 +93,24 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
   makes it `declined`, in any thread state: the human's call closes it unfixed.
 - **The closing round files what is left.** A round that closes the review, dry or ended, files
   every listed nitpick and every Unproven finding as one issue on the pull request's repository,
-  labelled `issue:follow-up` and titled with a Conventional Commit subject, and links it from the
-  summary. A later round edits that issue rather than filing a second. A pull request whose
-  `Closes` lines name an `issue:follow-up` issue files nothing.
+  labelled `issue:follow-up` and titled with a Conventional Commit subject. It links the issue from
+  the summary and names it in the summary's third line, the follow-up marker. A later round edits
+  that issue rather than filing a second. A pull request whose `Closes` lines name an
+  `issue:follow-up` issue files nothing.
+- **An Unproven finding in the follow-up ends in a decision.** The software factory starts an
+  implementer on a follow-up once its pull request merges, unread, unless it holds an Unproven
+  finding. Then whoever merged decides each one from its last four lines:
+
+  ```markdown
+  **If real:** <what breaks, and for whom>
+  **Not shown:** <what its investigator could not show>
+  **Fix:** <the edit, and what it could break>
+  **Recommendation:** <build or drop> — <the one reason>
+  ```
+
+  Recommend `build` when the fix is right whether or not the finding is real, and `drop`
+  otherwise, naming what would make it worth building. The implementer follows each
+  recommendation as the issue reads when it starts.
 - **The third round is the last.** A third round that leaves tasks ends the review: the tasks go
   to a human, not to an implementer, and the summary's Action reads `Review ended: a human
   decides`. Every later round ends the same way. Rounds that do not converge spend budget with
@@ -113,6 +128,7 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 ```markdown
 <!-- review-pr:summary -->
 <!-- review-pr:verdict <dry, tasks or ended> -->
+<!-- review-pr:follow-up <the follow-up's number> <unproven when it holds an Unproven finding, else nitpicks> -->
 ## 🔍 Review: <N>/10 — <the score table's Action>
 
 <the score's one line of reason>
