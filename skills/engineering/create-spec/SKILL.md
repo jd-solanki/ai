@@ -60,7 +60,11 @@ A spec with an origin opens on `Resolves #<origin>`, or on `Part of #<origin>` w
 delivers only some of it. Only `Resolves` earns the closing check under **Verification**,
 so merging closes the origin with the spec. A spec with no origin drops both lines.
 
-```markdown
+A spec with sub-issues carries **Sub-issues**, their graph: one node per sub-issue, and an
+arrow from each blocker to the sibling it blocks. In the draft, a node names its place in
+the series. A standalone spec drops the section.
+
+````markdown
 Resolves #<origin>
 
 ## Problem
@@ -81,6 +85,13 @@ Resolves #<origin>
 
 ## Technical shape
 
+## Sub-issues
+
+```mermaid
+flowchart TD
+  s1["1 · AFK<br><title>"] --> s2["2 · HITL<br><title>"]
+```
+
 ## Verification
 
 **Agent, before the pull request**
@@ -98,7 +109,7 @@ Resolves #<origin>
 - [ ] After merge: <step>
 
 ## Out of scope
-```
+````
 
 ### Sub-issue template
 
@@ -204,8 +215,14 @@ gh issue create --parent <n> --label issue:AFK --blocked-by <numbers> \
   --title "<subject>" --body-file <sub.md>
 ```
 
-**Done when:** the spec, every sub-issue in order with its blockers, and the spec branch
-when there are records, are on GitHub.
+Then swap each place in the spec's **Sub-issues** for its `#<number>`, and update the spec:
+
+```bash
+gh issue edit <n> --body-file <spec.md>
+```
+
+**Done when:** the spec, every sub-issue in order with its blockers, the spec's
+**Sub-issues** by number, and the spec branch when there are records, are on GitHub.
 
 ### 7. Hand off
 
