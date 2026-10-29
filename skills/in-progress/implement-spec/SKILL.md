@@ -69,7 +69,8 @@ notes in a folder outside the repo, so every implementer starts from findings.
 **The spec is its own AFK issue:** build it yourself on the spec branch with `/tdd`, as
 one commit whose subject is the spec's title and whose message ends in `Closes <owner>/<repo>#<n>`.
 A follow-up's items are an agent's claims: confirm each still holds in the current code
-before you build it, and skip one that no longer does. One comment on the follow-up lists
+before you build it, and skip one that no longer does, or an Unproven finding whose
+**Recommendation** reads `drop`. One comment on the follow-up lists
 each skipped item and why. When none holds, stop there, with no commit and no pull request.
 
 **Otherwise** start one implementer subagent per AFK issue on the frontier, all at once,
