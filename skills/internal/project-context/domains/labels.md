@@ -21,7 +21,8 @@ _Avoid_: primary, higher-priority factory
 - A trigger label re-applied while its working label is on is ignored: static code logs it
   and removes the trigger label.
 - Only static code applies or removes a working label. A human applies a trigger label,
-  or static code does when a run hands the work item to the next agent.
+  or static code does when a run hands the work item to the next agent, or a merge hands on its
+  follow-up.
 - A label records state only where GitHub keeps no record of its own. No label marks a
   work item done, reviewed, approved or failed.
 - `issue:*` labels name an issue's kind and never trigger an agent. `pipeline.md` owns
@@ -67,5 +68,5 @@ _Avoid_: primary, higher-priority factory
 `apps/software-factory/src/session.ts` (`TRIGGERS`, `claudeArgs`), `apps/software-factory/src/webhook.ts` (`handleWebhook`: what a
 GitHub event must pass to start a run), `apps/software-factory/src/run-end.ts` (`handleRunReport`: when
 a run's working label comes off), `apps/software-factory/src/hand-off.ts` (`handOff`: the
-trigger label a run's end applies; `tell`: `agent:handed-back`), `apps/software-factory/README.md` (Add a project: the labels a served
+trigger label a run's end applies; `handOffFollowUp`: the one a merge applies; `tell`: `agent:handed-back`), `apps/software-factory/README.md` (Add a project: the labels a served
 repo needs; Run on more than one machine: a fallback's setup).

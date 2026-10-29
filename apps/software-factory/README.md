@@ -225,11 +225,16 @@ flowchart LR
   V -->|"ended"| H
   I -->|"no draft PR"| H
   D --> H
+  D -->|"you merge"| M["merged"]
+  M -->|"follow-up of nitpicks"| I
+  M -->|"follow-up with an Unproven finding"| H
 ```
 
 The review's verdict is a marker in its summary comment, written by `/review-pr`, and QA's is one in its QA comment, written by `/verify-pr`, so each served repo needs the skills that write them.
 A run that hands its work item to no agent waits on you: a PR marked ready, or a run whose next step GitHub doesn't show, such as a review with no verdict of its own or a fix that left a thread unanswered. The work item gets `agent:handed-back` and is assigned to whoever applied the label, and the factory's one comment on it says what is left.
 Search `is:open label:agent:handed-back assignee:@me` on GitHub, or save it as a GitHub Mobile shortcut, for everything waiting on you.
+
+Merging a reviewed PR hands on the follow-up its review filed. A follow-up of nitpicks gets `agent:implement`. One holding an Unproven finding is assigned to whoever merged: each finding ends in a recommendation, `build` or `drop`, and the run follows it unless you edit it before you apply `agent:implement`. Close a follow-up before you merge to decline it.
 
 When a run starts, the server swaps the trigger label, and any `agent:handed-back`, for its `…ing` label.
 The run ends when its session stops with no background work left and starts no other turn within five seconds: the server closes the run's herdr tab, takes the `…ing` label off and hands the work item on.

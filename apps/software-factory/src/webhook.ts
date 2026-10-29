@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import type { IncomingHttpHeaders } from 'node:http'
 import { join } from 'node:path'
-import { crash } from './hand-off.ts'
+import { crash, handOffFollowUp } from './hand-off.ts'
 import type { Runs } from './run-end.ts'
 import { claudeArgs, type gh, type startSession, type WebhookPayload } from './session.ts'
 
@@ -36,7 +36,7 @@ export async function handleWebhook(
     body: `${received(event, payload)}: ${outcome}`,
   })
 
-  const launch = claudeArgs(event, payload)
+  const launch = merge(event, payload) ?? claudeArgs(event, payload)
   const cwd = join(reposDir, payload.repository.full_name)
   if ('skip' in launch) {
     if (launch.unlabel && existsSync(cwd)) await gh(launch.unlabel, cwd)
@@ -48,6 +48,11 @@ export async function handleWebhook(
   // Every factory gets every delivery, and two claims on one work item both succeed.
   const preferredFactory = await findPreferredFactoryUp()
   if (preferredFactory) return reply(200, `Deferred to ${preferredFactory}`)
+
+  if ('merged' in launch) {
+    const { ok, outcome } = await handOffFollowUp(launch.merged, (args) => gh(args, cwd))
+    return reply(ok ? 200 : 500, outcome)
+  }
 
   const claim = await gh(launch.claim, cwd)
   if (!claim.ok) return reply(500, claim.output.trim())
@@ -61,6 +66,14 @@ export async function handleWebhook(
   const outcomes = await crash(launch, 'could not start', (args) => gh(args, cwd))
   const failed = outcomes.filter((outcome) => !outcome.ok).map(({ output }) => output.trim())
   return reply(500, [started.output.trim(), ...failed].join('\n'))
+}
+
+// A merge starts no session: it hands on the follow-up the pull request's review filed.
+function merge(event: string, { action, pull_request, sender, repository }: WebhookPayload) {
+  if (event === 'pull_request' && action === 'closed' && pull_request?.merged && sender)
+    return {
+      merged: { repo: repository.full_name, number: pull_request.number, merger: sender.login },
+    }
 }
 
 const UP_CHECK_TIMEOUT_MS = 2000

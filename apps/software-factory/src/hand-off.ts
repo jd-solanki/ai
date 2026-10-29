@@ -157,6 +157,56 @@ export async function handOff({ release, work }: Pick<Launch, 'release' | 'work'
   }
 }
 
+// /review-pr names the follow-up it filed, and whether it holds an Unproven finding, in its summary.
+const FOLLOW_UP = /<!-- review-pr:follow-up (\d+) (nitpicks|unproven) -->/
+
+// A merge hands its pull request's follow-up to the Implementer, or back to whoever merged when an Unproven finding in it needs their call.
+export async function handOffFollowUp(
+  pull: { repo: string; number: number; merger: string },
+  gh: Gh,
+) {
+  try {
+    const summary = (await ownComments(pull, gh)).find(({ body }) =>
+      body.startsWith('<!-- review-pr:summary -->'),
+    )
+    const [, number, holds] = FOLLOW_UP.exec(summary?.body ?? '') ?? []
+    if (!number) return { ok: true, outcome: 'Its review filed no follow-up' }
+    const { url, state }: { url: string; state: string } = JSON.parse(
+      await read(gh, ['issue', 'view', number, '-R', pull.repo, '--json', 'url,state']),
+    )
+    // Closing a follow-up before the merge declines it.
+    if (state !== 'OPEN') return { ok: true, outcome: `Its follow-up ${url} is closed` }
+    if (holds === 'nitpicks') {
+      const handed = await gh(['issue', 'edit', url, '--add-label', 'agent:implement'])
+      return {
+        ok: handed.ok,
+        outcome: handed.ok ? `Handed ${url} to agent:implement` : handed.output.trim(),
+      }
+    }
+    const work: WorkItem = {
+      trigger: 'agent:implement',
+      kind: 'issue',
+      url,
+      repo: pull.repo,
+      number: Number(number),
+      sender: pull.merger,
+      claimedAt: new Date().toISOString(),
+    }
+    const told = await tell(
+      work,
+      `#${pull.number} merged, and this follow-up holds an Unproven finding, so it waits on you. Each one ends in a recommendation: apply agent:implement to follow them, or edit one first.`,
+      gh,
+    )
+    const failed = told.filter(({ ok }) => !ok).map(({ output }) => output.trim())
+    return {
+      ok: !failed.length,
+      outcome: failed.join('\n') || `Waiting on ${pull.merger}: ${url} holds an Unproven finding`,
+    }
+  } catch (error) {
+    return { ok: false, outcome: (error as Error).message }
+  }
+}
+
 // A crash or a failed launch hands nothing on: whoever applied the trigger label retries, once the claim is off.
 export async function crash(
   { release, work }: Pick<Launch, 'release' | 'work'>,
@@ -206,7 +256,7 @@ export async function tell(work: WorkItem, message: string, gh: Gh) {
 }
 
 // Static code reads only what the factory's own login wrote: an HTML comment does not render, so anyone could plant one.
-async function ownComments(work: WorkItem, gh: Gh) {
+async function ownComments(work: Pick<WorkItem, 'repo' | 'number'>, gh: Gh) {
   const me = (await read(gh, ['api', 'user', '--jq', '.login'])).trim()
   const comments = await read(gh, [
     'api',

@@ -224,6 +224,115 @@ test('handleWebhook leaves a delivery to a preferred factory that is up', async 
   assert.deepEqual(served.started, [])
 })
 
+const followUp = 'https://github.com/acme/app/issues/40'
+const comments = (number: number) =>
+  `api repos/acme/app/issues/${number}/comments --paginate --jq .[] | {id, login: .user.login, updated_at, body} | tojson`
+
+function mergeOf(merged = true) {
+  return Buffer.from(
+    JSON.stringify({
+      action: 'closed',
+      sender: { login: 'octocat' },
+      repository: { name: 'app', full_name: 'acme/app' },
+      pull_request: {
+        number: 12,
+        title: 'Kiosk pairing',
+        html_url: 'https://github.com/acme/app/pull/12',
+        labels: [],
+        merged,
+      },
+    }),
+  )
+}
+
+// `summary` is the review summary `login` wrote on the merged pull request, `state` its follow-up's.
+function merging(summary: string, { state = 'OPEN', login = 'factory' } = {}) {
+  const served = factory()
+  const writes: string[] = []
+  served.gh = async (args, cwd) => {
+    served.ghDirs.push(cwd)
+    const read = {
+      'api user --jq .login': 'factory\n',
+      [comments(12)]: JSON.stringify({ id: 7, login, updated_at: '', body: summary }),
+      [comments(40)]: '',
+      'issue view 40 -R acme/app --json url,state': JSON.stringify({ url: followUp, state }),
+    }[args.join(' ')]
+    if (read !== undefined) return { ok: true, stdout: read, output: read }
+    writes.push(args.join(' '))
+    return { ok: true, stdout: '', output: '' }
+  }
+  return { ...served, writes }
+}
+
+const summaryFiling = (holds: string) =>
+  `<!-- review-pr:summary -->\n<!-- review-pr:verdict dry -->\n<!-- review-pr:follow-up 40 ${holds} -->\n## 🔍 Review: 9/10`
+
+test("handleWebhook hands a merged pull request's follow-up of nitpicks to the Implementer", async () => {
+  const body = mergeOf()
+  const served = merging(summaryFiling('nitpicks'))
+  assert.deepEqual(await handleWebhook(signed(body), body, served), {
+    status: 200,
+    body: `pull_request closed acme/app#12: Handed ${followUp} to agent:implement`,
+  })
+  assert.deepEqual(served.writes, [`issue edit ${followUp} --add-label agent:implement`])
+  assert.deepEqual(new Set(served.ghDirs), new Set([join(reposDir, 'acme/app')]))
+  assert.deepEqual(served.started, [])
+})
+
+test('handleWebhook hands a follow-up holding an Unproven finding back to whoever merged', async () => {
+  const body = mergeOf()
+  const served = merging(summaryFiling('unproven'))
+  assert.deepEqual(await handleWebhook(signed(body), body, served), {
+    status: 200,
+    body: `pull_request closed acme/app#12: Waiting on octocat: ${followUp} holds an Unproven finding`,
+  })
+  assert.deepEqual(served.writes, [
+    `issue edit ${followUp} --add-assignee octocat --add-label agent:handed-back`,
+    `issue comment ${followUp} --body <!-- factory -->\n@octocat #12 merged, and this follow-up holds an Unproven finding, so it waits on you. Each one ends in a recommendation: apply agent:implement to follow them, or edit one first.`,
+  ])
+})
+
+test('handleWebhook hands on no follow-up that is closed, unfiled or from an unmerged pull request', async () => {
+  const body = mergeOf()
+  const declined = merging(summaryFiling('nitpicks'), { state: 'CLOSED' })
+  assert.deepEqual(await handleWebhook(signed(body), body, declined), {
+    status: 200,
+    body: `pull_request closed acme/app#12: Its follow-up ${followUp} is closed`,
+  })
+  const planted = merging(summaryFiling('nitpicks'), { login: 'mallory' })
+  assert.deepEqual(await handleWebhook(signed(body), body, planted), {
+    status: 200,
+    body: 'pull_request closed acme/app#12: Its review filed no follow-up',
+  })
+  const unmerged = mergeOf(false)
+  const closed = merging(summaryFiling('nitpicks'))
+  assert.deepEqual(await handleWebhook(signed(unmerged), unmerged, closed), {
+    status: 200,
+    body: 'pull_request closed acme/app#12: Not a label applied to a work item',
+  })
+  const deferred = {
+    ...merging(summaryFiling('nitpicks')),
+    findPreferredFactoryUp: async () => 'https://office.example.ts.net/',
+  }
+  assert.equal((await handleWebhook(signed(body), body, deferred)).status, 200)
+  for (const served of [declined, planted, closed, deferred]) assert.deepEqual(served.writes, [])
+})
+
+test('handleWebhook answers 500 when it cannot read the follow-up', async () => {
+  const body = mergeOf()
+  const served = merging(summaryFiling('nitpicks'))
+  const gh = served.gh
+  served.gh = async (args, cwd) =>
+    args[0] === 'issue' && args[1] === 'view'
+      ? { ok: false, stdout: '', output: 'HTTP 502' }
+      : gh(args, cwd)
+  assert.deepEqual(await handleWebhook(signed(body), body, served), {
+    status: 500,
+    body: 'pull_request closed acme/app#12: gh issue view failed: HTTP 502',
+  })
+  assert.deepEqual(served.writes, [])
+})
+
 test('findFactoryUp returns the highest-ranked factory that answers its own HEAD', async () => {
   // A down factory behind Funnel answers 502 from tailscaled.
   const server = createServer((req, res) => res.writeHead(req.url === '/down' ? 502 : 200).end())

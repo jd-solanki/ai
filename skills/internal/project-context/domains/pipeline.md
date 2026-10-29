@@ -53,6 +53,8 @@ _Avoid_: result, review status
      the run fails, and posts each failure as a review thread. A pass marks the pull request
      ready for review. A fail goes to the Fixer, then the Reviewer, then the Verifier again.
   7. A human tries any QA scenario left unticked, merges, then does the Owner steps.
+  8. The merge hands the pull request's follow-up on: static code applies `agent:implement` to
+     one holding only nitpicks, and hands one holding an Unproven finding back to whoever merged.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
   runs `/implement` with instructions appended: the release notes are the spec, and the code
@@ -96,6 +98,11 @@ _Avoid_: result, review status
 - The Implementer delivers a follow-up as a spec with no sub-issues. `/implement-spec`
   defines how it checks the follow-up's items first.
 - A review of a pull request that closes a follow-up files no follow-up.
+- `/review-pr` names the follow-up it filed in its summary comment's follow-up marker, with
+  whether it holds an Unproven finding.
+- Each Unproven finding in a follow-up ends in a recommendation, `build` or `drop`, and the
+  Implementer follows it. A human changes one by editing it before applying `agent:implement`.
+- A closed follow-up is not handed on: closing it before the merge declines it.
 - A sub-issue title is a Conventional Commit subject: it becomes the commit subject.
 - A review fix is its own commit, with a Conventional Commit subject naming the fix and
   no `Closes` footer: only an AFK issue's commit marks it done.
@@ -196,6 +203,15 @@ _Avoid_: result, review status
   code may have moved since.
 - A follow-up's pull request files no follow-up of its own, or each would breed the next, as
   jd-solanki/ai#26 did. What it leaves stays in its summary, for the human who merges.
+- A follow-up starts at the merge, not when it is filed: its items are about the pull request's
+  code, which reaches the default branch the spec branch is cut from only then. Every merge is a
+  human's, so it authorizes the run as a trigger label would. Before this, the owner applied
+  `agent:implement` to every follow-up by hand, minutes after its pull request merged.
+- Nitpicks run unread: the owner holds no pull request for polish, and the follow-up's own pull
+  request still goes through review and a human merge.
+- An Unproven finding waits on a human: its investigator could not settle it with the tools the
+  Implementer has, so its answer is usually something a person knows or can try. Its
+  recommendation turns the call into one word.
 - A changed decision or a wrong spec line goes to a human because the owner holds the
   one-way doors; by the pull request, the code already rests on the agent's call.
 - This file is the only definition of the pipeline, so served repos carry no copy.
@@ -229,5 +245,5 @@ _Avoid_: result, review status
 ## Where it lives
 
 `apps/software-factory/src/session.ts` (`TRIGGERS`: the skill each trigger label starts),
-`apps/software-factory/src/hand-off.ts` (`NEXT_STEPS`: where each run hands its work item), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
+`apps/software-factory/src/hand-off.ts` (`NEXT_STEPS`: where each run hands its work item; `handOffFollowUp`: where a merge hands its follow-up), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
 `create-pr`, `verify-pr`), `.agents/skills/` (`grill-with-docs`, `implement`), `apps/software-factory/README.md` (Add a project: the labels a served repo needs).

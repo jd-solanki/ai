@@ -64,6 +64,7 @@ interface Subject {
   html_url: string
   labels: { name: string }[]
   head?: { sha: string }
+  merged?: boolean
 }
 
 export interface WebhookPayload {
