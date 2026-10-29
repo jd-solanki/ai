@@ -496,7 +496,11 @@ test('a fix run ignores a thread another account opened during the round and han
 test('a fix run that left a thread of the last round unresolved and unanswered waits on whoever applied its label', async () => {
   const qaFailure = '2000-01-02T01:05:00Z'
   const run = fix(
-    [...rounds.slice(0, -1), labeled('agent:verifying', '2000-01-02T01:00:00Z'), rounds.at(-1)!],
+    [
+      ...rounds.slice(0, -1),
+      labeled('agent:verifying', '2000-01-02T01:00:00Z'),
+      labeled('agent:reviewing', fresh),
+    ],
     thread(false, qaFailure),
     // A thread fixed earlier, reopened with a reply.
     thread(false, earlierRoundThread, qaFailure),
@@ -635,7 +639,7 @@ test('a clean stop overtaken by a later one waits on the later one alone', async
   })
 })
 
-test('a stop with background work left cancels the clean stop before it', async () => {
+test('a Stop with background work left cancels the pending clean stop', async () => {
   const turnWindow = Promise.withResolvers<void>()
   const run = factory({ turnWindow: turnWindow.promise })
   const stopped = await run.report('Stop', { background_tasks: [] })
