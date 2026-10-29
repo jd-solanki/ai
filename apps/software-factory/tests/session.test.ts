@@ -29,6 +29,9 @@ function launch(event: string, label: string, work: Partial<WebhookPayload>) {
   return launched
 }
 const flag = (args: string[], name: string) => args[args.indexOf(name) + 1]
+const skillCall = ({ args }: { args: string[] }) => args.at(-1)?.split(' <factory-instructions>')[0]
+const prompt = ({ args }: { args: string[] }) =>
+  /<factory-instructions>(.*)<\/factory-instructions>$/.exec(args.at(-1) ?? '')?.[1] ?? ''
 const implement = () => launch('issues', 'agent:implement', { issue: subject('issue:spec') })
 const review = () => launch('pull_request', 'agent:review', { pull_request: subject() })
 const fix = () => launch('pull_request', 'agent:fix', { pull_request: subject() })
@@ -41,12 +44,12 @@ test('claudeArgs starts the trigger label skill in an interactive session of its
   assert.ok(!args.includes('--bg'))
   assert.equal(flag(args, '--worktree'), 'implement-spec-12')
   assert.equal(flag(args, '--permission-mode'), 'auto')
-  assert.equal(args.at(-1), '/implement-spec https://github.com/acme/app/issues/12')
-  assert.equal(review().args.at(-1), '/review-pr https://github.com/acme/app/issues/12')
-  assert.equal(fix().args.at(-1), '/implement https://github.com/acme/app/issues/12')
+  assert.equal(skillCall(implement()), '/implement-spec https://github.com/acme/app/issues/12')
+  assert.equal(skillCall(review()), '/review-pr https://github.com/acme/app/issues/12')
+  assert.equal(skillCall(fix()), '/implement https://github.com/acme/app/issues/12')
   const followUp = launch('issues', 'agent:implement', { issue: subject('issue:follow-up') })
-  assert.equal(followUp.args.at(-1), '/implement-spec https://github.com/acme/app/issues/12')
-  assert.equal(verify().args.at(-1), '/verify-pr https://github.com/acme/app/issues/12')
+  assert.equal(skillCall(followUp), '/implement-spec https://github.com/acme/app/issues/12')
+  assert.equal(skillCall(verify()), '/verify-pr https://github.com/acme/app/issues/12')
 })
 
 test('claudeArgs names the session for the trigger label and work item', () => {
@@ -99,7 +102,6 @@ test('claudeArgs runs review at higher effort than implementation', () => {
 })
 
 test('claudeArgs tells each session who to mention and leaves the hand-off to the factory', () => {
-  const prompt = ({ args }: { args: string[] }) => flag(args, '--append-system-prompt') ?? ''
   assert.match(prompt(implement()), /@octocat applied agent:implement/)
   assert.match(
     prompt(implement()),
@@ -107,8 +109,11 @@ test('claudeArgs tells each session who to mention and leaves the hand-off to th
   )
   assert.match(prompt(review()), /keeping every Closes line/)
   assert.match(prompt(fix()), /or that you cannot fix, gets a reply saying why/)
-  for (const launched of [implement(), review(), fix(), upgrade(), verify()])
+  for (const launched of [implement(), review(), fix(), upgrade(), verify()]) {
     assert.doesNotMatch(prompt(launched), /label|ready for review/)
+    // Auto mode does not count the system prompt as a request.
+    assert.ok(!launched.args.includes('--append-system-prompt'))
+  }
   const allowed = ({ args }: { args: string[] }) =>
     JSON.parse(flag(args, '--settings') ?? '').permissions.allow
   assert.deepEqual(allowed(review()), ['Bash(gh pr edit:*)'])

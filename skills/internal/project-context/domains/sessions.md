@@ -112,10 +112,12 @@ _Avoid_: failure
   pins `fresh`. `fresh` reads the clone's `origin/HEAD`, which moves only on a fetch and keeps
   the default branch it was cloned with, so `startSession` fetches and runs `set-head` first.
   `apps/software-factory/src/session.ts:claudeArgs`
-- **Auto mode refuses a command it never saw requested.** Instructions arrive in the
-  appended system prompt, which the classifier does not count as a request, so it denied
-  `gh pr ready` as unrequested. A trigger's `allow` grants what its instructions need.
-  `apps/software-factory/src/session.ts:TRIGGERS`
+- **Auto mode refuses a command it never saw requested.** Its classifier does not count an
+  appended system prompt as a request: there it denied `gh pr ready`, and from Claude Code
+  2.1.311 every Fixer's `resolveReviewThread`, while the skills' own GitHub writes went
+  through. So a trigger's instructions ride in the prompt, after the skill and its URL, inside
+  `<factory-instructions>`. The classifier still judges each command; a trigger's `allow`
+  grants what must never be refused. `apps/software-factory/src/session.ts:claudeArgs`
 - **`herdr agent start` never returns for a working session.** It waits until the agent is
   ready for input, and a session working on its prompt is not, so after 30 seconds it timed
   out and the factory closed a healthy run. The factory types the command into the pane

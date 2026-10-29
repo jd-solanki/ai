@@ -125,6 +125,9 @@ export function claudeArgs(
   const name = `${trigger.label} ${payload.repository.name}#${subject.number}`
   const mention = `@${payload.sender.login}`
   const token = randomUUID()
+  // A wrap-up comment beside the skill's own record repeats it, once per round.
+  const instructions =
+    `You run unattended for the software factory: nobody reads this terminal or answers a question asked in it. ${mention} applied ${trigger.label}: anything they must do or decide goes in what your skill writes on ${url}, mentioning them. Post nothing there beyond what your skill and these instructions write. ${trigger.instructions ?? ''}`.trimEnd()
   const args = [
     '--name',
     name,
@@ -138,9 +141,6 @@ export function claudeArgs(
     // Every trigger's `allow` and instructions assume auto mode, whatever the owner's default is.
     '--permission-mode',
     'auto',
-    '--append-system-prompt',
-    // A wrap-up comment beside the skill's own record repeats it, once per round.
-    `You run unattended for the software factory: nobody reads this terminal or answers a question asked in it. ${mention} applied ${trigger.label}: anything they must do or decide goes in what your skill writes on ${url}, mentioning them. Post nothing there beyond what your skill and these instructions write. ${trigger.instructions ?? ''}`.trimEnd(),
     '--settings',
     JSON.stringify({
       hooks: hooks(token),
@@ -148,7 +148,8 @@ export function claudeArgs(
       // The owner's `baseRef: head` would branch from whatever the clone has checked out, skills and all.
       worktree: { baseRef: 'fresh' },
     }),
-    `/${trigger.skill} ${url}`,
+    // In the prompt, not the system prompt: auto mode counts only the prompt as a request, so it refused the writes the instructions ask for.
+    `/${trigger.skill} ${url} <factory-instructions>${instructions}</factory-instructions>`,
   ]
   return {
     args,
@@ -202,7 +203,7 @@ function hooks(token: string) {
   }
 }
 
-// herdr pane run types its command into the pane's shell; the system prompt and settings must each reach claude as one argument.
+// herdr pane run types its command into the pane's shell; the prompt and settings must each reach claude as one argument.
 const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`).join(' ')
 
 interface Outcome {
