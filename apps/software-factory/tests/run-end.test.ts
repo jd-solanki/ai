@@ -466,7 +466,12 @@ test('a fix run that resolved or answered every thread of the last round hands i
 
 test('a retried fix run counts the replies an earlier fix run of the same round wrote', async () => {
   const run = fix(
-    [...rounds.slice(0, -1), labeled('agent:fixing', '2000-01-02T01:00:00Z')],
+    [
+      ...rounds.slice(0, -1),
+      labeled('agent:fixing', '2000-01-02T01:00:00Z'),
+      // The retry's own claim.
+      labeled('agent:fixing', fresh),
+    ],
     thread(false, lastRoundThread, '2000-01-02T01:30:00Z'),
   )
   await run.end()
@@ -491,7 +496,11 @@ test('a fix run ignores a thread another account opened during the round and han
 test('a fix run that left a thread of the last round unresolved and unanswered waits on whoever applied its label', async () => {
   const qaFailure = '2000-01-02T01:05:00Z'
   const run = fix(
-    [...rounds.slice(0, -1), labeled('agent:verifying', '2000-01-02T01:00:00Z')],
+    [
+      ...rounds.slice(0, -1),
+      labeled('agent:verifying', '2000-01-02T01:00:00Z'),
+      labeled('agent:reviewing', fresh),
+    ],
     thread(false, qaFailure),
     // A thread fixed earlier, reopened with a reply.
     thread(false, earlierRoundThread, qaFailure),
@@ -614,6 +623,34 @@ test("a fix run whose last subagent finishes during the turn on the first one's 
   await run.end()
   assert.deepEqual(run.writes, [released, `pr edit ${pull} --add-label agent:review`])
   assert.deepEqual(run.closed, ['w7:t3'])
+})
+
+test('a clean stop overtaken by a later one waits on the later one alone', async () => {
+  const turnWindow = Promise.withResolvers<void>()
+  const run = factory({ turnWindow: turnWindow.promise })
+  const first = await run.report('Stop', { background_tasks: [] })
+  await run.report('UserPromptSubmit', { prompt: '<task-notification> Spec review finished' })
+  const second = await run.report('Stop', { background_tasks: [] })
+  turnWindow.resolve()
+  assert.deepEqual(await first.ended, { status: 200, body: 'agent:fix app#12: Took another turn' })
+  assert.deepEqual(await second.ended, {
+    status: 200,
+    body: 'agent:fix app#12: Handed it to agent:review',
+  })
+})
+
+test('a Stop with background work left cancels the pending clean stop', async () => {
+  const turnWindow = Promise.withResolvers<void>()
+  const run = factory({ turnWindow: turnWindow.promise })
+  const stopped = await run.report('Stop', { background_tasks: [] })
+  await run.report('Stop', { background_tasks: [{ type: 'shell', status: 'running' }] })
+  turnWindow.resolve()
+  assert.deepEqual(await stopped.ended, {
+    status: 200,
+    body: 'agent:fix app#12: Took another turn',
+  })
+  assert.deepEqual(run.writes, [])
+  assert.deepEqual(run.closed, [])
 })
 
 test('a session that exits while its Stop waits for another turn crashes the run once', async () => {

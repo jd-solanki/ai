@@ -1,10 +1,10 @@
 import { crash, handOff } from './hand-off.ts'
 import type { closeTab, gh, Launch } from './session.ts'
 
-export type Run = Pick<Launch, 'name' | 'work' | 'release'> & {
+type Run = Pick<Launch, 'name' | 'work' | 'release'> & {
   tab: string
   cwd: string
-  // The clean stop waiting to end the run, until the session takes another turn.
+  // The clean stop waiting to end the run, until the session takes another turn or stops again.
   cleanStop?: symbol
 }
 export type Runs = Map<string, Run>
@@ -45,6 +45,8 @@ export async function handleRunReport(
   }
   if (CRASHES.has(hook)) return endRun({ token, run, hook, body }, factory)
   if (hook !== 'Stop') return { status: 404, body: `Not a run report: ${hook}` }
+  // Any later Stop shows the session took another turn.
+  run.cleanStop = undefined
 
   let backgroundTasks: unknown
   try {
