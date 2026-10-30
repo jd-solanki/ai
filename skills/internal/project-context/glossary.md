@@ -85,6 +85,24 @@ _Avoid_: agent (unqualified), pane agent
 The factory's own deterministic code, as opposed to a session.
 _Avoid_: orchestrator, harness
 
+**Layer**:
+A part of the factory whose implementation the owner swaps without touching the rest: the
+intake and the session host.
+_Avoid_: slot, port, tier
+
+**Adapter**:
+One implementation of a layer, such as herdr's or Orca's for the session host.
+_Avoid_: plugin, provider, driver, backend
+
+**Intake**:
+The layer that tells the factory a trigger label was applied: the GitHub webhook today.
+_Avoid_: trigger, trigger layer, event source
+
+**Session host**:
+The app a session runs in, where the owner watches it: herdr or Orca. It hosts the session;
+Claude Code runs it.
+_Avoid_: agent runner, runner, runtime, session provider
+
 **Served repo**:
 A repository the factory runs agents on.
 _Avoid_: target repo

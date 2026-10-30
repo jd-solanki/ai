@@ -204,15 +204,29 @@ function hooks(token: string) {
   }
 }
 
-// herdr pane run types its command into the pane's shell; the prompt and settings must each reach claude as one argument.
+// A session host types its command into a shell; the prompt and settings must each reach claude as one argument.
 const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`).join(' ')
+
+// What every session host types into its tab. A claude that exits before its hooks load reports nothing, so the shell reports its end.
+export const sessionCommand = ({ args, token }: Pick<Launch, 'args' | 'token'>) =>
+  `${shell(['claude', ...args])}; curl -sS -X POST http://localhost:${PORT}/runs/${token}/SessionEnd`
+
+// `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
+export async function refreshClone(cwd: string) {
+  await run('git', ['fetch', 'origin'], cwd)
+  await run('git', ['remote', 'set-head', 'origin', '--auto'], cwd)
+}
 
 interface Outcome {
   ok: boolean
   output: string
 }
 
-function run(file: string, args: string[], cwd?: string): Promise<Outcome & { stdout: string }> {
+export function run(
+  file: string,
+  args: string[],
+  cwd?: string,
+): Promise<Outcome & { stdout: string }> {
   return new Promise((resolve) => {
     execFile(file, args, { cwd }, (error, stdout, stderr) =>
       // A missing binary prints nothing. Its code says why; its message would repeat the whole command line.
@@ -239,14 +253,12 @@ async function findRepoWorkspace(clone: string): Promise<string | undefined> {
   }
 }
 
-// `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
 // A herdr tab puts the session in the owner's agent list; herdr must be running.
 export async function startSession(
-  { args, tabLabel, token }: Launch,
+  launch: Launch,
   cwd: string,
 ): Promise<(Outcome & { ok: false }) | (Outcome & { ok: true; tab: string })> {
-  await run('git', ['fetch', 'origin'], cwd)
-  await run('git', ['remote', 'set-head', 'origin', '--auto'], cwd)
+  await refreshClone(cwd)
   const workspace = await findRepoWorkspace(cwd)
   // The clone sits at `<owner>/<repo>`, so a workspace the factory opens is named for the repo, as the owner names theirs.
   const createArgs = workspace
@@ -263,7 +275,7 @@ export async function startSession(
     return { ok: false, output: `herdr ${createArgs[0]} create: ${created.output}` }
   }
   // A new tab is labelled with its number; a rename herdr refuses only costs the label.
-  await run('herdr', ['tab', 'rename', pane.tab_id, tabLabel])
+  await run('herdr', ['tab', 'rename', pane.tab_id, launch.tabLabel])
   // A command typed before the shell's prompt is up loses its Enter.
   const prompt = await run('herdr', [
     'pane',
@@ -276,13 +288,7 @@ export async function startSession(
   ])
   // `agent start` waits until claude is ready for input, which a session working on its prompt never is.
   const started = prompt.ok
-    ? await run('herdr', [
-        'pane',
-        'run',
-        pane.pane_id,
-        // A claude that exits before its hooks load reports nothing, so the shell reports its end.
-        `${shell(['claude', ...args])}; curl -sS -X POST http://localhost:${PORT}/runs/${token}/SessionEnd`,
-      ])
+    ? await run('herdr', ['pane', 'run', pane.pane_id, sessionCommand(launch)])
     : prompt
   if (started.ok) return { ...started, ok: true, tab: pane.tab_id }
   // The claim is released on failure, so a session that came up late must not run unclaimed.

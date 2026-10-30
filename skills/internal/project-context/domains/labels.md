@@ -27,13 +27,16 @@ _Avoid_: primary, higher-priority factory
   work item done, reviewed, approved or failed.
 - `issue:*` labels name an issue's kind and never trigger an agent. `pipeline.md` owns
   their meaning.
+- A factory runs one intake adapter: the GitHub webhook today.
 
 ## Reasons
 
 - GitHub is the only state store: the factory keeps nothing between runs, so a restart
   loses only in-flight claims, and any teammate sees where a work item stands.
 - The team starts and re-runs agents from the issue or pull request page, never from the
-  factory machine. The owner also watches runs live in herdr there.
+  factory machine. The owner also watches runs live in the session host there.
+- One intake per factory: two would each deliver the same label event, and a claim is a label
+  swap, not a lock, so both would start a run. `docs/adr/0001-factory-layers.md`
 - Applying a label needs the Triage role, so a label is authorization: an issue's author
   cannot start a run.
 - No outcome labels: GitHub already records a review, a merge and a closed issue, and a

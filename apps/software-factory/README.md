@@ -21,7 +21,8 @@ Applying the label again reuses that worktree.
 
 - Node, in the range `engines` in the root `package.json` sets. The server runs TypeScript directly, with no build step.
 - Claude Code, on an account that can run Opus.
-- herdr, running on the factory machine. Each session starts in a new herdr tab. With herdr down, a run fails to start: the server takes its `…ing` label off and hands the work item back to you, as below.
+- A session host, running on the factory machine: herdr, or Orca with `SESSION_HOST=orca` in `.env`. Each session starts in a new tab there. With the host down, a run fails to start: the server takes its `…ing` label off and hands the work item back to you, as below.
+  - Orca: the server calls the `orca` command, which Orca puts on `PATH` only in its own terminals, so start the factory from one. The server adds each served clone to Orca's projects on its first run. Quitting Orca keeps its sessions running, but a run that ends before Orca is back keeps its `…ing` label until you remove it.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.
 - `playwright-cli`, with its browsers: `npm i -g @playwright/cli@latest`, then `playwright-cli install-browser`. The Verifier drives the browser through it.
 - Tailscale, logged in. The first `tailscale funnel` run prints a link to allow Funnel on your tailnet.
@@ -44,6 +45,7 @@ Once per machine, from `apps/software-factory`:
 ```bash
 echo "GITHUB_WEBHOOK_SECRET=$(openssl rand -hex 32)" >> .env
 echo "REPOS_DIR=$HOME/Projects/github" >> .env
+echo "SESSION_HOST=orca" >> .env   # only to run sessions in Orca; herdr when unset
 ```
 
 Then, from the repository root:
