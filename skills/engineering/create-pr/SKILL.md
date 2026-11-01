@@ -10,6 +10,10 @@ metadata:
     - skill: pr
       author: Matt Pocock
       url: "https://github.com/mattpocock/skills/blob/main/skills/engineering/pr/SKILL.md"
+    - skill: pr-screenshots
+      author: Josh Goldberg
+      organisation: Sentry
+      url: "https://github.com/getsentry/skills/blob/main/skills/pr-screenshots/SKILL.md"
 ---
 
 # Create PR
@@ -34,13 +38,15 @@ without giving the reviewer something new. The body is these sections, in this o
 2. `## How this PR solves it` — the idea holding the lines together, and the
    alternative you rejected. The reviewer reads the diff for the lines; they read
    this for the shape, so show it: see **Show the shape**.
-3. `## What happens when this merges` — the effect downstream. Behaviour that
+3. `## Screenshots` — only when the diff changes what a user sees; a pull request
+   with no UI change has no such section. See **Screenshots**.
+4. `## What happens when this merges` — the effect downstream. Behaviour that
    changes for users, a migration that has to run, a follow-up this unblocks. Name
    the **door**: one-way when the merge is hard to walk back (a destructive
    migration, a published contract, deleted data), two-way when a revert undoes it.
    Then the **blast radius**: what breaks if the change is wrong (consumers, layout,
    mobile, a scheduled job).
-4. `## QA steps` — how a person tries the change by hand before it merges, as a list
+5. `## QA steps` — how a person tries the change by hand before it merges, as a list
    of scenarios. Each scenario is an unticked checkbox naming one behaviour, with its
    steps numbered beneath it from a checkout of the branch: the command to run or the
    thing to click, then the result they should see. Scenarios for the changed
@@ -54,7 +60,7 @@ without giving the reviewer something new. The body is these sections, in this o
      1. `pnpm dev`, open `/settings` → the form loads with your current values.
      2. Change the name, click Save → a "Saved" toast appears.
    ```
-5. `## Notes` — what a careful reader still cannot infer from the diff after
+6. `## Notes` — what a careful reader still cannot infer from the diff after
    reading it. Invariants that hold across the change, a decision that looks
    arbitrary but was deliberate, a gotcha that will trip the next person, a
    constraint from outside the repo.
@@ -90,6 +96,30 @@ sentence it supports. Usually one, sometimes two:
 
 Keep only the calls, files and boundaries the reviewer needs to see the idea. A
 visual that copies the code diff fails the diff-alone test like any bullet.
+
+## Screenshots
+
+Pixels are the one thing a UI diff cannot show. Show every place the change lands as
+a before/after pair:
+
+```markdown
+| Location | Before | After |
+| --- | --- | --- |
+| Explore › Logs | ![Explore › Logs before](./shots/logs-before.png) | ![Explore › Logs after](./shots/logs-after.png) |
+| Explore › Logs, loading | ![Explore › Logs, loading before](./shots/logs-loading-before.png) | ![Explore › Logs, loading after](./shots/logs-loading-after.png) |
+```
+
+- **Location** is a `›` breadcrumb to the surface, then the state after a comma. One
+  row per surface and state: trace the changed components to every page, drawer or
+  modal that renders them, and every state the change touches (loading, empty,
+  error, dark theme).
+- Capture Before on the base branch and After on this branch, from the running app,
+  framed identically: same viewport, same data, cropped to the region around the
+  change. A surface that is new gets `—` for Before.
+- Blur personal data (emails, names, IDs) and check every image for tokens and
+  cookies before it leaves your machine.
+- Save the images to `shots/` in a temp directory, beside the body file. Step 5
+  uploads them.
 
 ## Read the diff, don't imagine it
 
@@ -138,7 +168,8 @@ The diff, the log, and the ticket it closes.
 
 **Done when:** from what you read, you can state the problem, the approach, the
 downstream effect with its door and blast radius, the QA scenarios a reviewer will try,
-and every Note you plan to include.
+every Note you plan to include, and, for a UI change, every row of the screenshots
+table.
 
 ### 3. Draft the body
 
@@ -162,6 +193,10 @@ Push the branch and open the pull request **as a draft**:
 ```shell
 gh pr create --draft --base <base> --title "<title>" --body "<body>"
 ```
+
+With screenshots, pass the body as `--body-file <dir>/body.md` and add
+`--attach ./shots/<image>.png` per image, run from `<dir>`: `gh` uploads each one
+and rewrites its reference in the body to the hosted asset.
 
 Return the link, and say plainly that it is a draft waiting for them to mark it
 ready for review.
