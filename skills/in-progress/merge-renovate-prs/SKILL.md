@@ -2,12 +2,16 @@
 name: merge-renovate-prs
 description: >
   Land a repository's open Renovate pull requests: the Upgrader reads each, the human approves one
-  plan, then each merges alone on green CI for a head up to date with the base branch. Use when
-  asked to handle, merge or land Renovate pull requests or dependency updates.
+  plan, then each runs CI once, on a head up to date with the base branch, and merges alone on
+  green. Use when asked to handle, merge or land Renovate pull requests or dependency updates.
 ---
 
 Merge one pull request at a time. A pull request merges only on **green** CI for a head that is
 **up to date**, and only after the human approves the plan in step 3.
+
+A dependency update stays a **draft** until its turn, and drafts skip CI. Marking it ready is what
+runs its CI, once, on the head that merges. A run on any earlier head is spent: the next merge
+leaves that head behind.
 
 - **Up to date**: the base branch's tip is in the head's history, `behind_by` 0 from
   `gh api repos/{owner}/{repo}/compare/{base}...{head}`.
@@ -37,9 +41,11 @@ Read each pull request's commit authors.
    - No working label within 5 minutes of the trigger: the factory is down. Stop and report.
    - Still holding a working label after 2 hours: leave it out of the plan. A killed run keeps
      its label until a human removes it.
-   - Handed back as a draft: its review ended with findings open. Leave it out.
+   - The factory's hand-back comment (`<!-- factory -->`) says why it waits. "It stays a draft"
+     means the run finished; anything else, such as a review that ended with findings open,
+     leaves it out with that reason.
 
-   Done when each pull request is handed back ready, or left out with its reason.
+   Done when each pull request is handed back as a draft, or left out with its reason.
 
 3. **Ask once.** Show one table, in merge order:
    1. The lock file maintenance pull request (`renovate/lock-file-maintenance`).
@@ -48,11 +54,11 @@ Read each pull request's commit authors.
 
    Each row: the versions it moves from and to, its kind, the Upgrader's verdict (no commits, or
    its commit subjects), the release-note items a human must weigh (breaking changes,
-   deprecations, security advisories), and the CI result on its current head. Wait for approval.
+   deprecations, security advisories). Wait for approval.
    The human may drop or reorder rows; the approved table is the plan.
 
 4. **Merge in order.** For each pull request in the plan:
-   1. **Bring it up to date**, unless it already is.
+   1. **Bring it up to date**, unless it already is. A draft runs no CI for the new head.
       - Renovate-only: tick `<!-- rebase-check -->` in its body with `gh pr edit --body-file`, and
         wait up to 20 minutes for its head to change. Confirm every commit is still
         `renovate[bot]`'s and the versions are still the approved ones; a rebuild that moved to a
@@ -61,9 +67,11 @@ Read each pull request's commit authors.
         base's and regenerate it with a lockfile-only install (`git checkout origin/<base> --
         pnpm-lock.yaml`, then `pnpm install --lockfile-only --ignore-scripts`). Commit, and push
         as a fast-forward.
-   2. **Wait for CI** on that head, up to 45 minutes, until every check run completes.
-   3. **Green: squash-merge** with `gh pr merge --squash`. **Red: skip it** and note the failing
-      check.
+   2. **Mark it ready** with `gh pr ready`, which runs its CI. Already ready, its update ran CI.
+   3. **Wait for CI** on that head, up to 45 minutes, until every check run completes.
+   4. **Green: squash-merge** with `gh pr merge --squash`. **Red: return it to draft** with
+      `gh pr ready --undo`, so Renovate's later rebuilds run no CI, and skip it, noting the
+      failing check.
 
    Done when every pull request in the plan is merged or skipped with a reason.
 
