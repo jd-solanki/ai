@@ -9,6 +9,9 @@ export const PORT = 3456
 // The label a work item carries while it waits on a human after a run.
 export const HANDED_BACK = 'agent:handed-back'
 
+// The label Renovate puts on a dependency update, set in the served repo's Renovate `labels`.
+export const DEPENDENCY_UPDATE = '⬆️ Renovate'
+
 const TRIGGERS = [
   {
     event: 'issues',
@@ -41,7 +44,7 @@ const TRIGGERS = [
     event: 'pull_request',
     label: 'agent:upgrade',
     emoji: '⬆️',
-    requiresOneOf: ['⬆️ Renovate'],
+    requiresOneOf: [DEPENDENCY_UPDATE],
     skill: 'implement',
     effort: 'medium',
     instructions:
@@ -86,6 +89,7 @@ export interface WorkItem {
   sender: string
   // The upgrade's head before the run, so its end can tell whether it pushed.
   head?: string
+  dependencyUpdate?: boolean
   claimedAt: string
 }
 
@@ -167,6 +171,7 @@ export function claudeArgs(
       number: subject.number,
       sender: payload.sender.login,
       head: subject.head?.sha,
+      dependencyUpdate: subject.labels.some((l) => l.name === DEPENDENCY_UPDATE),
       claimedAt: new Date().toISOString(),
     },
     claim: [

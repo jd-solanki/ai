@@ -60,11 +60,11 @@ _Avoid_: result, review status
   runs `/implement` with instructions appended: the release notes are the spec, and the code
   ends as it would read had it been written against the new versions. With commits, it pushes
   them onto the update's branch, static code hands it to the Reviewer, and stage 5 follows.
-  With none, static code marks the pull request ready for review. Renovate's body stays: it carries the
-  Upgrader's spec.
+  With none, it waits on the human. Renovate's body stays: it carries the Upgrader's spec.
 - `/merge-renovate-prs` lands a repository's dependency updates in one session: it applies
   `agent:upgrade` where none ran, shows one plan, and merges only what the human approves there,
-  one pull request at a time on green CI for a head up to date with the base branch. Approving
+  one pull request at a time: it brings each draft up to date, marks it ready, and merges on green
+  CI. Approving
   that plan is the human's merge: they read every update in it before anything lands.
 - The Upgrader matches the upstream issues and pull requests the release notes name against the
   repository's open issues and pull requests, and comments on each match. A commit that does an
@@ -128,6 +128,8 @@ _Avoid_: result, review status
 - A pull request is marked ready only after a dry review of its current head and, when its body
   holds QA scenarios, a passing QA run since; an upgrade with no commits skips both. Every fix
   goes back through review, a fix for QA included.
+- A dependency update stays a draft where static code would mark another pull request ready:
+  marking it ready runs its CI, and that belongs to its merge.
 - A QA scenario ends `pass`, `fail` or `blocked`. A blocked one, which needs what the factory
   machine lacks, holds back nothing: it stays unticked for the human.
 - A tick means the scenario passed on the pull request's current code. `/create-pr` writes every
@@ -164,6 +166,9 @@ _Avoid_: result, review status
   matches issues the release does nothing for.
 - An upgrade with no commit skips review: its diff is Renovate's version bump, which CI checks
   once the pull request is ready, and a review would only repeat the Upgrader's reading.
+- A dependency update's CI waits for its merge because a run on any earlier head is spent: the
+  next merge leaves the update behind, and its rebuilt head runs CI again. Renovate opens it as a
+  draft for this reason, and marking every update ready at hand-off ran CI twice on each.
 - The Upgrader's instructions name the outcome, not a list of changes: a release can ask any
   change of the code, and a list misses the next kind.
 - `/create-spec` never triggers: a human reads a spec before an unattended run spends

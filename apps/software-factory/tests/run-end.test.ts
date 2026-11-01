@@ -6,11 +6,12 @@ import { claudeArgs } from '../src/session.ts'
 const pull = 'https://github.com/acme/app/pull/12'
 const spec = 'https://github.com/acme/app/issues/12'
 
-function launch(label: string) {
+// A dependency update carries `⬆️ Renovate`; an upgrade run's work item always does.
+function launch(label: string, dependencyUpdate = label === 'agent:upgrade') {
   const subject = {
     number: 12,
     title: 'Kiosk pairing',
-    labels: [{ name: 'issue:spec' }, { name: '⬆️ Renovate' }],
+    labels: [{ name: 'issue:spec' }, ...(dependencyUpdate ? [{ name: '⬆️ Renovate' }] : [])],
   }
   const launched = claudeArgs(label === 'agent:implement' ? 'issues' : 'pull_request', {
     action: 'labeled',
@@ -34,8 +35,9 @@ function factory({
     args[1] === 'graphql' ? '{"labeled":[],"threads":[]}' : '',
   refuses = (_args: string[]): boolean => false,
   turnWindow = Promise.resolve(),
+  dependencyUpdate = undefined as boolean | undefined,
 } = {}) {
-  const run = launch(label)
+  const run = launch(label, dependencyUpdate)
   const runs: Runs = new Map([[run.token, { ...run, tab: 'w7:t3', cwd: '/repos/acme/app' }]])
   const writes: string[] = []
   const ghDirs = new Set<string | undefined>()
@@ -163,6 +165,9 @@ const markedReady = (label: string) => {
   const [released, ...wait] = waits(pull, 'pr', label, 'it is marked ready for you to merge')
   return [released, `pr ready ${pull}`, ...wait]
 }
+// A dependency update waits on them as a draft, so its CI runs once they mark it ready.
+const staysDraft = (label: string) =>
+  waits(pull, 'pr', label, 'it stays a draft: mark it ready to run its CI when you merge it')
 
 test('a clean stop hands a fixed pull request back to the Reviewer and closes the run', async () => {
   const run = factory()
@@ -509,7 +514,7 @@ test('a fix run that left a thread of the last round unresolved and unanswered w
   )
 })
 
-test('an upgrade run hands new commits to the Reviewer and marks an untouched update ready', async () => {
+test('an upgrade run hands new commits to the Reviewer and leaves an untouched update a draft', async () => {
   const moved = upgrade('def\n', upgraderSaid(fresh))
   await moved.end()
   assert.deepEqual(moved.writes, [
@@ -519,7 +524,20 @@ test('an upgrade run hands new commits to the Reviewer and marks an untouched up
 
   const untouched = upgrade('abc\n', upgraderSaid(fresh))
   await untouched.end()
-  assert.deepEqual(untouched.writes, markedReady('agent:upgrade'))
+  assert.deepEqual(untouched.writes, staysDraft('agent:upgrade'))
+})
+
+test('a dry review of a dependency update leaves it a draft', async () => {
+  const run = factory({
+    label: 'agent:review',
+    dependencyUpdate: true,
+    github: pullRequestReads('', [summary(fresh, 'dry')]),
+  })
+  assert.equal(
+    (await run.end()).body,
+    'agent:review app#12: Waiting on octocat: it stays a draft: mark it ready to run its CI when you merge it',
+  )
+  assert.deepEqual(run.writes, staysDraft('agent:review'))
 })
 
 test('an upgrade run that said nothing on the pull request since its claim waits on whoever applied its label', async () => {

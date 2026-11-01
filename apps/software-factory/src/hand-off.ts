@@ -140,6 +140,9 @@ export async function handOff({ release, work }: Pick<Launch, 'release' | 'work'
     if (handed.ok) return { outcomes: [released], did: `Handed ${step.url ?? 'it'} to ${step.to}` }
     step = { wait: `the factory could not apply ${step.to}: ${handed.output.trim()}` }
   }
+  // Marking a dependency update ready runs its CI, on a head the next merge leaves behind: Renovate opens it as a draft so CI runs once, on the head that merges.
+  if ('ready' in step && work.dependencyUpdate)
+    step = { wait: 'it stays a draft: mark it ready to run its CI when you merge it' }
   if ('ready' in step) {
     const marked = await gh(['pr', 'ready', work.url])
     step = {

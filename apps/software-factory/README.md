@@ -204,7 +204,7 @@ Apply a trigger label on GitHub:
 - `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files, or `issue:follow-up`, which is what `/review-pr` files. The session builds the spec's sub-issues, in parallel where none blocks another, or the spec itself when it has none, and opens a draft PR.
 - `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score.
 - `agent:fix` on a pull request. The session fixes the review's threads.
-- `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, and brings the code in line with the new versions.
+- `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, and brings the code in line with the new versions. The PR comes back still a draft, because marking it ready runs its CI: mark it ready when you merge it.
 - `agent:verify` on a pull request. The session tries each QA scenario in its body, ticks the ones that pass, posts each failure as a thread and keeps one QA comment.
 
 You apply the first label. When a run ends, the server reads GitHub and applies the next one:
@@ -218,7 +218,7 @@ flowchart LR
   R -->|"tasks"| X["agent:fix"] -->|"every thread answered"| R
   X -->|"a thread left open"| H
   R -->|"dry of the head, with QA scenarios"| V["agent:verify"]
-  R -->|"dry of the head, none"| D["PR ready for review"]
+  R -->|"dry of the head, none"| D["PR ready for review,<br/>a Renovate PR left a draft"]
   R -->|"dry of an older head"| R
   V -->|"pass after a dry review of the head"| D
   V -->|"pass, head not dry-reviewed"| R
@@ -233,7 +233,7 @@ flowchart LR
 ```
 
 The review's verdict is a marker in its summary comment, written by `/review-pr`, and QA's is one in its QA comment, written by `/verify-pr`, so each served repo needs the skills that write them.
-A run that hands its work item to no agent waits on you: a PR marked ready, or a run whose next step GitHub doesn't show, such as a review with no verdict of its own or a fix that left a thread unanswered. The work item gets `agent:handed-back` and is assigned to whoever applied the label, and the factory's one comment on it says what is left.
+A run that hands its work item to no agent waits on you: a PR marked ready, a Renovate PR left a draft, or a run whose next step GitHub doesn't show, such as a review with no verdict of its own or a fix that left a thread unanswered. The work item gets `agent:handed-back` and is assigned to whoever applied the label, and the factory's one comment on it says what is left.
 Search `is:open label:agent:handed-back assignee:@me` on GitHub, or save it as a GitHub Mobile shortcut, for everything waiting on you.
 
 Merging a reviewed PR hands on the follow-up its review filed. A follow-up of nitpicks gets `agent:implement`. One holding an Unproven finding is assigned to whoever merged: each finding ends in a recommendation, `build` or `drop`, and the run follows it unless you edit it before you apply `agent:implement`. Close a follow-up before you merge to decline it.
