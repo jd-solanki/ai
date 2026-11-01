@@ -41,11 +41,12 @@ Read each pull request's commit authors.
    - No working label within 5 minutes of the trigger: the factory is down. Stop and report.
    - Still holding a working label after 2 hours: leave it out of the plan. A killed run keeps
      its label until a human removes it.
-   - The factory's hand-back comment (`<!-- factory -->`) says why it waits. "It stays a draft"
-     means the run finished; anything else, such as a review that ended with findings open,
-     leaves it out with that reason.
+   - The factory's hand-back comment (`<!-- factory -->`) says why it waits. A wait on the merge
+     alone, "it stays a draft" or an older factory's "it is marked ready", means the run
+     finished; anything else, such as a review that ended with findings open, leaves it out
+     with that reason.
 
-   Done when each pull request is handed back as a draft, or left out with its reason.
+   Done when each pull request is handed back waiting on its merge, or left out with its reason.
 
 3. **Ask once.** Show one table, in merge order:
    1. The lock file maintenance pull request (`renovate/lock-file-maintenance`).
