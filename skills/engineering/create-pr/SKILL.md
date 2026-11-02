@@ -112,7 +112,7 @@ a before/after pair:
 - **Location** is a `›` breadcrumb to the surface, then the state after a comma. One
   row per surface and state: trace the changed components to every page, drawer or
   modal that renders them, and every state the change touches (loading, empty,
-  error, dark theme).
+  error, dark theme, a mobile or tablet viewport where the layout shifts).
 - Capture Before on the base branch and After on this branch, from the running app,
   framed identically: same viewport, same data, cropped to the region around the
   change. A surface that is new gets `—` for Before.
