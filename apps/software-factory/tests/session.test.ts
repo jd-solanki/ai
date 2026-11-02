@@ -38,6 +38,7 @@ const fix = () => launch('pull_request', 'agent:fix', { pull_request: subject() 
 const upgrade = () =>
   launch('pull_request', 'agent:upgrade', { pull_request: subject('⬆️ Renovate') })
 const verify = () => launch('pull_request', 'agent:verify', { pull_request: subject() })
+const simplify = () => launch('pull_request', 'agent:simplify', { pull_request: subject() })
 
 test('claudeArgs starts the trigger label skill in an interactive session of its own', () => {
   const { args } = implement()
@@ -50,6 +51,7 @@ test('claudeArgs starts the trigger label skill in an interactive session of its
   const followUp = launch('issues', 'agent:implement', { issue: subject('issue:follow-up') })
   assert.equal(skillCall(followUp), '/implement-spec https://github.com/acme/app/issues/12')
   assert.equal(skillCall(verify()), '/verify-pr https://github.com/acme/app/issues/12')
+  assert.equal(skillCall(simplify()), '/simplify https://github.com/acme/app/issues/12')
 })
 
 test('claudeArgs names the session for the trigger label and work item', () => {
@@ -62,6 +64,7 @@ test("claudeArgs labels the run tab with its trigger's emoji, the work item numb
   assert.equal(review().tabLabel, '🔍 #12 Kiosk pairing')
   assert.equal(upgrade().tabLabel, '⬆️ #12 Kiosk pairing')
   assert.equal(verify().tabLabel, '🧪 #12 Kiosk pairing')
+  assert.equal(simplify().tabLabel, '🧹 #12 Kiosk pairing')
   const pullRequest = { ...subject(), title: 'Kiosk\x1b[2J pairing\n' }
   assert.equal(
     launch('pull_request', 'agent:fix', { pull_request: pullRequest }).tabLabel,
@@ -109,7 +112,7 @@ test('claudeArgs tells each session who to mention and leaves the hand-off to th
   )
   assert.match(prompt(review()), /keeping every Closes line/)
   assert.match(prompt(fix()), /or that you cannot fix, gets a reply saying why/)
-  for (const launched of [implement(), review(), fix(), upgrade(), verify()]) {
+  for (const launched of [implement(), review(), fix(), upgrade(), verify(), simplify()]) {
     assert.doesNotMatch(prompt(launched), /label|ready for review/)
     // Auto mode does not count the system prompt as a request.
     assert.ok(!launched.args.includes('--append-system-prompt'))
@@ -119,12 +122,19 @@ test('claudeArgs tells each session who to mention and leaves the hand-off to th
   assert.deepEqual(allowed(review()), ['Bash(gh pr edit:*)'])
   assert.deepEqual(allowed(upgrade()), [])
   assert.deepEqual(allowed(verify()), ['Bash(gh pr edit:*)'])
+  assert.deepEqual(allowed(simplify()), [])
+})
+
+test('claudeArgs tells the Simplifier to refactor only and say what it changed', () => {
+  assert.match(prompt(simplify()), /refactor only: change no behaviour/)
+  assert.match(prompt(simplify()), /as your last step, comment on this pull request/)
 })
 
 test('claudeArgs claims a work item with the working label of its trigger', () => {
   assert.equal(implement().claim.at(-1), 'agent:implementing')
   assert.equal(upgrade().claim.at(-1), 'agent:upgrading')
   assert.equal(verify().claim.at(-1), 'agent:verifying')
+  assert.equal(simplify().claim.at(-1), 'agent:simplifying')
 })
 
 test('claudeArgs has each run-ending hook report to the factory server under the run token', () => {

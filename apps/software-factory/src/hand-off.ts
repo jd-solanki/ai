@@ -30,7 +30,7 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
     if (verdict === 'dry') {
       const head = await reviewedHead(work, gh)
       if (head !== 'current') return head ? { to: 'agent:review' } : { wait: UNREAD_HEAD }
-      return (await hasQaScenarios(work, gh)) ? { to: 'agent:verify' } : { ready: true }
+      return (await hasQaScenarios(work, gh)) ? { to: 'agent:verify' } : { to: 'agent:simplify' }
     }
     if (verdict === 'tasks') return { to: 'agent:fix' }
     if (verdict === 'ended')
@@ -49,7 +49,7 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
     if (verdict === 'pass') {
       const head = await reviewedHead(work, gh, null)
       if (head !== 'current') return head ? { to: 'agent:review' } : { wait: UNREAD_HEAD }
-      return { ready: true }
+      return { to: 'agent:simplify' }
     }
     if (verdict === 'fail') return { to: 'agent:fix' }
     if (verdict === 'ended')
@@ -58,10 +58,16 @@ const NEXT_STEPS: Record<string, (work: WorkItem, gh: Gh) => Promise<Step>> = {
   },
   // The Upgrader says what it changed as its last step, after its push.
   'agent:upgrade': async (work, gh) => {
-    const comments = await ownComments(work, gh)
-    if (!comments.some((comment) => editedSince(comment, work.claimedAt)))
-      return { wait: 'this run left no comment saying what it changed' }
+    if (!(await saidWhatChanged(work, gh))) return { wait: NOTHING_SAID }
     return (await currentHead(work, gh)) === work.head ? { ready: true } : { to: 'agent:review' }
+  },
+  // The Simplifier changes no behaviour, so its commits skip review and QA: only the head it started from must be reviewed.
+  // shortcut: a human applying agent:simplify between a dry review and QA skips QA, read the QA comment here if that happens.
+  'agent:simplify': async (work, gh) => {
+    if (!(await saidWhatChanged(work, gh))) return { wait: NOTHING_SAID }
+    const head = await reviewedHead(work, gh, null, work.head)
+    if (head !== 'current') return head ? { to: 'agent:review' } : { wait: UNREAD_HEAD }
+    return { ready: true }
   },
 }
 
@@ -109,18 +115,23 @@ async function countOpenThreads(work: WorkItem, gh: Gh) {
   }).length
 }
 
+const NOTHING_SAID = 'this run left no comment saying what it changed'
+
+const saidWhatChanged = async (work: WorkItem, gh: Gh) =>
+  (await ownComments(work, gh)).some((comment) => editedSince(comment, work.claimedAt))
+
 const UNREAD_HEAD =
   "the dry review's summary names no commit the factory can read, so it cannot tell whether the head was reviewed"
 
 // A push since the dry review, a fix's or a human's, leaves the head unreviewed.
 // A dry summary with no commit to read is undefined, not unreviewed: dry rounds never reach the review cap, so handing it back to review would loop.
 // shortcut: reads the commit off the summary's footer, so a reworded footer waits on a human, have /review-pr write a marker if that happens.
-async function reviewedHead(work: WorkItem, gh: Gh, since?: string | null) {
+async function reviewedHead(work: WorkItem, gh: Gh, since?: string | null, head?: string) {
   const review = (await readComment(work, gh, 'review-pr:summary', since)) ?? ''
   if (!review.includes('<!-- review-pr:verdict dry -->')) return 'unreviewed'
   const reviewed = /Last reviewed commit: `?([0-9a-f]{7,40})\b/.exec(review)?.[1]
   if (!reviewed) return undefined
-  return (await currentHead(work, gh)).startsWith(reviewed) ? 'current' : 'unreviewed'
+  return (head ?? (await currentHead(work, gh))).startsWith(reviewed) ? 'current' : 'unreviewed'
 }
 
 const currentHead = async (work: WorkItem, gh: Gh) =>

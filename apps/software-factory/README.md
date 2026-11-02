@@ -104,6 +104,8 @@ gh label create agent:upgrade -R "$REPO" --force -d "Factory: upgrade the code f
 gh label create agent:upgrading -R "$REPO" --force -d "Factory: an Upgrader run holds this PR"
 gh label create agent:verify -R "$REPO" --force -d "Factory: try this PR's QA scenarios"
 gh label create agent:verifying -R "$REPO" --force -d "Factory: a Verifier run holds this PR"
+gh label create agent:simplify -R "$REPO" --force -d "Factory: refactor this PR with no behaviour change"
+gh label create agent:simplifying -R "$REPO" --force -d "Factory: a Simplifier run holds this PR"
 gh label create agent:handed-back -R "$REPO" --force -d "Factory: a run left this to the assignee"
 ```
 
@@ -206,6 +208,7 @@ Apply a trigger label on GitHub:
 - `agent:fix` on a pull request. The session fixes the review's threads.
 - `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, and brings the code in line with the new versions. The PR comes back still a draft, because marking it ready runs its CI: mark it ready when you merge it.
 - `agent:verify` on a pull request. The session tries each QA scenario in its body, ticks the ones that pass, posts each failure as a thread and keeps one QA comment.
+- `agent:simplify` on a pull request whose head a dry review covers. The session runs `/simplify`, commits only refactors that change no behaviour, and comments what it changed. Those commits skip review and QA, and the PR is marked ready.
 
 You apply the first label. When a run ends, the server reads GitHub and applies the next one:
 
@@ -218,9 +221,12 @@ flowchart LR
   R -->|"tasks"| X["agent:fix"] -->|"every thread answered"| R
   X -->|"a thread left open"| H
   R -->|"dry of the head, with QA scenarios"| V["agent:verify"]
-  R -->|"dry of the head, none"| D["PR ready for review,<br/>a Renovate PR left a draft"]
+  R -->|"dry of the head, none"| S["agent:simplify"]
   R -->|"dry of an older head"| R
-  V -->|"pass after a dry review of the head"| D
+  V -->|"pass after a dry review of the head"| S
+  S -->|"started on a reviewed head"| D["PR ready for review,<br/>a Renovate PR left a draft"]
+  S -->|"started on an unreviewed head"| R
+  S -->|"no comment"| H
   V -->|"pass, head not dry-reviewed"| R
   V -->|"fail"| X
   R -->|"ended"| H["agent:handed-back,<br/>assigned to you"]

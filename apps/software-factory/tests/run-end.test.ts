@@ -20,7 +20,7 @@ function launch(label: string, dependencyUpdate = label === 'agent:upgrade') {
     repository: { name: 'app', full_name: 'acme/app' },
     ...(label === 'agent:implement'
       ? { issue: { ...subject, html_url: spec } }
-      : { pull_request: { ...subject, html_url: pull, head: { sha: 'abc' } } }),
+      : { pull_request: { ...subject, html_url: pull, head: { sha: 'abc1234def' } } }),
   })
   assert.ok('args' in launched)
   return launched
@@ -128,10 +128,12 @@ const pullRequest = (label: string, body: string, ...said: string[]) =>
   factory({ label, github: pullRequestReads(body, said) })
 const review = (...said: string[]) => pullRequest('agent:review', '', ...said)
 const verify = (...said: string[]) => pullRequest('agent:verify', scenarios, ...said)
+const simplify = (...said: string[]) => pullRequest('agent:simplify', '', ...said)
 const upgrade = (head: string, ...said: string[]) =>
   factory({ label: 'agent:upgrade', github: pullRequestReads('', said, head) })
 const upgraderSaid = (updated_at: string, login = 'factory') =>
   JSON.stringify({ id: 8, login, updated_at, body: 'Nothing here uses what vite 7 changed.' })
+const dryReview = summary('2000-01-01T00:00:00Z', 'dry')
 // `timeline` is the pull request's labeled events, `threads` its review threads.
 const fix = (
   timeline: { label: string; createdAt: string }[],
@@ -165,6 +167,11 @@ const markedReady = (label: string) => {
   const [released, ...wait] = waits(pull, 'pr', label, 'it is marked ready for you to merge')
   return [released, `pr ready ${pull}`, ...wait]
 }
+// Everything finished, the Simplifier runs last.
+const toSimplifier = (working: string) => [
+  `pr edit ${pull} --remove-label ${working}`,
+  `pr edit ${pull} --add-label agent:simplify`,
+]
 // A dependency update waits on them as a draft, so its CI runs once they mark it ready.
 const staysDraft = (label: string) =>
   waits(pull, 'pr', label, 'it stays a draft: mark it ready to run its CI when you merge it')
@@ -201,26 +208,65 @@ test('a review that leaves tasks hands the pull request to the Fixer', async () 
   ])
 })
 
-test('a dry review marks the pull request ready', async () => {
+test('a dry review hands the pull request to the Simplifier', async () => {
   const run = review(summary(fresh, 'dry'))
-  assert.equal(
-    (await run.end()).body,
-    'agent:review app#12: Waiting on octocat: it is marked ready for you to merge',
-  )
-  assert.deepEqual(run.writes, markedReady('agent:review'))
+  assert.equal((await run.end()).body, 'agent:review app#12: Handed it to agent:simplify')
+  assert.deepEqual(run.writes, toSimplifier('agent:reviewing'))
 })
 
-test('a dry review GitHub will not mark ready waits on whoever applied the label', async () => {
+test('a Simplifier run that started on the reviewed head marks the pull request ready', async () => {
+  const run = simplify(dryReview, upgraderSaid(fresh))
+  assert.equal(
+    (await run.end()).body,
+    'agent:simplify app#12: Waiting on octocat: it is marked ready for you to merge',
+  )
+  assert.deepEqual(run.writes, markedReady('agent:simplify'))
+
+  // Its own commits move the head and still reach ready.
+  const pushed = factory({
+    label: 'agent:simplify',
+    github: pullRequestReads('', [dryReview, upgraderSaid(fresh)], 'fed9876\n'),
+  })
+  await pushed.end()
+  assert.deepEqual(pushed.writes, markedReady('agent:simplify'))
+})
+
+test('a Simplifier run that started on an unreviewed head goes to the Reviewer', async () => {
+  for (const said of [
+    [upgraderSaid(fresh)],
+    [summary('2000-01-01T00:00:00Z', 'dry', 'factory', '1111111'), upgraderSaid(fresh)],
+  ]) {
+    const run = simplify(...said)
+    await run.end()
+    assert.deepEqual(run.writes, [
+      `pr edit ${pull} --remove-label agent:simplifying`,
+      `pr edit ${pull} --add-label agent:review`,
+    ])
+  }
+})
+
+test('a Simplifier run that said nothing since its claim waits on whoever applied its label', async () => {
+  for (const said of [[dryReview], [dryReview, upgraderSaid('2000-01-01T00:00:00Z')]]) {
+    const run = simplify(...said)
+    await run.end()
+    assert.deepEqual(
+      run.writes,
+      waits(pull, 'pr', 'agent:simplify', 'this run left no comment saying what it changed'),
+    )
+  }
+})
+
+test('a Simplifier run GitHub will not mark ready waits on whoever applied the label', async () => {
   const run = factory({
-    label: 'agent:review',
-    github: pullRequestReads('', [summary(fresh, 'dry')]),
+    label: 'agent:simplify',
+    github: pullRequestReads('', [dryReview, upgraderSaid(fresh)]),
     refuses: (args) => args[1] === 'ready',
   })
   await run.end()
   const [released, ...wait] = waits(
     pull,
     'pr',
-    'agent:review',
+    'agent:simplify',
     "the factory could not mark it ready: could not add label: 'agent:review' not found",
   )
   assert.deepEqual(run.writes, [released, `pr ready ${pull}`, ...wait])
@@ -260,7 +306,7 @@ test('a dry review whose summary names no readable commit waits rather than revi
   // A commit in backticks still reads.
   const quoted = review(summary(fresh, 'dry', 'factory', '`abc1234`'))
   await quoted.end()
-  assert.deepEqual(quoted.writes, markedReady('agent:review'))
+  assert.deepEqual(quoted.writes, toSimplifier('agent:reviewing'))
 })
 
 test('a dry review hands a pull request with QA scenarios to the Verifier', async () => {
@@ -272,7 +318,7 @@ test('a dry review hands a pull request with QA scenarios to the Verifier', asyn
   ])
 })
 
-test('a dry review marks ready a pull request whose QA steps hold no scenario', async () => {
+test('a dry review skips QA on a pull request whose QA steps hold no scenario', async () => {
   for (const body of [
     '## QA steps\n\n1. Run it.\n',
     '## Notes\n\n- [ ] not a scenario\n',
@@ -280,14 +326,14 @@ test('a dry review marks ready a pull request whose QA steps hold no scenario', 
   ]) {
     const run = pullRequest('agent:review', body, summary(fresh, 'dry'))
     await run.end()
-    assert.deepEqual(run.writes, markedReady('agent:review'))
+    assert.deepEqual(run.writes, toSimplifier('agent:reviewing'))
   }
 })
 
-test('a passing QA run marks the pull request ready and a failing one hands it to the Fixer', async () => {
+test('a passing QA run hands the pull request to the Simplifier and a failing one to the Fixer', async () => {
   const passed = verify(summary('2000-01-01T00:00:00Z', 'dry'), qaReport(fresh, 'pass'))
   await passed.end()
-  assert.deepEqual(passed.writes, markedReady('agent:verify'))
+  assert.deepEqual(passed.writes, toSimplifier('agent:verifying'))
 
   // A pass with no dry review goes to the Reviewer, whose dry round hands it back.
   const unreviewed = verify(qaReport(fresh, 'pass'))
@@ -356,7 +402,7 @@ test('the factory edits its own comment in place rather than adding one', async 
 test("a verdict planted in someone else's comment is ignored", async () => {
   const run = review(summary(fresh, 'tasks', 'mallory'), summary(fresh, 'dry'))
   await run.end()
-  assert.deepEqual(run.writes, markedReady('agent:review'))
+  assert.deepEqual(run.writes, toSimplifier('agent:reviewing'))
 })
 
 test('a review that ended waits on whoever applied its label', async () => {
@@ -522,22 +568,22 @@ test('an upgrade run hands new commits to the Reviewer and leaves an untouched u
     `pr edit ${pull} --add-label agent:review`,
   ])
 
-  const untouched = upgrade('abc\n', upgraderSaid(fresh))
+  const untouched = upgrade('abc1234def\n', upgraderSaid(fresh))
   await untouched.end()
   assert.deepEqual(untouched.writes, staysDraft('agent:upgrade'))
 })
 
-test('a dry review of a dependency update leaves it a draft', async () => {
+test('a Simplifier run on a dependency update leaves it a draft', async () => {
   const run = factory({
-    label: 'agent:review',
+    label: 'agent:simplify',
     dependencyUpdate: true,
-    github: pullRequestReads('', [summary(fresh, 'dry')]),
+    github: pullRequestReads('', [dryReview, upgraderSaid(fresh)]),
   })
   assert.equal(
     (await run.end()).body,
-    'agent:review app#12: Waiting on octocat: it stays a draft: mark it ready to run its CI when you merge it',
+    'agent:simplify app#12: Waiting on octocat: it stays a draft: mark it ready to run its CI when you merge it',
   )
-  assert.deepEqual(run.writes, staysDraft('agent:review'))
+  assert.deepEqual(run.writes, staysDraft('agent:simplify'))
 })
 
 test('an upgrade run that said nothing on the pull request since its claim waits on whoever applied its label', async () => {
@@ -546,7 +592,7 @@ test('an upgrade run that said nothing on the pull request since its claim waits
     [upgraderSaid('2000-01-01T00:00:00Z')],
     [upgraderSaid(fresh, 'mallory')],
   ]) {
-    const run = upgrade('abc\n', ...said)
+    const run = upgrade('abc1234def\n', ...said)
     await run.end()
     assert.deepEqual(
       run.writes,
