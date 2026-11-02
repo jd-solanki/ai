@@ -28,10 +28,10 @@ label starts one session in the factory's session host, and when a run ends, the
 GitHub and applies the next agent's trigger label.
 
 The factory is splitting into layers, each with one adapter the owner picks per factory
-([ADR 0001](./docs/adr/0001-factory-layers.md)). The session host has herdr's adapter and
-Orca's, picked by `SESSION_HOST`; Orca's has run no factory session yet. The intake has one
-adapter, the GitHub webhook. T3 Code waits, because it takes a prompt where the other hosts
-take the `claude` command.
+([ADR 0001](./docs/adr/0001-factory-layers.md)). The session host has herdr's adapter, the
+Herdr app's and Orca's, picked by `SESSION_HOST`; the last two have run no factory session
+yet. The intake has one adapter, the GitHub webhook. T3 Code waits, because it takes a prompt
+where the other hosts take the `claude` command.
 
 The pipeline in `/project-context` is built but unproven: no spec with sub-issues, no HITL
 stop and no Fixer run has gone end to end on a served repo.

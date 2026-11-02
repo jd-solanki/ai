@@ -91,7 +91,7 @@ intake and the session host.
 _Avoid_: slot, port, tier
 
 **Adapter**:
-One implementation of a layer, such as herdr's or Orca's for the session host.
+One implementation of a layer, such as herdr's, the Herdr app's or Orca's for the session host.
 _Avoid_: plugin, provider, driver, backend
 
 **Intake**:
@@ -99,8 +99,8 @@ The layer that tells the factory a trigger label was applied: the GitHub webhook
 _Avoid_: trigger, trigger layer, event source
 
 **Session host**:
-The app a session runs in, where the owner watches it: herdr or Orca. It hosts the session;
-Claude Code runs it.
+The app a session runs in, where the owner watches it: herdr, the Herdr app or Orca. It hosts
+the session; Claude Code runs it.
 _Avoid_: agent runner, runner, runtime, session provider
 
 **Served repo**:

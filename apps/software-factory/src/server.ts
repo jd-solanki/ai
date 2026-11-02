@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { buffer } from 'node:stream/consumers'
 import { setTimeout as sleep } from 'node:timers/promises'
+import * as herdrApp from './herdr-app.ts'
 import * as orca from './orca.ts'
 import { handleRunReport, type Runs } from './run-end.ts'
 import { closeTab, gh, PORT, startSession } from './session.ts'
@@ -10,7 +11,7 @@ import { findFactoryUp, handleWebhook } from './webhook.ts'
 const { GITHUB_WEBHOOK_SECRET: secret, REPOS_DIR: reposDir, DEFER_TO, SESSION_HOST } = process.env
 if (!secret || !reposDir) throw new Error('Set GITHUB_WEBHOOK_SECRET and REPOS_DIR')
 // The session host adapters, by the name SESSION_HOST picks one with. An empty value, as .env.example leaves it, is unset.
-const sessionHosts = { herdr: { startSession, closeTab }, orca }
+const sessionHosts = { herdr: { startSession, closeTab }, 'herdr-app': herdrApp, orca }
 const sessionHost = SESSION_HOST || 'herdr'
 if (!Object.hasOwn(sessionHosts, sessionHost))
   throw new Error(
