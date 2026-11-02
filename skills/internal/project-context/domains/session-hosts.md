@@ -15,13 +15,13 @@ _Avoid_: run workspace, project workspace
 - A factory runs one session host adapter: the one its owner names in that factory's
   configuration. Factories on different machines may name different ones.
 - An adapter hosts the `claude` command static code builds. It opens a tab for the run at the
-  served repo's clone without taking focus, labels it, types the command into the tab's shell,
-  and closes the tab when the run ends. The command, its hooks and its worktree stay static
-  code's.
+  served repo's clone without taking focus, labels it, runs the command there, and closes the
+  tab when the run ends. The command, its hooks and its worktree stay static code's.
 - A run never ends on a session host's state. Its end comes from Claude Code's hooks.
 - Closing an adapter's tab ends the session, so its SessionEnd fires. Stopping the host either
   does the same, as stopping herdr does, or leaves the session running for the adapter to close
-  once the host is back, as quitting Orca does.
+  once the host is back, as quitting Orca does. Closing the Herdr app's window stops nothing:
+  the session runs in `hc`'s core, which the adapter reaches without the window.
 
 ## Reasons
 
@@ -70,8 +70,12 @@ _Avoid_: run workspace, project workspace
 - **`hc kill` answers `not_found` for a kill that worked.** `--rm` removes the terminal as it
   dies, so `not_found` counts as closed. `apps/software-factory/src/herdr-app.ts:closeTab`
 - **The window refuses a rename until it adopts the tab.** A `tab.rename` right after `hc run`
-  fails with `no tab`, so the adapter retries that error alone.
-  `apps/software-factory/src/herdr-app.ts:renameTab`
+  fails with `no tab`, so the adapter retries that error alone, and never makes `startSession`
+  wait for it: a run registers when `startSession` returns, so a crash during the wait finds no
+  run and keeps its claim. `apps/software-factory/src/herdr-app.ts:renameTab`
+- **A session gets `hc`'s environment, not the server's.** `hc run` starts it in the core, so
+  a variable set only in the server's `.env` never reaches it.
+  `apps/software-factory/src/herdr-app.ts:startSession`
 
 ## Where it lives
 

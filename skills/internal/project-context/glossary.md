@@ -91,7 +91,7 @@ intake and the session host.
 _Avoid_: slot, port, tier
 
 **Adapter**:
-One implementation of a layer, such as herdr's, the Herdr app's or Orca's for the session host.
+One implementation of a layer, such as herdr's or Orca's for the session host.
 _Avoid_: plugin, provider, driver, backend
 
 **Intake**:

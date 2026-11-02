@@ -3,6 +3,7 @@ import { chmodSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, beforeEach, test } from 'node:test'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { closeTab, startSession } from '../src/herdr-app.ts'
 import { claudeArgs } from '../src/session.ts'
 
@@ -32,6 +33,7 @@ stub(
   `case "$1" in
   ls) echo "{\\"terminals\\":\${TERMINALS:-[]}}" ;;
   get) echo "get $2" >> "${bin}/hc.log"
+    [ "$2" = gone ] && exit 3
     [ "$2" = t3 ] && echo '{"labels":{"herdr.space":"sp1"}}' || echo '{"labels":{}}' ;;
   run) echo "$1 $2 $3 $4 $5 $6 $7 $8 $9 \${10} \${11} \${12}" >> "${bin}/hc.log"
     [ -n "$RUN_FAILS" ] && { echo '{"error":{"kind":"spawn_failed"}}' >&2; exit 1; }
@@ -42,8 +44,8 @@ esac`,
 )
 stub(
   'herdr-app',
-  `echo "$1 $2 $3 $4 $5 $6" >> "${bin}/app.log"
-tries=$(wc -l < "${bin}/app.log")
+  `tries=$(($(wc -l < "${bin}/app.log") + 1))
+echo "$1 $2 $3 $4 $5 $6" >> "${bin}/app.log"
 [ "$tries" -le "\${RENAME_MISSES:-0}" ] && { echo '{ "error": "no tab" }'; exit 1; }
 [ -n "$RENAME_ERROR" ] && { echo '{ "error": "no window" }'; exit 1; }
 echo '{ "ok": true }'`,
@@ -59,6 +61,12 @@ const withEnv = (t: { after: (fn: () => void) => void }, key: string, value: str
   t.after(() => delete process.env[key])
   process.env[key] = value
 }
+const renames = () => log('app.log').split('\n').filter(Boolean).length
+// The rename runs on after startSession returns, and must not reach the next test's log.
+const waitForRenames = async (count: number) => {
+  for (let tries = 0; tries < 200 && renames() < count; tries++) await sleep(10)
+  assert.equal(renames(), count)
+}
 
 test('startSession opens the run in the repo workspace of the first labelled terminal at the clone', async (t) => {
   withEnv(
@@ -71,6 +79,7 @@ test('startSession opens the run in the repo workspace of the first labelled ter
     ]),
   )
   assert.deepEqual(await startSession(launched, bin), { ok: true, output: '', tab: 't7' })
+  await waitForRenames(1)
   const [get2, get3, started] = log('hc.log').split('\n')
   assert.deepEqual([get2, get3], ['get t2', 'get t3'])
   // Without --no-parent a session is the server's child, and ends with it.
@@ -87,21 +96,40 @@ test('startSession opens the run in the repo workspace of the first labelled ter
   )
 })
 
+test('startSession looks past a terminal that exited since the list', async (t) => {
+  withEnv(
+    t,
+    'TERMINALS',
+    JSON.stringify([
+      { address: 'gone', cwd: bin },
+      { address: 't3', cwd: bin },
+    ]),
+  )
+  assert.equal((await startSession(launched, bin)).ok, true)
+  await waitForRenames(1)
+  assert.match(log('hc.log'), /--label herdr\.space=sp1 /)
+})
+
 test('startSession opens a workspace of its own when no terminal sits at the clone', async () => {
   assert.equal((await startSession(launched, bin)).ok, true)
+  await waitForRenames(1)
   assert.match(log('hc.log'), /--label herdr\.space=sp[0-9a-f]{32} --label herdr\.tab=tb/)
 })
 
-test('startSession retries the rename until the window adopts the tab', async (t) => {
+// A run registers when startSession returns, and an end reported before that finds no run: a crash lost, its claim held.
+test('startSession returns before the window adopts the tab, and renames it once it does', async (t) => {
   withEnv(t, 'RENAME_MISSES', '2')
   assert.equal((await startSession(launched, bin)).ok, true)
-  assert.equal(log('app.log').trim().split('\n').length, 3)
+  assert.ok(renames() < 3)
+  await waitForRenames(3)
 })
 
-test('startSession keeps the run when the window refuses the rename for another reason', async (t) => {
+test('startSession keeps the run, and stops renaming, when the window refuses for another reason', async (t) => {
   withEnv(t, 'RENAME_ERROR', '1')
   assert.deepEqual(await startSession(launched, bin), { ok: true, output: '', tab: 't7' })
-  assert.equal(log('app.log').trim().split('\n').length, 1)
+  await waitForRenames(1)
+  await sleep(300)
+  assert.equal(renames(), 1)
 })
 
 test('startSession fails the launch and names no tab when hc starts nothing', async (t) => {
@@ -115,10 +143,9 @@ test('startSession fails the launch and names no tab when hc starts nothing', as
 test('closeTab kills the terminal, and counts one already removed as closed', async (t) => {
   assert.equal((await closeTab('t7')).ok, true)
   assert.equal(log('hc.log'), 'kill t7 --json\n')
-  t.after(() => delete process.env.KILL_ERROR)
   // --rm removes a terminal as it dies, so even a kill that worked can answer not_found.
-  process.env.KILL_ERROR = 'not_found'
+  withEnv(t, 'KILL_ERROR', 'not_found')
   assert.equal((await closeTab('t7')).ok, true)
-  process.env.KILL_ERROR = 'internal'
+  withEnv(t, 'KILL_ERROR', 'internal')
   assert.equal((await closeTab('t7')).ok, false)
 })
