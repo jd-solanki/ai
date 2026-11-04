@@ -58,6 +58,7 @@ Write the README in this shape:
 
 | | |
 | --- | --- |
+| Upstream | <the issue URL, filled in at step 3> |
 | `<package>` | <version> |
 | `node` / `pnpm` | <versions> |
 
@@ -90,7 +91,11 @@ Run `/create-ticket` against the package's repo, with the branch URL as the
 reproduction. If step 1 found an open issue, comment there with the branch URL
 instead.
 
-**Done when:** the upstream issue or comment is live and links the branch.
+Then put the issue's URL in the README's Upstream row, commit it as `repro: link upstream
+issue`, and push. A cleanup run reads that row to decide whether the branch can go.
+
+**Done when:** the upstream issue or comment is live and links the branch, and the
+branch's README links the issue back.
 
 ## 4. Track it in our repo
 
