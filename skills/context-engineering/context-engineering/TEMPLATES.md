@@ -77,10 +77,20 @@ description: This repository's words, rules, reasons and fences. Invoke before t
 **The test: could I learn this by reading the code?** Then link the path under
 **Where it lives**. Leave the prose out.
 
+A line that passes still needs both of these:
+
+- **The value test: could leaving it out cause a costly wrong decision before nearby code or
+  tests catch it?** Correct but low-value detail earns nothing.
+- **The refactor test: would the sentence survive an ordinary rename, move or refactor?**
+  Write the invariant (an outcome, ownership boundary, state transition, safety property or
+  failure policy), not symbols, call sequences, wiring or versions. Name a library only when
+  the owner chose it as durable architecture.
+
 Git holds the history and `package.json` holds the commands. Both are sources of
 truth already; point at them.
 
-Past ~150 lines, a file is two domains, or it is restating code. Split it or cut it.
+A file whose tasks need different parts of it is two domains; so, usually, is one past ~150
+lines. Split it or cut it.
 
 `/audit-project-context` enforces all of the above.
 
@@ -91,9 +101,13 @@ This context holds the decisions. The code implements them.
 When a task changes a decision, update the domain file in the same pull request as the
 code. When the code and a domain file disagree, ask the owner which one is wrong.
 
+Before you edit any file in this skill (this router, `glossary.md` or a domain file), invoke
+`/context-engineering`.
+
 ## References
 
-Load `glossary.md` every session. Load a domain file when your task enters it.
+Load `glossary.md` every session. Load a domain file when your task enters it, and the file
+its row names after `with`.
 
 A domain file is settled unless its header says otherwise. `provisional`: build on it, but
 keep its detail behind one seam. `exploratory`: argue with it before building on it.
@@ -129,7 +143,8 @@ which of the two a term goes in; that one governs how it is written.
 ## 5. `domains/<domain>.md`
 
 One file per domain. Five sections. A section with nothing true in it gets deleted,
-not padded.
+not padded. A section may hold `###` subheadings and tables; `SKILL.md`'s **A domain file**
+says when.
 
 ```markdown
 # [Domain]
@@ -151,7 +166,7 @@ when the domain is settled.]
 
 ## Fences
 
-- **[The trap.]** [What it breaks, and why the fence stands.] `path/to/file.ts:42`
+- **[The trap.]** [What it breaks, and why the fence stands.] `path/to/file.ts:symbol`
 
 ## Where it lives
 

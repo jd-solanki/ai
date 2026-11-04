@@ -203,9 +203,9 @@ dimension you add is a lens whenever a blocker could hide in it.
 
 **Dimension add-ons.** Pass as that dimension's `addon`, verbatim:
 
-- *Project-context conformance*: `Every fence in /project-context names a file:line. Open each one
-  and confirm it lands on what the fence describes. An edit in this range that shifts a cited line
-  is a candidate.`
+- *Project-context conformance*: `Every fence in /project-context names a file:symbol. Open each one
+  and confirm it lands on what the fence describes. An edit in this range that renames, moves or
+  deletes a cited symbol is a candidate.`
 - *Deletion*: `Invoke /ponytail-review and /simplify, obey each triage gate. /simplify applies
   fixes — OVERRIDE IT. You are report-only. Name what to cut and what replaces it.`
 - *Rendered surface*, with `"budget": 60`: `Load the page, drive it, report what you saw. Stacking

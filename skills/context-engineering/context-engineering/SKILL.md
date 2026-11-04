@@ -1,6 +1,6 @@
 ---
 name: context-engineering
-description: Shared reference for project context — its shape and the law every file obeys. Invoked by name from /setup-project-context, /setup-landscape and /audit-project-context.
+description: Shared reference for project context — its shape and the law every file obeys. Invoked by name from /setup-project-context, /setup-landscape, /audit-project-context, and /project-context before any edit to a context file.
 argument-hint: "[a decision to record]"
 ---
 
@@ -86,8 +86,18 @@ nothing.
 - Preserve a module's boundary when it owns a cohesive product domain. A task that crosses
   domains loads multiple files; crossing them is not a reason to merge them under an umbrella.
 - Two domains that always load together are one domain.
+- **A domain may depend on one other.** When every task in Y needs X's lines but X's tasks never
+  need Y's, Y depends on X: Y's router row ends its `load-when` with `; with X.md`, and nothing
+  else records it. One level only: a file another depends on depends on nothing. The dependent
+  names the file it needs, never the reverse; if X needs Y too, they are one domain. Y needing one
+  or two of X's lines is a pointer in prose, not a dependency.
 - A domain earns a file once it holds at least one fence or one non-obvious reason.
   Below that bar it is an empty heading pretending to be context.
+- **A file whose tasks need different parts of it is two domains.** A task pays for the whole
+  file it loads. When a task that loads it needs only one part (one subheading, one cluster of
+  words and fences), that part is a domain: give it its own file and router row, split the old
+  row's `load-when` between them, and move each line into the same section of the new file.
+  The sign in the router is a `load-when` joining tasks that never need each other's lines.
 - A file heading past ~150 lines is two domains, or it is restating code.
 
 For example, a Nuxt project may have `layer-auth` owning identity and access,
@@ -140,8 +150,13 @@ competes with. Once the owner names a competitor, the project has
 
 ## A domain file
 
-Five sections, nothing else, plus a `confidence:` line under the heading when the domain
-is not settled. Its `load-when` lives only in the router table.
+Five sections, nothing else at the top level, plus a `confidence:` line under the heading
+when the domain is not settled. Its `load-when` lives only in the router table.
+
+Inside a section, a `###` subheading or a table is fine when one rule, reason or fence needs
+more than a bullet: the shapes a value can take, or a layout an agent looks up. It belongs to
+its section and passes the same admission tests. A subheading a task could load without its
+siblings is a domain of its own; see **Domains**.
 
 - **Words** — terms used only inside this domain.
 - **Rules** — conventions no linter or type checker enforces.

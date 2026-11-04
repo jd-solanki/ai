@@ -15,10 +15,20 @@ description: This repository's words, rules, reasons and fences. Invoke before t
 **The test: could I learn this by reading the code?** Then link the path under
 **Where it lives**. Leave the prose out.
 
+A line that passes still needs both of these:
+
+- **The value test: could leaving it out cause a costly wrong decision before nearby code or
+  tests catch it?** Correct but low-value detail earns nothing.
+- **The refactor test: would the sentence survive an ordinary rename, move or refactor?**
+  Write the invariant (an outcome, ownership boundary, state transition, safety property or
+  failure policy), not symbols, call sequences, wiring or versions. Name a library only when
+  the owner chose it as durable architecture.
+
 Git holds the history, the skills CLI holds the install state, and `package.json` holds the
 commands. All are sources of truth already; point at them.
 
-Past ~150 lines, a file is two domains, or it is restating code. Split it or cut it.
+A file whose tasks need different parts of it is two domains; so, usually, is one past ~150
+lines. Split it or cut it.
 
 `/audit-project-context` enforces all of the above.
 
@@ -29,9 +39,13 @@ This context holds the decisions. The code implements them.
 When a task changes a decision, update the domain file in the same pull request as the
 code. When the code and a domain file disagree, ask the owner which one is wrong.
 
+Before you edit any file in this skill (this router, `glossary.md` or a domain file), invoke
+`/context-engineering`.
+
 ## References
 
-Load `glossary.md` every session. Load a domain file when your task enters it.
+Load `glossary.md` every session. Load a domain file when your task enters it, and the file
+its row names after `with`.
 
 A row may name any path in the repository. Living inside this folder is not what makes
 a file loadable; this table is.
