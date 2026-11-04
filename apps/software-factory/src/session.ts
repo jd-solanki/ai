@@ -218,10 +218,10 @@ function hooks(token: string) {
   }
 }
 
-// A session host types its command into a shell; the prompt and settings must each reach claude as one argument.
+// A session host hands its command to a shell; the prompt and settings must each reach claude as one argument.
 const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`).join(' ')
 
-// What every session host types into its tab. A claude that exits before its hooks load reports nothing, so the shell reports its end.
+// What every session host runs in its tab. A claude that exits before its hooks load reports nothing, so the shell reports its end.
 export const sessionCommand = ({ args, token }: Pick<Launch, 'args' | 'token'>) =>
   `${shell(['claude', ...args])}; curl -sS -X POST http://localhost:${PORT}/runs/${token}/SessionEnd`
 

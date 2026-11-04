@@ -99,8 +99,8 @@ The layer that tells the factory a trigger label was applied: the GitHub webhook
 _Avoid_: trigger, trigger layer, event source
 
 **Session host**:
-The app a session runs in, where the owner watches it: herdr or Orca. It hosts the session;
-Claude Code runs it.
+The app a session runs in, where the owner watches it: herdr, the Herdr app or Orca. It hosts
+the session; Claude Code runs it.
 _Avoid_: agent runner, runner, runtime, session provider
 
 **Served repo**:

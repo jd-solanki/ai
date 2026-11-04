@@ -1,12 +1,13 @@
 # Session hosts
 
-confidence: provisional — Orca's adapter is built but has run no factory session yet, and a
-run's tab is still found by a handle an Orca restart invalidates.
+confidence: provisional — Orca's adapter and the Herdr app's are built but have run no factory
+session yet, and a run's tab in Orca is still found by a handle an Orca restart invalidates.
 
 ## Words
 
 **Repo workspace**:
-A herdr workspace with a pane at a served repo's clone, where that repo's runs open as tabs.
+A herdr workspace, or a Herdr app space, with a terminal at a served repo's clone, where that
+repo's runs open as tabs.
 _Avoid_: run workspace, project workspace
 
 ## Rules
@@ -14,13 +15,13 @@ _Avoid_: run workspace, project workspace
 - A factory runs one session host adapter: the one its owner names in that factory's
   configuration. Factories on different machines may name different ones.
 - An adapter hosts the `claude` command static code builds. It opens a tab for the run at the
-  served repo's clone without taking focus, labels it, types the command into the tab's shell,
-  and closes the tab when the run ends. The command, its hooks and its worktree stay static
-  code's.
+  served repo's clone without taking focus, labels it, runs the command there, and closes the
+  tab when the run ends. The command, its hooks and its worktree stay static code's.
 - A run never ends on a session host's state. Its end comes from Claude Code's hooks.
 - Closing an adapter's tab ends the session, so its SessionEnd fires. Stopping the host either
   does the same, as stopping herdr does, or leaves the session running for the adapter to close
-  once the host is back, as quitting Orca does.
+  once the host is back, as quitting Orca does. Closing the Herdr app's window stops nothing:
+  the session runs in `hc`'s core, which the adapter reaches without the window.
 
 ## Reasons
 
@@ -35,6 +36,9 @@ _Avoid_: run workspace, project workspace
   the token. Supporting it moves the seam above the command. `research/herdr-orca-t3code.md`
 - Orca's adapter would use `orca terminal create`, not `orca agent launch`: no launch flag
   carries the factory's `--settings`, `--worktree` or `--permission-mode`.
+- The Herdr app's adapter runs a session with `hc run` and labels it into the window, not with
+  `herdr-app do tab.new`: a new tab is shown at once, and `hc` alone needs no window to start or
+  end a session. `herdr-app` only names the tab.
 - Quitting Orca leaves its sessions running in its terminal daemon, but every `orca` call fails
   until Orca is back, and then the old terminal handles are invalid. A run that ends in that window
   keeps its claim until its tab closes, so Orca's adapter must find a run's tab by something a
@@ -60,10 +64,23 @@ _Avoid_: run workspace, project workspace
 - **herdr's `idle` is not the end of a run.** A turn that ends while the session's own
   background shell runs shows `idle`, then `working` again when the session resumes by itself.
   A run never ends on herdr's state. `apps/software-factory/src/run-end.ts:handleRunReport`
+- **`hc run` makes a session the caller's child.** The factory server runs in an `hc` terminal,
+  so without `--no-parent` every session ends with the server and reports to it as notes typed
+  into its terminal. `apps/software-factory/src/herdr-app.ts:startSession`
+- **`hc kill` answers `not_found` for a kill that worked.** `--rm` removes the terminal as it
+  dies, so `not_found` counts as closed. `apps/software-factory/src/herdr-app.ts:closeTab`
+- **The window refuses a rename until it adopts the tab.** A `tab.rename` right after `hc run`
+  fails with `no tab`, so the adapter retries that error alone, and never makes `startSession`
+  wait for it: a run registers when `startSession` returns, so a crash during the wait finds no
+  run and keeps its claim. `apps/software-factory/src/herdr-app.ts:renameTab`
+- **A session gets `hc`'s environment, not the server's.** `hc run` starts it in the core, so
+  a variable set only in the server's `.env` never reaches it.
+  `apps/software-factory/src/herdr-app.ts:startSession`
 
 ## Where it lives
 
 `apps/software-factory/src/server.ts` (`sessionHosts`: the adapters `SESSION_HOST` picks from),
 `apps/software-factory/src/session.ts` (`startSession`, `closeTab`: the herdr adapter;
-`sessionCommand`: what every adapter types), `apps/software-factory/src/orca.ts` (the Orca
-adapter), `research/herdr-orca-t3code.md` (what herdr, Orca and T3 Code each offer an adapter).
+`sessionCommand`: what every adapter runs), `apps/software-factory/src/herdr-app.ts` (the
+Herdr app adapter), `apps/software-factory/src/orca.ts` (the Orca adapter),
+`research/herdr-orca-t3code.md` (what herdr, Orca and T3 Code each offer an adapter).
