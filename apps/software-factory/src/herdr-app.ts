@@ -24,7 +24,6 @@ async function findRepoWorkspace(clone: string): Promise<string | undefined> {
   } catch {
     // A core `hc` can't reach, or a clone that is gone, fails the `hc run` that follows, which reports it.
   }
-  return undefined
 }
 
 // The window refuses a rename until it adopts the tab, a moment after the terminal starts. A rename it never takes, as with no window open, only costs the label.
