@@ -74,8 +74,10 @@ _Avoid_: failure
   the host closes the tab or stops, so only `kill -9`, a power loss or a stopped factory
   server leave the working label on, and a human removes it.
 - The tab's shell reports SessionEnd too, once claude exits: a claude that exits before its
-  hooks load, such as in an untrusted folder, reports nothing. After a normal end that second
-  report finds no run.
+  hooks load, such as in an untrusted folder, reports nothing. The shell retries its
+  report for a few seconds, because a claude that exits at once can report before its run
+  registers. A host slower than that to answer its launch loses the report, and the working
+  label stays on. After a normal end the report finds no run, and the shell gives up.
 - Each run reports under a random token because the server's port is public, behind
   Tailscale Funnel: the token is what stops anyone else ending a run.
 

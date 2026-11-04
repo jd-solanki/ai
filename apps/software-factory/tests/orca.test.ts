@@ -55,7 +55,7 @@ test('startSession registers the clone, then opens a titled tab that runs the se
   // The shell reports the end of a claude that exits before its hooks load.
   assert.equal(
     readFileSync(join(bin, 'curl.log'), 'utf8'),
-    `-sS -X POST http://localhost:3456/runs/${launched.token}/SessionEnd\n`,
+    `-fsS --retry 5 --retry-all-errors --retry-delay 1 -X POST http://localhost:3456/runs/${launched.token}/SessionEnd\n`,
   )
 })
 
