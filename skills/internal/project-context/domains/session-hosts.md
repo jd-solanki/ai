@@ -81,6 +81,6 @@ _Avoid_: run workspace, project workspace
 
 `apps/software-factory/src/server.ts` (`sessionHosts`: the adapters `SESSION_HOST` picks from),
 `apps/software-factory/src/session.ts` (`startSession`, `closeTab`: the herdr adapter;
-`sessionCommand`: what every adapter types), `apps/software-factory/src/herdr-app.ts` (the
+`sessionCommand`: what every adapter runs), `apps/software-factory/src/herdr-app.ts` (the
 Herdr app adapter), `apps/software-factory/src/orca.ts` (the Orca adapter),
 `research/herdr-orca-t3code.md` (what herdr, Orca and T3 Code each offer an adapter).
