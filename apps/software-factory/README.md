@@ -21,7 +21,7 @@ Applying the label again reuses that worktree.
 
 - Node, in the range `engines` in the root `package.json` sets. The server runs TypeScript directly, with no build step.
 - Claude Code, on an account that can run Opus.
-- A session host, running on the factory machine: herdr, the Herdr app with `SESSION_HOST=herdr-app` in `.env`, or Orca with `SESSION_HOST=orca`. Each session starts in a new tab there. With the host down, a run fails to start: the server takes its `…ing` label off and hands the work item back to you, as below.
+- A session host, running on the factory machine: herdr, the Herdr app with `SESSION_HOST=herdr-app` in `.env`, or Orca with `SESSION_HOST=orca`. Each session starts in a new tab there. With herdr or Orca down, a run fails to start: the server takes its `…ing` label off and hands the work item back to you, as below.
   - Herdr app: the server calls `hc` and `herdr-app`, which must be on the server's `PATH`. A session runs in `hc`'s core, not the window, so it gets the core's environment and not the server's, and a closed window doesn't stop it. A run that starts with the window closed keeps its tab's number instead of its label. `hc ls` lists sessions and their state.
   - Orca: the server calls the `orca` command, which Orca puts on `PATH` only in its own terminals, so start the factory from one. The server adds each served clone to Orca's projects on its first run. Quitting Orca keeps its sessions running, but a run that ends before Orca is back keeps its `…ing` label until you remove it.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.

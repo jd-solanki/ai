@@ -22,7 +22,7 @@ async function findRepoWorkspace(clone: string): Promise<string | undefined> {
       if (space) return space
     }
   } catch {
-    // A core that is down, or a clone that is gone, fails the `hc run` that follows, which reports it.
+    // A core `hc` can't reach, or a clone that is gone, fails the `hc run` that follows, which reports it.
   }
   return undefined
 }
