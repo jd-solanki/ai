@@ -222,7 +222,7 @@ function hooks(token: string) {
 const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`).join(' ')
 
 // What every session host runs in its tab. A claude that exits before its hooks load reports nothing, so the shell reports its end.
-// Retried: a claude that exits at once can report before its run registers. After a normal end, the run's end kills this shell.
+// Retried: a claude that exits at once can report before its run registers. After a normal end it finds no run and gives up within seconds.
 export const sessionCommand = ({ args, token }: Pick<Launch, 'args' | 'token'>) =>
   `${shell(['claude', ...args])}; curl -fsS --retry 5 --retry-all-errors --retry-delay 1 -X POST http://localhost:${PORT}/runs/${token}/SessionEnd`
 
