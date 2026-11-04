@@ -192,7 +192,7 @@ test('startSession has the shell report the end of a claude that exits before it
   })
   assert.equal(
     readFileSync(join(bin, 'curl.log'), 'utf8'),
-    `-sS -X POST http://localhost:3456/runs/${launched.token}/SessionEnd\n`,
+    `-fsS --retry 5 --retry-all-errors --retry-delay 1 -X POST http://localhost:3456/runs/${launched.token}/SessionEnd\n`,
   )
 })
 

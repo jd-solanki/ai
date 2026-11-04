@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict'
-import { chmodSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, beforeEach, test } from 'node:test'
@@ -31,13 +39,15 @@ const stub = (name: string, body: string) => {
 stub(
   'hc',
   `case "$1" in
-  ls) echo "{\\"terminals\\":\${TERMINALS:-[]}}" ;;
+  ls) [ -n "$RUN_FAILS" ] && exit 1; echo "{\\"terminals\\":\${TERMINALS:-[]}}" ;;
   get) echo "get $2" >> "${bin}/hc.log"
     [ "$2" = gone ] && exit 3
+    [ "$2" = t4 ] && { echo '{"labels":{"herdr.space":"sp2"}}'; exit 0; }
     [ "$2" = t3 ] && echo '{"labels":{"herdr.space":"sp1"}}' || echo '{"labels":{}}' ;;
   run) echo "$1 $2 $3 $4 $5 $6 $7 $8 $9 \${10} \${11} \${12}" >> "${bin}/hc.log"
     [ -n "$RUN_FAILS" ] && { echo '{"error":{"kind":"spawn_failed"}}' >&2; exit 1; }
-    sh -c "\${13}"; echo '{"address":"t7","state":"live"}' ;;
+    [ -n "$NO_ADDRESS" ] && { echo '{"state":"live"}'; exit 0; }
+    sh -c "\${13}"; echo warning >&2; echo '{"address":"t7","state":"live"}' ;;
   kill) echo "$1 $2 $3" >> "${bin}/hc.log"
     [ -z "$KILL_ERROR" ] || { echo "{\\"error\\":{\\"kind\\":\\"$KILL_ERROR\\"}}" >&2; exit 3; } ;;
 esac`,
@@ -76,6 +86,7 @@ test('startSession opens the run in the repo workspace of the first labelled ter
       { address: 't1', cwd: join(bin, 'worktree') },
       { address: 't2', cwd: bin },
       { address: 't3', cwd: bin },
+      { address: 't4', cwd: bin },
     ]),
   )
   assert.deepEqual(await startSession(launched, bin), { ok: true, output: '', tab: 't7' })
@@ -92,7 +103,7 @@ test('startSession opens the run in the repo workspace of the first labelled ter
   // The shell reports the end of a claude that exits before its hooks load.
   assert.equal(
     log('curl.log'),
-    `-sS -X POST http://localhost:3456/runs/${launched.token}/SessionEnd\n`,
+    `-fsS --retry 5 --retry-all-errors --retry-delay 1 -X POST http://localhost:3456/runs/${launched.token}/SessionEnd\n`,
   )
 })
 
@@ -105,7 +116,11 @@ test('startSession looks past a terminal that exited since the list', async (t) 
       { address: 't3', cwd: bin },
     ]),
   )
-  assert.equal((await startSession(launched, bin)).ok, true)
+  // A clone reached through a symlink still matches the real path hc lists.
+  const link = `${bin}-link`
+  symlinkSync(bin, link)
+  t.after(() => rmSync(link))
+  assert.equal((await startSession(launched, link)).ok, true)
   await waitForRenames(1)
   assert.match(log('hc.log'), /--label herdr\.space=sp1 /)
 })
@@ -137,7 +152,13 @@ test('startSession fails the launch and names no tab when hc starts nothing', as
   const failed = await startSession(launched, bin)
   assert.equal(failed.ok, false)
   assert.match(failed.output, /^hc run: .*spawn_failed/)
+  await sleep(300)
   assert.equal(log('app.log'), '')
+})
+
+test('startSession fails the launch when hc run names no terminal', async (t) => {
+  withEnv(t, 'NO_ADDRESS', '1')
+  assert.equal((await startSession(launched, bin)).ok, false)
 })
 
 test('closeTab kills the terminal, and counts one already removed as closed', async (t) => {
