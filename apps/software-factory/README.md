@@ -93,8 +93,8 @@ gh repo clone "$REPO" "${REPOS_DIR:?run from apps/software-factory so .env loads
 # 3. Labels
 gh label create issue:spec -R "$REPO" --force -d "Spec an agent implements unattended"
 gh label create issue:follow-up -R "$REPO" --force -d "What a PR review left for later, for an agent to implement"
-gh label create issue:AFK -R "$REPO" --force -d "Sub-issue an agent does unattended"
-gh label create issue:HITL -R "$REPO" --force -d "Sub-issue a human does"
+gh label create issue:AFK -R "$REPO" --force -d "Sub-issue an agent does unattended, or follow-up of nitpicks only"
+gh label create issue:HITL -R "$REPO" --force -d "Sub-issue a human does, or follow-up holding an Unproven finding"
 gh label create issue:HITL-done -R "$REPO" --force -d "The human finished this HITL issue"
 gh label create agent:implement -R "$REPO" --force -d "Factory: implement this spec and open a draft PR"
 gh label create agent:implementing -R "$REPO" --force -d "Factory: an Implementer run holds this spec"
