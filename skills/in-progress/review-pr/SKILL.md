@@ -93,10 +93,12 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
   makes it `declined`, in any thread state: the human's call closes it unfixed.
 - **The closing round files what is left.** A round that closes the review, dry or ended, files
   every listed nitpick and every Unproven finding as one issue on the pull request's repository,
-  labelled `issue:follow-up` and titled with a Conventional Commit subject. It links the issue from
+  labelled `issue:follow-up` and titled with a Conventional Commit subject. It also labels the issue
+  `issue:HITL` when it holds an Unproven finding and `issue:AFK` when not. It links the issue from
   the summary and names it in the summary's third line, the follow-up marker. A later round edits
-  that issue rather than filing a second. A pull request whose `Closes` lines name an
-  `issue:follow-up` issue files nothing.
+  that issue rather than filing a second, swapping `issue:AFK` and `issue:HITL` when its Unproven
+  findings come or go. A pull request whose `Closes` lines name an `issue:follow-up` issue files
+  nothing.
 - **An Unproven finding in the follow-up ends in a decision.** The software factory starts an
   implementer on a follow-up once its pull request merges, unread, unless it holds an Unproven
   finding. Then whoever merged decides each one from its last four lines:

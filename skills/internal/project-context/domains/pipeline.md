@@ -84,6 +84,9 @@ _Avoid_: result, review status
 - Every spec carries `issue:spec`, a follow-up `issue:follow-up` instead, and
   `agent:implement` acts only on an issue that carries one of them. Every sub-issue lives
   in the spec's repository and carries exactly one of `issue:AFK` or `issue:HITL`.
+- A follow-up carries `issue:HITL` when it holds an Unproven finding and `issue:AFK` when not.
+  The label is the owner's to read, and only that: it puts the follow-up in no done set, and
+  its follow-up marker, not the label, decides where the merge hands it.
 - The done set: an AFK issue is done when a commit on the spec branch, and not on the
   default branch, has a message ending in `Closes <owner>/<repo>#<n>`. A HITL issue is done when it
   carries `issue:HITL-done`. Open or closed state never counts.
@@ -217,6 +220,9 @@ _Avoid_: result, review status
   code, which reaches the default branch the spec branch is cut from only then. Every merge is a
   human's, so it authorizes the run as a trigger label would. Before this, the owner applied
   `agent:implement` to every follow-up by hand, minutes after its pull request merged.
+- A follow-up's label shows on the issue whether it needs the owner: the marker sits on the pull
+  request, and the owner applied `agent:implement` to a follow-up holding an Unproven finding
+  without seeing it.
 - Nitpicks run unread: the owner holds no pull request for polish, and the follow-up's own pull
   request still goes through review and a human merge.
 - An Unproven finding waits on a human: its investigator could not settle it with the tools the
