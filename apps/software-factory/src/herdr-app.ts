@@ -8,18 +8,20 @@ import { refreshClone, run, sessionCommand } from './session.ts'
 
 const newId = () => randomUUID().replaceAll('-', '')
 
-// The repo workspace is the first the terminals at the clone itself name: `hc ls` has their folders and `hc get` their labels. A terminal another app started has no label.
+// The repo workspace is the first the terminals at the clone itself name. A terminal another app started has no label.
 async function findRepoWorkspace(clone: string): Promise<string | undefined> {
   const listed = await run('hc', ['ls', '--json'])
   try {
-    const terminals: { address: string; cwd: string }[] = JSON.parse(listed.stdout).terminals
+    const terminals: { address: string }[] = JSON.parse(listed.stdout).terminals
     const realClone = await realpath(clone)
-    for (const { address, cwd } of terminals) {
-      if (cwd !== realClone) continue
+    for (const { address } of terminals) {
       const terminal = await run('hc', ['get', address, '--json'])
       // A terminal that exited since the list answers nothing.
-      const space = terminal.ok && JSON.parse(terminal.stdout).labels['herdr.space']
-      if (space) return space
+      if (!terminal.ok) continue
+      const { cwd, foreground, labels } = JSON.parse(terminal.stdout)
+      // `cwd` is where the terminal started; a shell cd'd into another repo since must not count.
+      if ((foreground?.cwd ?? cwd) === realClone && labels['herdr.space'])
+        return labels['herdr.space']
     }
   } catch {
     // A core `hc` can't reach, or a clone that is gone, fails the `hc run` that follows, which reports it.

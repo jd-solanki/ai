@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import {
   chmodSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   realpathSync,
@@ -29,7 +30,7 @@ const launched = claudeArgs('pull_request', {
 })
 assert.ok('args' in launched)
 
-// Stubs on PATH: hc logs each call and runs its session command through sh, herdr-app logs each rename, claude exits before its hooks load, curl logs its report.
+// Stubs on PATH: hc answers `get` from get/<address>.json, logs each call and runs its session command through sh, herdr-app logs each rename, claude exits before its hooks load, curl logs its report.
 const bin = realpathSync(mkdtempSync(join(tmpdir(), 'software-factory-herdr-app-')))
 after(() => rmSync(bin, { recursive: true }))
 const stub = (name: string, body: string) => {
@@ -41,9 +42,7 @@ stub(
   `case "$1" in
   ls) [ -n "$RUN_FAILS" ] && exit 1; echo "{\\"terminals\\":\${TERMINALS:-[]}}" ;;
   get) echo "get $2" >> "${bin}/hc.log"
-    [ "$2" = gone ] && exit 3
-    [ "$2" = t4 ] && { echo '{"labels":{"herdr.space":"sp2"}}'; exit 0; }
-    [ "$2" = t3 ] && echo '{"labels":{"herdr.space":"sp1"}}' || echo '{"labels":{}}' ;;
+    cat "${bin}/get/$2.json" 2>/dev/null || exit 3 ;;
   run) echo "$1 $2 $3 $4 $5 $6 $7 $8 $9 \${10} \${11} \${12}" >> "${bin}/hc.log"
     [ -n "$RUN_FAILS" ] && { echo '{"error":{"kind":"spawn_failed"}}' >&2; exit 1; }
     [ -n "$NO_ADDRESS" ] && { echo '{"state":"live"}'; exit 0; }
@@ -65,11 +64,22 @@ stub('curl', `echo "$@" >> "${bin}/curl.log"`)
 process.env.PATH = `${bin}:${process.env.PATH}`
 beforeEach(() => {
   for (const log of ['hc.log', 'app.log', 'curl.log']) writeFileSync(join(bin, log), '')
+  rmSync(join(bin, 'get'), { recursive: true, force: true })
+  mkdirSync(join(bin, 'get'))
 })
 const log = (name: string) => readFileSync(join(bin, name), 'utf8')
 const withEnv = (t: { after: (fn: () => void) => void }, key: string, value: string) => {
   t.after(() => delete process.env[key])
   process.env[key] = value
+}
+// What `hc ls` lists and `hc get` answers for each; null is a terminal that exited since the list.
+const terminals = (
+  t: { after: (fn: () => void) => void },
+  answers: Record<string, object | null>,
+) => {
+  withEnv(t, 'TERMINALS', JSON.stringify(Object.keys(answers).map((address) => ({ address }))))
+  for (const [address, answer] of Object.entries(answers))
+    if (answer) writeFileSync(join(bin, 'get', `${address}.json`), JSON.stringify(answer))
 }
 const renames = () => log('app.log').split('\n').filter(Boolean).length
 // The rename runs on after startSession returns, and must not reach the next test's log.
@@ -79,20 +89,16 @@ const waitForRenames = async (count: number) => {
 }
 
 test('startSession opens the run in the repo workspace of the first labelled terminal at the clone', async (t) => {
-  withEnv(
-    t,
-    'TERMINALS',
-    JSON.stringify([
-      { address: 't1', cwd: join(bin, 'worktree') },
-      { address: 't2', cwd: bin },
-      { address: 't3', cwd: bin },
-      { address: 't4', cwd: bin },
-    ]),
-  )
+  terminals(t, {
+    t1: { cwd: join(bin, 'worktree'), labels: { 'herdr.space': 'sp0' } },
+    t2: { cwd: bin, labels: {} },
+    t3: { cwd: bin, labels: { 'herdr.space': 'sp1' } },
+    t4: { cwd: bin, labels: { 'herdr.space': 'sp2' } },
+  })
   assert.deepEqual(await startSession(launched, bin), { ok: true, output: '', tab: 't7' })
   await waitForRenames(1)
-  const [get2, get3, started] = log('hc.log').split('\n')
-  assert.deepEqual([get2, get3], ['get t2', 'get t3'])
+  const [get1, get2, get3, started] = log('hc.log').split('\n')
+  assert.deepEqual([get1, get2, get3], ['get t1', 'get t2', 'get t3'])
   // Without --no-parent a session is the server's child, and ends with it.
   const tab = /herdr\.tab=(tb[0-9a-f]{32})/.exec(started)?.[1]
   assert.equal(
@@ -108,19 +114,23 @@ test('startSession opens the run in the repo workspace of the first labelled ter
 })
 
 test('startSession looks past a terminal that exited since the list', async (t) => {
-  withEnv(
-    t,
-    'TERMINALS',
-    JSON.stringify([
-      { address: 'gone', cwd: bin },
-      { address: 't3', cwd: bin },
-    ]),
-  )
+  terminals(t, { gone: null, t3: { cwd: bin, labels: { 'herdr.space': 'sp1' } } })
   // A clone reached through a symlink still matches the real path hc lists.
   const link = `${bin}-link`
   symlinkSync(bin, link)
   t.after(() => rmSync(link))
   assert.equal((await startSession(launched, link)).ok, true)
+  await waitForRenames(1)
+  assert.match(log('hc.log'), /--label herdr\.space=sp1 /)
+})
+
+// `hc get`'s `cwd` is the folder a terminal started in; `foreground.cwd` is where it is now.
+test('startSession goes by the folder a terminal is in now, not the one it started in', async (t) => {
+  terminals(t, {
+    t1: { cwd: bin, foreground: { cwd: '/elsewhere' }, labels: { 'herdr.space': 'sp0' } },
+    t2: { cwd: '/elsewhere', foreground: { cwd: bin }, labels: { 'herdr.space': 'sp1' } },
+  })
+  assert.equal((await startSession(launched, bin)).ok, true)
   await waitForRenames(1)
   assert.match(log('hc.log'), /--label herdr\.space=sp1 /)
 })
