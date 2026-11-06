@@ -35,7 +35,7 @@ export interface Selection {
 }
 
 const STATUSES = ['working', 'blocked', 'done', 'idle']
-// The first #number, as apps/software-factory and apps/herdr-tab-title both put it in a tab's name; `C#1` is not one.
+// The first #number, as apps/software-factory and the dotfiles' tab-title mod both put it in a tab's name; `C#1` is not one.
 const ISSUE_NUMBER = /(?:^|\s)#(\d+)/
 
 export type Rows = string[][]

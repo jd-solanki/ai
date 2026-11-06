@@ -43,7 +43,7 @@ Repos connected to each other also share a **landscape**, which `/setup-landscap
 
 ## Whose herdr tab is it
 
-[`herdr-tab-title`](./apps/herdr-tab-title/) and the [software factory](./apps/software-factory/) both label tabs `<emoji> #<number> <title>`. The emoji tells you who owns the tab:
+The `tab-title` Herdr app mod in my dotfiles and the [software factory](./apps/software-factory/) both label tabs `<emoji> #<number> <title>`. The emoji tells you who owns the tab:
 
 | Emoji | Tab                                         | Owner            |
 | ----- | ------------------------------------------- | ---------------- |

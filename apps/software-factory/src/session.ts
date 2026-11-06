@@ -169,7 +169,7 @@ export function claudeArgs(
     args,
     name,
     // A title is anyone's text bound for the owner's terminal: control characters must not reach it.
-    // Shaped like apps/herdr-tab-title's labels, with an emoji per trigger apart from its 🔀 and 🛠️, so a run's tab says which agent holds it.
+    // Shaped like the dotfiles' tab-title mod's labels, with an emoji per trigger apart from its 🔀 and 🛠️, so a run's tab says which agent holds it.
     tabLabel: `${trigger.emoji} #${subject.number} ${subject.title.replace(/\p{Cc}/gu, '')}`,
     token,
     work: {
