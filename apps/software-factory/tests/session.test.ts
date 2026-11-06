@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import {
   chmodSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   realpathSync,
@@ -11,7 +13,7 @@ import {
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { after, test } from 'node:test'
-import { claudeArgs, startSession, type WebhookPayload } from '../src/session.ts'
+import { claudeArgs, sessionCommand, startSession, type WebhookPayload } from '../src/session.ts'
 
 const repository = { name: 'app', full_name: 'acme/app' }
 const labeled = { action: 'labeled', sender: { login: 'octocat' }, repository }
@@ -178,9 +180,26 @@ case "$1 $2" in
   "tab close") exit "\${CLOSE_EXIT:-0}" ;;
 esac`,
 )
-stub('claude', 'exit 1')
+stub('claude', `echo "\${CLAUDE_CONFIG_DIR-unset}" >> "${bin}/claude.log"; exit 1`)
 stub('curl', `echo "$@" >> "${bin}/curl.log"`)
 process.env.PATH = `${bin}:${process.env.PATH}`
+
+test('sessionCommand runs claude as the account claude-use picked, and the personal one without it', (t) => {
+  const home = mkdtempSync(join(tmpdir(), 'software-factory-home-'))
+  t.after(() => rmSync(home, { recursive: true }))
+  // The next test reads curl.log whole.
+  t.after(() => writeFileSync(join(bin, 'curl.log'), ''))
+  const env = { ...process.env, HOME: home, CLAUDE_CONFIG_DIR: undefined }
+  const accounts = () => {
+    writeFileSync(join(bin, 'claude.log'), '')
+    execFileSync('sh', ['-c', sessionCommand(review())], { env })
+    return readFileSync(join(bin, 'claude.log'), 'utf8')
+  }
+  assert.equal(accounts(), 'unset\n')
+  mkdirSync(join(home, '.local/state'), { recursive: true })
+  writeFileSync(join(home, '.local/state/claude-account'), 'work\n')
+  assert.equal(accounts(), `${home}/.claude-work\n`)
+})
 
 test('startSession has the shell report the end of a claude that exits before its hooks load', async () => {
   const launched = review()

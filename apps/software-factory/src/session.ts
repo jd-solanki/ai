@@ -223,8 +223,9 @@ const shell = (args: string[]) => args.map((arg) => `'${arg.replaceAll("'", `'\\
 
 // What every session host runs in its tab. A claude that exits before its hooks load reports nothing, so the shell reports its end.
 // Retried: a claude that exits at once can report before its run registers. After a normal end it finds no run and gives up within seconds.
+// The Claude account is the one `claude-use` picked last, read per run: a host's sh loads no profile, and hc keeps the environment it started with.
 export const sessionCommand = ({ args, token }: Pick<Launch, 'args' | 'token'>) =>
-  `${shell(['claude', ...args])}; curl -fsS --retry 5 --retry-all-errors --retry-delay 1 -X POST http://localhost:${PORT}/runs/${token}/SessionEnd`
+  `a=$(cat "$HOME/.local/state/claude-account" 2>/dev/null); [ -n "$a" ] && export CLAUDE_CONFIG_DIR="$HOME/.claude-$a"; ${shell(['claude', ...args])}; curl -fsS --retry 5 --retry-all-errors --retry-delay 1 -X POST http://localhost:${PORT}/runs/${token}/SessionEnd`
 
 // `fresh` branches from origin/HEAD: it moves only on a fetch, and follows a changed default branch only on set-head.
 export async function refreshClone(cwd: string) {

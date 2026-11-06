@@ -104,6 +104,12 @@ _Avoid_: failure
   through. So a trigger's instructions ride in the prompt, after the skill and its URL, inside
   `<factory-instructions>`. The classifier still judges each command; a trigger's `allow`
   grants what must never be refused. `apps/software-factory/src/session.ts:claudeArgs`
+- **A session runs as the default Claude account unless its command picks one.** The owner's
+  account switch, `claude-use`, lives in an interactive zsh function. A session host runs the
+  command with a bare `sh` that loads no profile, and herdr-core keeps the environment it started
+  with. Every review on jd-solanki/dotfiles#15 ran as the rate-limited default account while the
+  owner's chosen account had room. So the command reads `claude-use`'s choice itself on every run,
+  and a later switch reaches the next run with no restart. `apps/software-factory/src/session.ts:sessionCommand`
 - **Static code's `gh` acts as whichever account its directory names.** The owner's `gh`
   picks the account matching the directory's git `user.name`, so a call from the server's own
   directory acted as the wrong account and could not see a private served repo. Every `gh`
