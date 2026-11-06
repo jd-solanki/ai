@@ -12,8 +12,6 @@ Two things that change together:
   matching agent works in a local clone and reports back on GitHub. It is a Node server
   on the owner's machine, or one per machine, driving Claude Code.
 
-Beside them, a herdr plugin, `apps/herdr-kanban/`, a board of every herdr agent by state.
-
 ## Status
 
 **Skills.** Working and installed in real projects. `skills/in-progress/` is the
