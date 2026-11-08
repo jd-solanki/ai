@@ -23,10 +23,12 @@ exists: `/context-engineering <decision>` records a change, and
 Read what is already there: `README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`,
 `CONTEXT.md`, `docs/`, `package.json`, `skills/` and `skills-lock.json`. Run
 `git remote -v`. Read every `*-landscape` skill the lock lists: its connections are
-already written, so the mining below writes only this repo's side of them.
+already written, so the mining below writes only this repo's side of them. If the repo is a
+workspace (`pnpm-workspace.yaml`, or `workspaces` in `package.json`), list every workspace
+package: each one needs a home domain or a reason it has none.
 
 **Done when** you can name every agent-facing doc in the repo and say which tier it
-belongs in.
+belongs in, and every workspace package is listed.
 
 ## 2. Mine
 
@@ -54,9 +56,12 @@ enclosing symbol instead, because the fence outlives the line.
 ## 3. Propose the domains
 
 **This skill ships no domain list.** Every repo has its own. Read the repo, propose a
-list that obeys **Domains**, with one line each, and wait for approval.
+list that obeys **Domains**, with one line each, and wait for approval. Give each domain its
+home package, or mark it repo-wide. A workspace package that is no domain's home gets a line
+saying why: it holds no fence and no non-obvious reason.
 
-**Done when** the user has approved the list.
+**Done when** the user has approved the list, and every workspace package is a domain's home
+or carries its line.
 
 ## 4. Interview
 
