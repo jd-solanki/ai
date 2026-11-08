@@ -59,9 +59,11 @@ pnpm factory
 In a second terminal:
 
 ```bash
-tailscale funnel --bg 3456   # the PORT in src/session.ts
-tailscale funnel status      # prints the public URL
+tailscale funnel --bg --https=8443 3456   # the PORT in src/session.ts
+tailscale funnel status                  # prints the public URL
 ```
+
+Funnel serves on 8443, which leaves 443 free for dev servers that need it.
 
 `pnpm factory` runs in the foreground, so the factory stops when its terminal closes.
 
@@ -82,7 +84,7 @@ Steps 1 to 3 need write access to the repo:
 ```bash
 set -a; . ./.env; set +a
 REPO=owner/repo
-FUNNEL_URL="https://$(tailscale status --json | jq -r '.Self.DNSName | rtrimstr(".")')/"
+FUNNEL_URL="https://$(tailscale status --json | jq -r '.Self.DNSName | rtrimstr(".")'):8443/"
 
 # 1. Clone to the convention path
 gh repo clone "$REPO" "${REPOS_DIR:?run from apps/software-factory so .env loads}/$REPO"
@@ -187,7 +189,7 @@ In the fallback's `.env`, list the Funnel URLs of its preferred factories, highe
 
 ```bash
 # Home machine's .env. The office machine sets no DEFER_TO, so it takes every delivery it gets.
-DEFER_TO=https://office.<tailnet>.ts.net/
+DEFER_TO=https://office.<tailnet>.ts.net:8443/
 ```
 
 On every delivery, the fallback asks each listed factory whether it is up, waiting up to 2 seconds each.
