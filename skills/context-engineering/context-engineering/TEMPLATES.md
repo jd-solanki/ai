@@ -170,7 +170,7 @@ when the domain is settled.]
 
 ## Where it lives
 
-`[path]`, `[path]`, `[path]`
+`[home package root, if any]`, `[path]`, `[path]`
 ```
 
 A fence is worth more than a rule. It is the thing that bites, and the code never

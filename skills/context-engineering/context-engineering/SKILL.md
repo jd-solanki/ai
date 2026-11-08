@@ -83,9 +83,15 @@ nothing.
 - Name the file and heading with the repository's glossary terms. A name must tell an
   agent what work loads it; generic containers such as `lifecycle`, `management` or
   `platform` earn their place only when the glossary gives them a project-specific meaning.
-- Preserve a module's boundary when it owns a cohesive product domain. A task that crosses
-  domains loads multiple files; crossing them is not a reason to merge them under an umbrella.
-- Two domains that always load together are one domain.
+- **A domain has at most one home package.** In a workspace repo, a domain's **home package**
+  is the workspace package whose code its tasks change, and its root is the first path under
+  **Where it lives**. A domain whose tasks are about the whole repo, such as deploys or
+  tooling, has none. One package may have several domains, and a package holding a fence or
+  a non-obvious reason has at least one. A task that crosses packages loads each one's file;
+  crossing them is not a reason to merge them under an umbrella.
+- Two domains that always load together are one domain, unless their home packages differ.
+  Then the consumer depends on the provider, or, when each needs the other, they share a
+  contract (see **A domain file**).
 - **A domain may depend on one other.** When every task in Y needs X's lines but X's tasks never
   need Y's, Y depends on X: Y's router row ends its `load-when` with `; with X.md`, and nothing
   else records it. One level only: a file another depends on depends on nothing. The dependent
@@ -104,7 +110,8 @@ For example, a Nuxt project may have `layer-auth` owning identity and access,
 `layer-payments` owning Orders and payment collection, and `layer-email` owning email
 delivery. Write `identity-and-access.md`, `payments.md` and `email-delivery.md`. A checkout
 task that emails a receipt loads all three. Do not hide their ownership in a
-`customer-lifecycle.md` umbrella.
+`customer-lifecycle.md` umbrella. A `layer-kiosk` built on `layer-search` gets `kiosk.md`,
+its row ending `; with search.md`, never one `search-and-kiosk.md`.
 
 ## Landscapes
 
@@ -162,10 +169,18 @@ siblings is a domain of its own; see **Domains**.
 - **Rules** — conventions no linter or type checker enforces.
 - **Reasons** — why this shape was chosen, when the code cannot show it.
 - **Fences** — the trap, where it bites (`file:symbol`), and why the fence stands.
-- **Where it lives** — paths. Everything you were about to explain goes here instead.
+- **Where it lives** — paths, the home package's root first. Everything you were about to
+  explain goes here instead.
 
 A fence with no reason teaches the next agent to guess. Ask the owner for the reason, or
 drop the fence.
+
+A fence belongs to the domain whose rule it states, wherever its anchor sits. Hide the
+`file:symbol` and read the fence: if it still states a complete rule in this domain's words,
+it stays, even with its anchor in another package. If not, it moves to the domain of the
+anchor's home package. A contract two packages share is one fence, written in the domain
+whose rule it is; its shared words go in `glossary.md`, and the other domain states its own
+side and names this one.
 
 `file:symbol` is the path plus the enclosing symbol — function, class, constant, a heading
 in prose, or the path alone. Never a line number: it rots on the next edit above it, then

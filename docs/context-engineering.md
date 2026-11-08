@@ -46,6 +46,38 @@ and the miss is silent.
 
 One subject, one file. There is nothing left to miss.
 
+## A domain has one home package
+
+In a workspace repo, a domain is still a subject, but the packages give the subjects edges.
+
+**Home package**:
+The workspace package whose code a domain's tasks change. A repo-wide domain has none.
+_Avoid_: owner, layer
+
+The rules are **Domains** and **A domain file** in `/context-engineering`. They came out of one
+Nuxt project whose context had none of them. One file covered a retrieval layer and the
+kiosk built on it, so loading either gave a reader half of the other. A transport layer's
+file held three fences anchored in another layer's code. The Assets file held a second
+layer's whole storage policy. And the largest layer had no file at all: its two real fences
+were code comments nobody would load. The audit passed all four, because nothing listed the
+packages it should have checked against.
+
+Why this shape:
+
+- **At most one home package, not exactly one domain per package.** A package with several
+  subjects needs several files; this repository's factory app has three. A package with nothing
+  past the admission tests earns no file. Deploys and tooling span every package and belong
+  to none.
+- **The root path, not a new field.** **Where it lives** already lists the paths. Putting the
+  home package's root first states it at no cost and cannot disagree with the paths beside it.
+- **A fence follows its rule, not its anchor.** An Asset replacement-order fence anchored in
+  the auth layer's avatar code is a rule every feature obeys, so it belongs where the asset
+  policy is written. Hiding the anchor and reading the sentence settles it without argument.
+- **Not "owner".** The owner is the human who decides; a package is a home.
+- **The audit checks only touched packages.** It reads a diff, and setup already listed every
+  package once. An uncovered package is a question for the owner, not a failure: it may
+  hold nothing worth a file.
+
 ## Three tiers, three prices
 
 | Tier                                        | Price                                     |
