@@ -68,7 +68,8 @@ Drift is the owner's call. Put both options to them:
   domain file in their words, with its `confidence:` word if that moved too.
 
 A diff that enters code no domain governs gets the same question: does it carry a
-decision the context is missing?
+decision the context is missing? So does a diff in a workspace package that is no domain's
+home package: name the package, since it may need a domain of its own. Neither blocks.
 
 **Done when** every touched domain carries a verdict, and every drift carries the
 `file:line` of the code and of the context line it breaks.
