@@ -208,8 +208,8 @@ dimension you add is a lens whenever a blocker could hide in it.
 - *Project-context conformance*: `Every fence in /project-context names a file:symbol. Open each one
   and confirm it lands on what the fence describes. An edit in this range that renames, moves or
   deletes a cited symbol is a candidate.`
-- *Deletion*: `Invoke /ponytail-review and /simplify, obey each triage gate. /simplify applies
-  fixes — OVERRIDE IT. You are report-only. Name what to cut and what replaces it.`
+- *Deletion*: `Invoke /ponytail-review and obey its triage gate. Name what to cut and what
+  replaces it.`
 - *Rendered surface*, with `"budget": 60`: `Load the page, drive it, report what you saw. Stacking
   context, focus order, accessible names and anything that streams are invisible to a source read.
   The run skill launches the app and Playwright CLI drives it. Start a fresh server; a server
@@ -360,7 +360,6 @@ save the round as step 5 says.
 - **A fix names fewer sites than its own problem does.** A reviewer writes "neither call site does
   X" with three sites present, then patches two. The `sites` field exists to make that impossible;
   do not write a task from a finding without one.
-- **`/simplify` writes.** Keep the deletion dimension's report-only override when you edit it.
 - **A two-ref diff hides the round.** `git diff <base> HEAD` skips every uncommitted fix, and an
   untracked file is missing whichever refs you pin. Check `git status` before you run the workflow.
 - **A merge mid-review invalidates it.** If the branch needs the base branch merged, do it BEFORE
