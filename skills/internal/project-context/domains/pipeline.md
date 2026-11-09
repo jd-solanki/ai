@@ -13,9 +13,9 @@ The sub-issues outside the done set whose blocking siblings are all inside it.
 A human step a spec lists for its pull request: it blocks merge or production, never an
 AFK issue.
 
-**Implementer**, **Reviewer**, **Fixer**, **Upgrader**, **Verifier**, **Simplifier**:
-The agents that `agent:implement`, `agent:review`, `agent:fix`, `agent:upgrade`,
-`agent:verify` and `agent:simplify` request.
+**Implementer**, **Reviewer**, **Fixer**, **Upgrader**, **Verifier**:
+The agents that `agent:implement`, `agent:review`, `agent:fix`, `agent:upgrade` and
+`agent:verify` request.
 
 **QA scenario**:
 One checkbox under a pull request body's `## QA steps`: a behaviour to try by hand, with
@@ -48,14 +48,12 @@ _Avoid_: result, review status
      Fixer runs alternate until a review comes back dry, which is the approval: `/review-pr`
      defines dry, and files what the review leaves for later as one follow-up. The Reviewer then rewrites the pull
      request body with `/create-pr`, keeping every `Closes` line. Static code hands it to the
-     Verifier when the body holds a QA scenario, and to the Simplifier when not.
+     Verifier when the body holds a QA scenario, and marks it ready for review when not.
   6. The Verifier runs `/verify-pr`: it tries every QA scenario, ticks the ones that pass unless
-     the run fails, and posts each failure as a review thread. A pass goes to the Simplifier. A
-     fail goes to the Fixer, then the Reviewer, then the Verifier again.
-  7. The Simplifier runs `/simplify` on the pull request's changes, refactors with no change of
-     behaviour, and says what it changed in a comment. Static code then marks it ready for review.
-  8. A human tries any QA scenario left unticked, merges, then does the Owner steps.
-  9. The merge hands the pull request's follow-up on: static code applies `agent:implement` to
+     the run fails, and posts each failure as a review thread. A pass marks the pull request
+     ready for review. A fail goes to the Fixer, then the Reviewer, then the Verifier again.
+  7. A human tries any QA scenario left unticked, merges, then does the Owner steps.
+  8. The merge hands the pull request's follow-up on: static code applies `agent:implement` to
      one holding only nitpicks, and hands one holding an Unproven finding back to whoever merged.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
@@ -130,18 +128,15 @@ _Avoid_: result, review status
   otherwise.
 - A review run's verdict is the one `/review-pr` writes into its summary comment, and a QA run's
   the one `/verify-pr` writes into its QA comment.
-- A pull request is marked ready only after a dry review of the head its Simplifier run started
-  from and, when its body holds QA scenarios, a passing QA run since; an upgrade with no commits
-  skips all three. Every fix goes back through review, a fix for QA included.
-- The Simplifier's commits change no behaviour, so they skip review and QA. A run that started on
-  an unreviewed head goes to the Reviewer.
+- A pull request is marked ready only after a dry review of its current head and, when its body
+  holds QA scenarios, a passing QA run since; an upgrade with no commits skips both. Every fix
+  goes back through review, a fix for QA included.
 - A dependency update stays a draft where static code would mark another pull request ready:
   marking it ready runs its CI, and that belongs to its merge.
 - A QA scenario ends `pass`, `fail` or `blocked`. A blocked one, which needs what the factory
   machine lacks, holds back nothing: it stays unticked for the human.
-- A tick means the scenario passed on the pull request's code before the Simplifier ran.
-  `/create-pr` writes every box unticked, so the Reviewer's rewrite clears them and the QA run
-  that follows sets them.
+- A tick means the scenario passed on the pull request's current code. `/create-pr` writes every
+  box unticked, so the Reviewer's rewrite clears them and the QA run that follows sets them.
 - `/verify-pr` caps QA runs as `/review-pr` caps reviews: a last run that still fails ends QA,
   and a human decides.
 
@@ -231,12 +226,6 @@ _Avoid_: result, review status
 - A changed decision or a wrong spec line goes to a human because the owner holds the
   one-way doors; by the pull request, the code already rests on the agent's call.
 - This file is the only definition of the pipeline, so served repos carry no copy.
-- `/simplify` runs last, not at each stage: a review's fixes and a QA fix would reshape what it
-  tidied. Its commits skip review because they change no behaviour, and a further review would
-  reopen a loop no cap counts: dry rounds never reach the review cap. jd-solanki/ai#7. The cost:
-  only its instructions and the repository's checks hold that promise.
-- A Simplifier run says what it changed in a comment, as an Upgrader's does, because a run with no
-  commits is a valid end and GitHub would show nothing else for it.
 - QA runs after a dry review, not before: a review's fixes would change the code a QA run had
   passed.
 - A QA failure is a review thread so the Fixer and the Reviewer's fix-verify work it as they

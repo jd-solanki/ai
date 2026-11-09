@@ -59,15 +59,6 @@ const TRIGGERS = [
     // The skill ticks the scenarios that passed in the pull request body.
     allow: ['Bash(gh pr edit:*)'],
   },
-  {
-    event: 'pull_request',
-    label: 'agent:simplify',
-    emoji: '🧹',
-    skill: 'simplify',
-    effort: 'medium',
-    instructions:
-      "The work is the code this pull request changes against its base branch. Check the pull request out detached: its branch may be checked out in another worktree. Review and QA are finished and nobody reads your commits before a human does, so refactor only: change no behaviour, leave out any cleanup you cannot show preserves it, and keep only what passes the repository's checks. Each change is its own commit, with a Conventional Commit subject and no Closes footer. Push your commits to the pull request's branch, then, as your last step, comment on this pull request with what you changed or why nothing needed to.",
-  },
 ]
 
 interface Subject {
@@ -96,7 +87,7 @@ export interface WorkItem {
   repo: string
   number: number
   sender: string
-  // The head before the run, so its end can tell whether it pushed, or started on a reviewed commit.
+  // The upgrade's head before the run, so its end can tell whether it pushed.
   head?: string
   dependencyUpdate?: boolean
   claimedAt: string
