@@ -26,7 +26,7 @@ Content from `~/.codex/AGENTS.md` plus following:
 ```markdown
 - Prefer subagent notification over sleep
 - Respond once, after all subagents finish
-- For `sudo` commands, run them in /herdr pane using `herdr pane *` commands so I can input password and you can see the logs
+- For `sudo` commands, run them in a Herdr app terminal through `/herdr-core` (`hc`) so I can input the password and you can read the logs
 
 ## Skill reference loading
 
