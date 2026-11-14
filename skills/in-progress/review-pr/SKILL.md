@@ -86,13 +86,15 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
 - **The summary's second line is the round's verdict**, read by the software factory to pick
   who acts next: `dry` when the round is dry, a first round included; `tasks` when it leaves
   tasks for an implementer; `ended` when what is left goes to a human, because the review has
-  ended or nothing is left but Unproven findings.
+  ended or nothing is left but Unproven findings. An Unproven finding from any round stays open
+  until a human's comment on the pull request settles it.
 - **The round is read off the pull request.** No summary comment means a first round. One means a
   later round, and the threads of the last review are its task list.
 - **A thread's state is the implementer's report.** Resolved claims `done`. Unresolved with a
   reply claims `blocked`. Unresolved and silent is open. A human's reply that declines the task
   makes it `declined`, in any thread state: the human's call closes it unfixed. A nitpick task the
-  implementer answers without fixing is `declined` too, so a nitpick never holds the review open.
+  implementer answers without fixing is `declined` too, so a skipped nitpick never holds the
+  review open.
 - **An Unproven finding ends in a decision.** A human settles each one at the pull request, from
   its last four lines in the summary:
 
@@ -144,9 +146,9 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 ```
 
 Emoji go on headings and severities only, one meaning each: 🔴 blocker, 🟠 major, 🟡 minor,
-⚪ nitpick. A reader scanning finds a section by its mark. A section with nothing in it is left out, `Tasks`
-excepted. The Tasks heading's state mark is the review's state: ☑️ while a task is open, ✅ once
-every task is fixed or declined, 🛑 once the review has ended.
+⚪ nitpick. A reader scanning finds a section by its mark. A section with nothing in it is left
+out, `Tasks` excepted. The Tasks heading's state mark is the review's state: ☑️ while a task is
+open, ✅ once every task is fixed or declined, 🛑 once the review has ended.
 
 ## Step 1 — Probe
 
@@ -324,8 +326,9 @@ Call the same script with `repo`, `scratch`, `spec` and:
 ```
 
 The result adds `tasks`, each `correct`, `broken` or `open`. The round is `dry` when every task
-is `correct`, every check exits 0, and nothing is confirmed or uncertain: `dry` closes the
-review. A nitpick never holds it. Anything else lands on a new task list.
+is `correct`, every check exits 0, nothing is confirmed or uncertain, and no earlier round's
+Unproven finding is still open: `dry` closes the review. A new nitpick never holds it; a broken
+nitpick fix is a defect the fix made, and does. Anything else lands on a new task list.
 
 On a pull request, a fix that came back broken gets a reply on its thread saying what is wrong,
 and the thread reopened. A new finding gets a new thread. Then rewrite the summary comment, and
@@ -341,8 +344,7 @@ save the round as step 5 says.
 - **An unproved minor is free to raise and costly to apply.** In the reference run the unproved
   minors produced one invented anchor, one refuted claim, two that were not actionable, one that
   predated the range — and the only harmful fix of the review. A minor is proved like a major
-  before it becomes a task. A nitpick task stays unproved because the implementer may decline it
-  and fix-verify reads its fix.
+  before it becomes a task.
 - **An implementer that improvises writes the bug nobody reads.** The fix is the last point the
   diff changes and the first point no reviewer is watching. Fix-verify exists for it.
 - **A rendered surface skips itself.** Left as a condition an agent evaluates under load, the
