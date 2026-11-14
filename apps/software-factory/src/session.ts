@@ -17,7 +17,7 @@ const TRIGGERS = [
     event: 'issues',
     label: 'agent:implement',
     emoji: '🏗️',
-    requiresOneOf: ['issue:spec', 'issue:follow-up'],
+    requiresOneOf: ['issue:spec'],
     skill: 'implement-spec',
     effort: 'medium',
   },
@@ -67,7 +67,6 @@ interface Subject {
   html_url: string
   labels: { name: string }[]
   head?: { sha: string }
-  merged?: boolean
 }
 
 export interface WebhookPayload {

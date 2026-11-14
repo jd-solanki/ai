@@ -94,9 +94,8 @@ gh repo clone "$REPO" "${REPOS_DIR:?run from apps/software-factory so .env loads
 
 # 3. Labels
 gh label create issue:spec -R "$REPO" --force -d "Spec an agent implements unattended"
-gh label create issue:follow-up -R "$REPO" --force -d "What a PR review left for later, for an agent to implement"
-gh label create issue:AFK -R "$REPO" --force -d "Sub-issue an agent does unattended, or follow-up of nitpicks only"
-gh label create issue:HITL -R "$REPO" --force -d "Sub-issue a human does, or follow-up holding an Unproven finding"
+gh label create issue:AFK -R "$REPO" --force -d "Sub-issue an agent does unattended"
+gh label create issue:HITL -R "$REPO" --force -d "Sub-issue a human does"
 gh label create issue:HITL-done -R "$REPO" --force -d "The human finished this HITL issue"
 gh label create agent:implement -R "$REPO" --force -d "Factory: implement this spec and open a draft PR"
 gh label create agent:implementing -R "$REPO" --force -d "Factory: an Implementer run holds this spec"
@@ -205,7 +204,7 @@ Apply the trigger label again to retry.
 
 Apply a trigger label on GitHub:
 
-- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files, or `issue:follow-up`, which is what `/review-pr` files. The session builds the spec's sub-issues, in parallel where none blocks another, or the spec itself when it has none, and opens a draft PR.
+- `agent:implement` on an issue that carries `issue:spec`, which is what `/create-spec` files. The session builds the spec's sub-issues, in parallel where none blocks another, or the spec itself when it has none, and opens a draft PR.
 - `agent:review` on a pull request. The review posts each finding as a thread and keeps one summary comment with a score.
 - `agent:fix` on a pull request. The session fixes the review's threads.
 - `agent:upgrade` on a Renovate PR, which must carry `⬆️ Renovate`: set it in Renovate's `labels` option. The session reads the release notes in its body, and brings the code in line with the new versions. The PR comes back still a draft, because marking it ready runs its CI: mark it ready when you merge it.
@@ -231,16 +230,11 @@ flowchart LR
   V -->|"ended"| H
   I -->|"no draft PR"| H
   D --> H
-  D -->|"you merge"| M["merged"]
-  M -->|"follow-up of nitpicks"| I
-  M -->|"follow-up with an Unproven finding"| H
 ```
 
 The review's verdict is a marker in its summary comment, written by `/review-pr`, and QA's is one in its QA comment, written by `/verify-pr`, so each served repo needs the skills that write them.
 A run that hands its work item to no agent waits on you: a PR marked ready, a Renovate PR left a draft, or a run whose next step GitHub doesn't show, such as a review with no verdict of its own or a fix that left a thread unanswered. The work item gets `agent:handed-back` and is assigned to whoever applied the label, and the factory's one comment on it says what is left.
 Search `is:open label:agent:handed-back assignee:@me` on GitHub, or save it as a GitHub Mobile shortcut, for everything waiting on you.
-
-Merging a reviewed PR hands on the follow-up its review filed. A follow-up of nitpicks gets `agent:implement`. One holding an Unproven finding is assigned to whoever merged: each finding ends in a recommendation, `build` or `drop`, and the run follows it unless you edit it before you apply `agent:implement`. Close a follow-up before you merge to decline it.
 
 When a run starts, the server swaps the trigger label, and any `agent:handed-back`, for its `…ing` label.
 The run ends when its session stops with no background work left and starts no other turn within five seconds: the server closes the run's herdr tab, takes the `…ing` label off and hands the work item on.
