@@ -46,15 +46,13 @@ _Avoid_: result, review status
      with `/create-pr`.
   5. The Implementer exits, and static code hands the draft to the Reviewer. Review runs and
      Fixer runs alternate until a review comes back dry, which is the approval: `/review-pr`
-     defines dry, and files what the review leaves for later as one follow-up. The Reviewer then rewrites the pull
-     request body with `/create-pr`, keeping every `Closes` line. Static code hands it to the
-     Verifier when the body holds a QA scenario, and marks it ready for review when not.
+     defines dry. The Reviewer then rewrites the pull request body with `/create-pr`, keeping
+     every `Closes` line. Static code hands it to the Verifier when the body holds a QA
+     scenario, and marks it ready for review when not.
   6. The Verifier runs `/verify-pr`: it tries every QA scenario, ticks the ones that pass unless
      the run fails, and posts each failure as a review thread. A pass marks the pull request
      ready for review. A fail goes to the Fixer, then the Reviewer, then the Verifier again.
   7. A human tries any QA scenario left unticked, merges, then does the Owner steps.
-  8. The merge hands the pull request's follow-up on: static code applies `agent:implement` to
-     one holding only nitpicks, and hands one holding an Unproven finding back to whoever merged.
 - A dependency update enters the pipeline at its pull request: a teammate applies
   `agent:upgrade`, which acts only on a pull request carrying `⬆️ Renovate`. The Upgrader
   runs `/implement` with instructions appended: the release notes are the spec, and the code
@@ -79,12 +77,9 @@ _Avoid_: result, review status
 - A sub-issue waits on the siblings GitHub lists as blocking it. The frontier's AFK
   issues run at once, each in its own worktree, and each lands on the spec branch as it
   finishes.
-- Every spec carries `issue:spec`, a follow-up `issue:follow-up` instead, and
-  `agent:implement` acts only on an issue that carries one of them. Every sub-issue lives
-  in the spec's repository and carries exactly one of `issue:AFK` or `issue:HITL`.
-- A follow-up carries `issue:HITL` when it holds an Unproven finding and `issue:AFK` when not.
-  The label is the owner's to read, and only that: it puts the follow-up in no done set, and
-  its follow-up marker, not the label, decides where the merge hands it.
+- Every spec carries `issue:spec`, and `agent:implement` acts only on an issue that carries
+  it. Every sub-issue lives in the spec's repository and carries exactly one of `issue:AFK` or
+  `issue:HITL`.
 - The done set: an AFK issue is done when a commit on the spec branch, and not on the
   default branch, has a message ending in `Closes <owner>/<repo>#<n>`. A HITL issue is done when it
   carries `issue:HITL-done`. Open or closed state never counts.
@@ -98,14 +93,12 @@ _Avoid_: result, review status
   decision recorded in project context, or that finds a line of its spec wrong files a
   HITL issue naming it, blocking the sub-issues that wait on the answer, and stops as
   above.
-- The Implementer delivers a follow-up as a spec with no sub-issues. `/implement-spec`
-  defines how it checks the follow-up's items first.
-- A review of a pull request that closes a follow-up files no follow-up.
-- `/review-pr` names the follow-up it filed in its summary comment's follow-up marker, with
-  whether it holds an Unproven finding.
-- Each Unproven finding in a follow-up ends in a recommendation, `build` or `drop`, and the
-  Implementer follows it. A human changes one by editing it before applying `agent:implement`.
-- A closed follow-up is not handed on: closing it before the merge declines it.
+- What a review leaves stays on its pull request: no review files an issue, and a merge starts
+  nothing.
+- A nitpick rides along: it is fixed only in a Fixer run a defect already calls for, and never
+  starts a round of its own. `/review-pr` defines which round makes it a task.
+- A human settles each Unproven finding at its pull request, from the recommendation it ends
+  in, `build` or `drop`: a review that leaves one ends rather than comes back dry.
 - A sub-issue title is a Conventional Commit subject: it becomes the commit subject.
 - A review fix is its own commit, with a Conventional Commit subject naming the fix and
   no `Closes` footer: only an AFK issue's commit marks it done.
@@ -207,19 +200,12 @@ _Avoid_: result, review status
   nothing else tells the owner it came back.
 - No desktop notification: it reaches only the machine that raises it, and the factory may
   run where nobody sits.
-- A follow-up's items are checked, not trusted: an agent wrote them, some unproven, and the
-  code may have moved since.
-- A follow-up's pull request files no follow-up of its own, or each would breed the next, as
-  jd-solanki/ai#26 did. What it leaves stays in its summary, for the human who merges.
-- A follow-up starts at the merge, not when it is filed: its items are about the pull request's
-  code, which reaches the default branch the spec branch is cut from only then. Every merge is a
-  human's, so it authorizes the run as a trigger label would. Before this, the owner applied
-  `agent:implement` to every follow-up by hand, minutes after its pull request merged.
-- A follow-up's label shows on the issue whether it needs the owner: the marker sits on the pull
-  request, and the owner applied `agent:implement` to a follow-up holding an Unproven finding
-  without seeing it.
-- Nitpicks run unread: the owner holds no pull request for polish, and the follow-up's own pull
-  request still goes through review and a human merge.
+- Nitpicks ride along because the `issue:follow-up` a review once filed spent a run of every
+  stage, and a human merge, on 17 to 47 lines of polish: jd-solanki/ai#29, #34, #38, #42 and
+  #47. Each merge also started a run its merger never read. Polish is not worth a round's wait, so a pull request with only
+  nitpicks left goes on with them listed in its summary.
+- An Unproven finding stays on its pull request because the review already hands it to the owner
+  there, before the merge: that issue filed it a second time, after.
 - An Unproven finding waits on a human: its investigator could not settle it with the tools the
   Implementer has, so its answer is usually something a person knows or can try. Its
   recommendation turns the call into one word.
@@ -256,5 +242,5 @@ _Avoid_: result, review status
 ## Where it lives
 
 `apps/software-factory/src/session.ts` (`TRIGGERS`: the skill each trigger label starts),
-`apps/software-factory/src/hand-off.ts` (`NEXT_STEPS`: where each run hands its work item; `handOffFollowUp`: where a merge hands its follow-up), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
+`apps/software-factory/src/hand-off.ts` (`NEXT_STEPS`: where each run hands its work item), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
 `create-pr`, `verify-pr`), `.agents/skills/` (`grill-with-docs`, `implement`), `apps/software-factory/README.md` (Add a project: the labels a served repo needs).
