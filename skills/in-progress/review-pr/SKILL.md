@@ -48,11 +48,12 @@ the opt-in that tool asks for, and the script decides how many agents run.
    the file it names: confirmed, uncertain and deferred alike. A miss drops the finding. Say in
    your report which findings died here: a paraphrased quote and an invented one look identical
    from where you sit.
-5. **Hold the severity gate: a defect reaches the task list, a nitpick reaches the report.**
-   Blocker, major and minor are defects. An investigator proves each, and a confirmed minor is a
-   task beside the majors, fixed in the same push. A nitpick is polish: nothing breaks if it
-   stays. Batch nitpicks under `Nitpicks`, unverified, and let the human raise one by id. A raised
-   nitpick is proved in the next round before it becomes a task.
+5. **Hold the severity gate: a defect earns a round, a nitpick rides along.** Blocker, major and
+   minor are defects. An investigator proves each, and a confirmed minor is a task beside the
+   majors, fixed in the same push. A nitpick is polish: nothing breaks if it stays. In a round
+   that hands a defect task to an implementer, each nitpick is a task too, unproved: fix-verify
+   reads its fix. In any other round, batch nitpicks under `Nitpicks` and let the human raise one
+   by id. A raised nitpick is proved in the next round before it becomes a task.
 6. **An uncertain finding is not a task.** Carry it under `Unproven` with what its investigator
    could not show — never silently. The human decides.
 7. **Name what went unchecked, once.** Each `accepted_risk` marked `serious`, each
@@ -90,18 +91,10 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
   later round, and the threads of the last review are its task list.
 - **A thread's state is the implementer's report.** Resolved claims `done`. Unresolved with a
   reply claims `blocked`. Unresolved and silent is open. A human's reply that declines the task
-  makes it `declined`, in any thread state: the human's call closes it unfixed.
-- **The closing round files what is left.** A round that closes the review, dry or ended, files
-  every listed nitpick and every Unproven finding as one issue on the pull request's repository,
-  labelled `issue:follow-up` and titled with a Conventional Commit subject. It also labels the issue
-  `issue:HITL` when it holds an Unproven finding and `issue:AFK` when not. It links the issue from
-  the summary and names it in the summary's third line, the follow-up marker. A later round edits
-  that issue rather than filing a second, swapping `issue:AFK` and `issue:HITL` when its Unproven
-  findings come or go. A pull request whose `Closes` lines name an `issue:follow-up` issue files
-  nothing.
-- **An Unproven finding in the follow-up ends in a decision.** The software factory starts an
-  implementer on a follow-up once its pull request merges, unread, unless it holds an Unproven
-  finding. Then whoever merged decides each one from its last four lines:
+  makes it `declined`, in any thread state: the human's call closes it unfixed. A nitpick task the
+  implementer answers without fixing is `declined` too, so a nitpick never holds the review open.
+- **An Unproven finding ends in a decision.** A human settles each one at the pull request, from
+  its last four lines in the summary:
 
   ```markdown
   **If real:** <what breaks, and for whom>
@@ -111,8 +104,7 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
   ```
 
   Recommend `build` when the fix is right whether or not the finding is real, and `drop`
-  otherwise, naming what would make it worth building. The implementer follows each
-  recommendation as the issue reads when it starts.
+  otherwise, naming what would make it worth building.
 - **The third round is the last.** A third round that leaves tasks ends the review: the tasks go
   to a human, not to an implementer, and the summary's Action reads `Review ended: a human
   decides`. Every later round ends the same way. Rounds that do not converge spend budget with
@@ -123,14 +115,13 @@ Write every thread, reply and summary comment with `/writing-for-humans`: a pers
 Every round rewrites it whole from this template and writes nothing beside the template's lines.
 Each item appears once across all rounds: earlier rounds' items keep their place, a later round
 adds only what is new, and an item that changes state moves rather than repeats. A fixed task
-stays under Tasks as `fixed`; a raised nitpick leaves Nitpicks when it becomes a task. A heading is
+stays under Tasks as `fixed`; a nitpick leaves Nitpicks when it becomes a task. A heading is
 its mark, its name and its count. `Reviews` counts the rounds, this one included. `Took` is this
 round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 
 ```markdown
 <!-- review-pr:summary -->
 <!-- review-pr:verdict <dry, tasks or ended> -->
-<!-- review-pr:follow-up <the follow-up's number> <unproven when it holds an Unproven finding, else nitpicks> -->
 ## 🔍 Review: <N>/10 — <the score table's Action>
 
 <the score's one line of reason>
@@ -141,7 +132,7 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 
 <details><summary>❓ Unproven (<count>)</summary>
 
-- <one line per finding, as above, with what its investigator could not show>
+- <one line per finding, as above, then its four decision lines>
 
 </details>
 <details><summary>⏭️ Nitpicks (<count>)</summary> … </details>
@@ -149,11 +140,11 @@ round's wall-clock in minutes, from `started`, as step 5 names it, to now.
 <details><summary>⚓ Died at the Anchor grep (<count>)</summary> … </details>
 <details><summary>🙈 Unchecked (<count>)</summary> … </details>
 
-<sub>Reviews (<n>) · Last reviewed commit: <short sha> · Took <minutes>m · Left for later: <the filed issue, once filed, or none: this PR does a follow-up></sub>
+<sub>Reviews (<n>) · Last reviewed commit: <short sha> · Took <minutes>m</sub>
 ```
 
-Emoji go on headings and severities only, one meaning each: 🔴 blocker, 🟠 major, 🟡 minor. A
-reader scanning finds a section by its mark. A section with nothing in it is left out, `Tasks`
+Emoji go on headings and severities only, one meaning each: 🔴 blocker, 🟠 major, 🟡 minor,
+⚪ nitpick. A reader scanning finds a section by its mark. A section with nothing in it is left out, `Tasks`
 excepted. The Tasks heading's state mark is the review's state: ☑️ while a task is open, ✅ once
 every task is fixed or declined, 🛑 once the review has ended.
 
@@ -243,7 +234,7 @@ The workflow runs in the background and notifies you when it is done. Its result
 | `confirmed` | defects an investigator proved | write a task for each |
 | `uncertain` | defects neither proved nor killed | report under `Unproven` |
 | `killed` | candidates refuted, each with its reason | list by id, so a wrong kill can be caught |
-| `deferred` | nitpicks; `verified` only where an investigator happened to confirm one | report under `Nitpicks` |
+| `deferred` | nitpicks; `verified` only where an investigator happened to confirm one | task or `Nitpicks`, as rule 5 says |
 | `judged` | a score, merges and conflicts per confirmed finding; present for two or more | apply below |
 | `accepted_risk`, `uncovered_files`, `not_reviewed` | surfaces, range files and agents nothing covered | name each in the report |
 
@@ -254,9 +245,10 @@ names it, and keep the worst severity of the merged set. The workflow folds noth
 candidates on one line can be two defects. Where two nitpicks describe one thing, list it once under
 both ids.
 
-Turn the confirmed findings into a numbered task list: one task per finding, each carrying the
-file, the exact edit, and how to tell it worked. A task you cannot write that concretely is a
-finding that is not ready — report it under `Unproven`. The list is the deliverable of your
+Turn the confirmed findings, and the nitpicks rule 5 lets ride along, into a numbered task list:
+one task per finding, each carrying the file, the exact edit, and how to tell it worked. A task you
+cannot write that concretely is a finding that is not ready — report it under `Unproven`, or a
+nitpick under `Nitpicks`. The list is the deliverable of your
 judging. The implementer works it rather than rebuilding it, and that is what lets them work at
 medium effort: a soft finding handed to a reasoning implementer becomes a fix nobody specified.
 
@@ -333,8 +325,7 @@ Call the same script with `repo`, `scratch`, `spec` and:
 
 The result adds `tasks`, each `correct`, `broken` or `open`. The round is `dry` when every task
 is `correct`, every check exits 0, and nothing is confirmed or uncertain: `dry` closes the
-review. A nitpick never holds it: the closing round files it. Anything else lands on a new task
-list.
+review. A nitpick never holds it. Anything else lands on a new task list.
 
 On a pull request, a fix that came back broken gets a reply on its thread saying what is wrong,
 and the thread reopened. A new finding gets a new thread. Then rewrite the summary comment, and
@@ -350,7 +341,8 @@ save the round as step 5 says.
 - **An unproved minor is free to raise and costly to apply.** In the reference run the unproved
   minors produced one invented anchor, one refuted claim, two that were not actionable, one that
   predated the range — and the only harmful fix of the review. A minor is proved like a major
-  before it becomes a task; a nitpick waits for the human.
+  before it becomes a task. A nitpick task stays unproved because the implementer may decline it
+  and fix-verify reads its fix.
 - **An implementer that improvises writes the bug nobody reads.** The fix is the last point the
   diff changes and the first point no reviewer is watching. Fix-verify exists for it.
 - **A rendered surface skips itself.** Left as a condition an agent evaluates under load, the
