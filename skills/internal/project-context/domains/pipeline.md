@@ -93,10 +93,9 @@ _Avoid_: result, review status
   decision recorded in project context, or that finds a line of its spec wrong files a
   HITL issue naming it, blocking the sub-issues that wait on the answer, and stops as
   above.
-- What a review leaves stays on its pull request: no review files an issue, and a merge starts
-  nothing.
-- A nitpick rides along: it is fixed only in a Fixer run a defect already calls for, and never
-  starts a round of its own. `/review-pr` defines which round makes it a task.
+- What a review leaves stays on its pull request.
+- A nitpick rides along: it is fixed only in a Fixer run a defect already calls for, or once a
+  human raises it. `/review-pr` defines which round makes it a task.
 - A human settles each Unproven finding at its pull request, from the recommendation it ends
   in, `build` or `drop`: a review that leaves one ends rather than comes back dry.
 - A sub-issue title is a Conventional Commit subject: it becomes the commit subject.
