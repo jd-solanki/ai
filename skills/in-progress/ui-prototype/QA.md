@@ -60,8 +60,7 @@ options, and every recaptured screenshot is clean.
   as it arrives.
 - **Stretch**: text lines past about 80 characters, a column stretched thin, or content lost
   in empty space, from 1920 up.
-- **Cramp**: touch targets under 44 px on touch devices, controls touching, an action only
-  reachable by hover on a touch device.
+- **Cramp**: controls touching, or an action only reachable by hover on a touch device.
 - **Rhythm**: misaligned edges, uneven gaps between like items, a heading closer to the
   section above than to its own content.
 - **State**: an empty or error state without its next step; worst-case names, RTL and emoji
