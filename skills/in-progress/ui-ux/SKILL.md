@@ -93,6 +93,9 @@ breaks nothing.
   edited title, the new row), add no success message. Always report failure.
 - **One job per screen.** One primary action per view or section; the rest quieter.
   Frequent things up front, the rest behind disclosure, at most two levels deep.
+- **Grey first.** Build in the theme's neutrals, and add colour only where it means
+  something: a status that needs attention, a destructive action, the primary action. A
+  colour on every state is noise, and colour is never the only signal.
 - **Mindless choices.** Write labels so the user's first guess is right. Ask up front
   only what the task needs now, and defer the rest. Give guidance that is brief, timely
   and next to where it is needed.

@@ -59,8 +59,9 @@ When a service fails but the user's data exists:
 
 Use it in step 4, and whenever a component renders data.
 
-- Put a dev-only "Demo data / Worst case" toggle on the screen, and feed the worst case
-  through the same fixture or prop as the demo data. Change the data, not the component.
+- Put a dev-only data menu on the screen that holds it in each of five data states:
+  typical, worst, empty, loading and error. Feed each through the same fixture or prop as
+  the real data. Change the data, not the component.
 - Take each value from a real naming pattern or the validation schema's limit. A field
   with no limit is a finding.
 - Cover:
