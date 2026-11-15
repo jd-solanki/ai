@@ -51,5 +51,5 @@ focus trapping. Use them as they are, and own the behaviour around them.
 
 - Icon-only buttons get an `aria-label`; a visible label is better still.
 - Every hover-only action also has a keyboard and a tap path.
-- Hit targets are at least 24 px, and 44 px on touch. Nuxt UI's default sizes meet this;
+- Hit targets are at least 24 px. Nuxt UI's default sizes meet this;
   keep custom targets as large.
