@@ -1,6 +1,6 @@
 # Motion
 
-Nuxt UI animates its own components. These rules govern motion you add.
+The component library animates its own components. These rules govern motion you add.
 
 - Add motion only when it explains a change: where something came from or went, what
   changed state, or what the user's action did. Motion with no such job stays out.
@@ -12,5 +12,5 @@ Nuxt UI animates its own components. These rules govern motion you add.
   plays, and an element animating out takes no input.
 - Keep motion subtle enough that it never pulls attention from the task.
 - Under `prefers-reduced-motion`, replace movement with fades and keep colour and opacity
-  changes that aid understanding. Loading spinners keep turning, gently. Nuxt UI's
-  overlays already do this; apply it to your own motion.
+  changes that aid understanding. Loading spinners keep turning, gently. The
+  library file says whether its overlays already do this; apply it to your own motion.

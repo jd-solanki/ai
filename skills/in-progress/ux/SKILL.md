@@ -1,6 +1,6 @@
 ---
-name: ui-ux
-description: Structure and behaviour of app screens built on Nuxt UI — hierarchy, states, feedback, forms, dialogs, navigation and interface copy. Use when building or changing a page, form, dialog, table or list, adding an async action or loading state, writing labels, errors or empty states, or reviewing a screen's UX.
+name: ux
+description: Structure and behaviour of app screens, whatever the component library — task, hierarchy, states, feedback, forms, dialogs, navigation and interface copy. Use when building or changing a page, form, dialog, table or list, adding an async action or loading state, writing labels, errors or empty states, or auditing a screen's UX.
 metadata:
   credits:
     - skill: ui-craft
@@ -18,15 +18,14 @@ metadata:
       url: "https://github.com/emilkowalski/skills"
 ---
 
-# UI/UX
+# UX
 
-Nuxt UI and the app's theme own the look: type, colour, spacing, radius, shadow, dark
-mode and component styling. For props and for choosing between similar components, use
-the `nuxt-ui` skill or the Nuxt UI MCP server. This skill owns the rest: what each screen
-shows, in what order, and how it behaves while the user acts.
+This skill owns what each screen shows, in what order, and how it behaves while the user
+acts. It names no component library: its rules hold in any app. How the screen looks, and
+which component the project's library gives for each part, belong to `/ui`.
 
-Where `nuxt-ui` says to use `useToast()` for action feedback, this skill wins: feedback
-for the user's own action goes **in place**.
+Building a screen invokes both `/ux` and `/ui`. Use `/ux` alone to plan a screen or audit
+its UX.
 
 ## Steps
 
@@ -57,18 +56,17 @@ action.
 ### 3. Build
 
 Apply the principles below, and load each reference whose condition the work meets
-(see [References](#references)). Reach for the app's own component first, then Nuxt
-UI's; hand-roll only when neither exists, and then own its keyboard and focus
-behaviour.
+(see [References](#references)). Reach for the app's own component first, then the
+component library's; hand-roll only when neither exists, and then own its keyboard and
+focus behaviour.
 
 Done when every principle that applies holds, and every rule in each loaded reference
 is applied.
 
 ### 4. Check
 
-Render the screen in the browser at real widths, with the worst-case data from
-`references/states.md`. Then walk the main task one action at a time and ask, at each
-action:
+Open the screen in the browser, switch its data menu through every state of
+`references/states.md`, and walk the main task one action at a time. At each action, ask:
 
 1. Will users try to achieve the right effect?
 2. Will users notice that the correct action is available?
@@ -77,8 +75,7 @@ action:
 
 Fix every no, then walk again.
 
-Done when every action of the main task gets four yeses and the worst-case render
-breaks nothing.
+Done when every action of the main task gets four yeses in every data state.
 
 ## Principles
 
@@ -93,9 +90,9 @@ breaks nothing.
   edited title, the new row), add no success message. Always report failure.
 - **One job per screen.** One primary action per view or section; the rest quieter.
   Frequent things up front, the rest behind disclosure, at most two levels deep.
-- **Grey first.** Build in the theme's neutrals, and add colour only where it means
-  something: a status that needs attention, a destructive action, the primary action. A
-  colour on every state is noise, and colour is never the only signal.
+- **Few things stand out.** Name what must catch the eye: the primary action, a status
+  that needs attention, a destructive action. Everything else stays quiet. How it stands
+  out is `/ui`'s call, and never by colour alone.
 - **Mindless choices.** Write labels so the user's first guess is right. Ask up front
   only what the task needs now, and defer the rest. Give guidance that is brief, timely
   and next to where it is needed.
@@ -128,9 +125,8 @@ breaks nothing.
 | `references/states.md` | step 2 and step 4 of every build |
 | `references/feedback-and-async.md` | an action waits on the network, or the screen shows loading, success or failure |
 | `references/forms-and-saving.md` | building or changing a form, a settings page, an inline edit, or anything that saves |
-| `references/destructive-and-dialogs.md` | adding a delete, remove or irreversible action, or any modal or slideover |
+| `references/destructive-and-dialogs.md` | adding a delete, remove or irreversible action, or any modal or side panel |
 | `references/layout-and-navigation.md` | building a new page, navigation, filters, bulk actions, shortcuts or onboarding |
 | `references/copy.md` | writing or changing any label, button, message or empty state |
 | `references/accessibility-behaviour.md` | moving focus, announcing status, disabling or hiding a control, or building a custom interactive element |
-| `references/motion.md` | adding or changing an animation or transition |
 | `references/review.md` | reviewing an existing screen or someone else's change for UX |

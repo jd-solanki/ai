@@ -11,8 +11,8 @@ For reviewing an existing screen, or someone else's change, for UX.
    - a screen-reader user, who hears the page in order;
    - a stress tester, who enters worst-case data, double-clicks, and loses the
      network.
-2. **Render the states.** Load the worst-case data and force each state from
-   `states.md`: loading, each empty kind, error, partial, offline.
+2. **Render the states.** Switch the data menu through each option, and force each
+   state from `states.md`: loading, each empty kind, error, partial, offline.
 3. **Collect candidates.** Hold each against the principles in `SKILL.md` and the
    references the screen touches.
 4. **Prove each candidate.** A candidate becomes a finding only with all three:
@@ -43,4 +43,3 @@ and the report is ranked and cut.
 - A modal for a repeated task, or a modal opening another modal.
 - A value the user must remember from an earlier step.
 - Filters, tabs or pagination lost on refresh or Back.
-- Text that truncates a number, amount or date.

@@ -4,17 +4,10 @@
 
 - Build the feature first and the shell (sidebar, header, nav) last. The shell's needs
   only show once the features exist.
-- Name the focal element before building, and let it dominate: squint at the screen
-  and one thing should stand out.
+- Name the focal element before building; `/ui` makes it dominate.
 - One primary action per view or section, a few secondary ones, the rare ones tertiary
-  or in a menu. When something must stand out, quiet its competitors rather than
-  making it louder. A button that does the same thing looks the same everywhere.
-- Group with spacing first. Add a `UCard`, border or divider only where spacing does
-  not read as a group; plain content with spacing is often better.
-- Things that look alike behave alike; things that behave differently look different.
+  or in a menu.
 - Keep each action next to the thing it acts on.
-- Structure carries meaning: numbering, dividers, labels and outlines say something
-  about the content.
 - Put key content top and left, and the most important item first or last in a list,
   never buried in the middle.
 - Front-load headings, labels and list items: the first words carry the meaning.
@@ -28,29 +21,28 @@
 
 ## Progressive disclosure
 
-- Show the frequent options; put the advanced ones behind a `UCollapsible`,
-  `UAccordion`, "More options" or a `UDropdownMenu`. Stop at two levels.
+- Show the frequent options; put the advanced ones behind a collapsible, an accordion,
+  "More options" or a dropdown menu. Stop at two levels.
 - Offer fewer choices, and highlight the recommended one when several remain.
 - After a first choice, show only the follow-up questions that choice needs.
 - Keep the user's place when something expands, and pair the expand icon with text.
-- Use `UTabs` only when users will not compare content across tabs. Put the most used
+- Use tabs only when users will not compare content across tabs. Put the most used
   tab first and selected. Tabs that need their own URL are navigation.
 
 ## Navigation
 
 - Navigation is part of the product: it shows where the user is, where they can go and
   what matters. Every page sits in the app's navigation.
-- Keep primary navigation visible on desktop (a `UNavigationMenu` or dashboard sidebar);
+- Keep primary navigation visible on desktop (a navigation menu or a sidebar);
   hidden navigation makes tasks slower. On mobile, prefer visible or combined
   navigation.
-- Show where the user is: active route styles (built in), a `UBreadcrumb`, and a step
-  count in flows.
+- Show where the user is: active route styles, a breadcrumb, and a step count in
+  flows.
 - Keep filters, tabs, pagination, sort and open panels in the URL, so refresh, share
   and Back work.
 - Back from a detail view returns to the list with its filters, sort, page and scroll
   position intact.
-- Links navigate and buttons act. A `UButton` with `to` renders a link. Back always
-  works.
+- Links navigate and buttons act. Back always works.
 - Every screen offers a way to the rest of the app; people change goals midway.
 - Name categories so each makes sense alone and next to its siblings.
 - When a destination is unavailable but the user could unlock it, show it and say why.
@@ -74,10 +66,10 @@
 
 ## Power users
 
-- Give frequent actions a keyboard shortcut with `defineShortcuts`, and show it next to
-  the command with `UKbd`. Keep standard shortcuts (Cmd+S, Cmd+K, Escape) meaning what
+- Give frequent actions a keyboard shortcut, and show it next to the command as a key
+  hint. Keep standard shortcuts (Cmd+S, Cmd+K, Escape) meaning what
   users expect.
-- Offer a `UCommandPalette` once the app has many destinations or actions.
+- Offer a command palette once the app has many destinations or actions.
 - Reduce a repeated operation to one action per repetition.
 
 ## Feature onboarding
