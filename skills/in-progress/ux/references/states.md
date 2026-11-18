@@ -36,8 +36,8 @@ Tell failures apart; each gets its own words and next step:
 A filtered empty state that says "create your first record" to a user with 4,000
 records reads as broken. Match the kind to the cause.
 
-Build empty states with `UEmpty` (`title`, `description`, `icon`, `actions`). `UTable`'s
-default empty text is "No data": replace it through its empty slot with the right kind.
+A table's or list's default empty text, such as "No data", is never the right kind:
+replace it.
 
 ## Degraded
 
@@ -55,13 +55,30 @@ When a service fails but the user's data exists:
 - Keep a page to about five outage messages; more makes it feel broken.
 - Say plainly that something is wrong.
 
+## Data menu
+
+Every screen that renders data gets a dev-only data menu, which holds the screen in one
+data state at a time. `/ux` walks the task through it in step 4; `/ui` captures every
+option on every device.
+
+| Option | Data |
+| --- | --- |
+| `live` | The screen's real data. The default. |
+| `typical` | A fixture with normal content. |
+| `worst` | A fixture with the worst-case data below. |
+| `empty` | A fixture for the screen's likeliest empty kind. |
+| `loading` | Held in loading, never resolving. |
+| `error` | A request that fails. |
+
+- Feed each option through the same fetch or prop as the real data: change the data,
+  not the component.
+- Keep the option in the URL, `?data=<option>`, so a reload or a shared link holds it.
+- Render the menu only in the dev build, and mark it `data-dev-tool`, so screenshots
+  leave it out.
+- The menu and its fixtures stay with the screen for good, for every later check.
+
 ## Worst-case data
 
-Use it in step 4, and whenever a component renders data.
-
-- Put a dev-only data menu on the screen that holds it in each of five data states:
-  typical, worst, empty, loading and error. Feed each through the same fixture or prop as
-  the real data. Change the data, not the component.
 - Take each value from a real naming pattern or the validation schema's limit. A field
   with no limit is a finding.
 - Cover:
@@ -73,12 +90,6 @@ Use it in step 4, and whenever a component renders data.
   - missing optional fields and broken avatars;
   - every status at once, and the current user in the list;
   - touch: every hover-only action needs a tap or keyboard path.
-- Choose per field:
-  - wrap names and titles the user needs to identify something;
-  - end-truncate secondary metadata, with a way to see the full value;
-  - middle-truncate file names, emails, paths and hashes, whose ends tell them apart;
-  - clamp card previews;
-  - show numbers, amounts and dates in full, always.
 - Relative times switch to an absolute date after about seven days.
-- When a break has more than one right fix, report it as a decision for the user
-  instead of picking one.
+
+How each value wraps or truncates is `/ui`'s.

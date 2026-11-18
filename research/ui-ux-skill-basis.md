@@ -1,9 +1,9 @@
-# UI and UX research for a Nuxt UI app skill
+# UI and UX research for the ux and ui skills
 
 A living research document. It is the single home for everything we know about UI
-structure and UX behaviour for apps built on Nuxt UI, and the source the `ui-ux` skill is
-written from. Add to it as research grows, as the owner adds input, and as Nuxt UI
-changes. Every list here is open: add a rule, a source or a topic when evidence earns
+structure and UX behaviour for apps built on a component library (Nuxt UI, shadcn/ui),
+and the source the `ux` and `ui` skills are written from. Add to it as research grows,
+as the owner adds input, and as a library changes. Every list here is open: add a rule, a source or a topic when evidence earns
 it. No list is meant to be complete.
 
 First researched 2026-11-15. Each claim is true as of the date its source was read.
@@ -34,13 +34,14 @@ point to [Sources](#sources).
 - [Summary](#summary)
 - [Resources reviewed](#resources-reviewed)
 - [The boundary with Nuxt UI](#the-boundary-with-nuxt-ui)
+- [The boundary with shadcn/ui](#the-boundary-with-shadcnui)
 - [Core principles](#core-principles)
 - [How people use interfaces](#how-people-use-interfaces)
 - [Rules by topic](#rules-by-topic)
 - [Notes per source](#notes-per-source)
 - [Conflicts and how the skill settles them](#conflicts-and-how-the-skill-settles-them)
 - [Rejected](#rejected)
-- [The skill built from this](#the-skill-built-from-this)
+- [The skills built from this](#the-skills-built-from-this)
 - [Not covered yet](#not-covered-yet)
 - [Sources](#sources)
 
@@ -119,28 +120,29 @@ taken (reason in [Rejected](#rejected) or [Notes per source](#notes-per-source))
 
 ### Agent skills
 
-| Key                     | Resource                                                                                                                                                                                | Access   | Verdict                         |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------- |
-| [Vercel]                | Vercel Web Interface Guidelines and `web-design-guidelines` skill (864K installs, S)                                                                                                    | Full     | Kept                            |
-| [ui-craft]              | educlopez/ui-craft (owner's list)                                                                                                                                                       | Full     | Kept, richest source            |
-| [impeccable]            | pbakaus/impeccable (409K installs, S)                                                                                                                                                   | Full     | Part                            |
-| [break-ui]              | Emil Kowalski `break-ui` (owner's list)                                                                                                                                                 | Full     | Kept                            |
-| [emil-design-eng]       | Emil Kowalski `emil-design-eng` (450K installs, S)                                                                                                                                      | Full     | Part                            |
-| —                       | Emil Kowalski `review-animations`, `ask-sonner`                                                                                                                                         | Full     | Rejected                        |
-| [frontend-design]       | Anthropic `frontend-design` (1.1M installs, S)                                                                                                                                          | Full     | Part                            |
-| [interface-design]      | Dammyjay93 `interface-design` (owner's list)                                                                                                                                            | Full     | Part                            |
-| [ux-discovery]          | JacobLinCool `ux-discovery-interviewer` (owner's list)                                                                                                                                  | Full     | Part                            |
-| [cognitive-walkthrough] | mastepanoski `cognitive-walkthrough`                                                                                                                                                    | Full     | Part                            |
-| [ibelick]               | ibelick/ui-skills: `improve-ui`, `baseline-ui`, `fixing-accessibility`                                                                                                                  | Full     | Part                            |
-| [NuxtUI-skill]          | Nuxt UI official `nuxt-ui` skill                                                                                                                                                        | Full     | Boundary; one line overridden   |
-| [ui-ux-pro-max]         | nextlevelbuilder `ui-ux-pro-max` (owner's list)                                                                                                                                         | Full     | Rejected, three lines harvested |
-| —                       | uxuiprinciples/agent-skills, 5 skills (owner's list)                                                                                                                                    | Full     | Rejected                        |
-| —                       | sergekostenchuk/ui-ux-agent-skill-system, 3 skills (owner's list)                                                                                                                       | Full     | Rejected                        |
-| —                       | leonxlnx `design-taste-frontend`, `high-end-visual-design`                                                                                                                              | Full     | Rejected                        |
-| —                       | addyosmani `accessibility`                                                                                                                                                              | Full     | Rejected                        |
-| —                       | Vercel `writing-guidelines`, `vercel-composition-patterns`                                                                                                                              | Full     | Rejected                        |
-| —                       | skills.sh "Design & UI" topic list (16 skills); all assessed above or visual-only (`canvas-design`, impeccable `bolder`/`quieter`, `extract-design-system`, `sleek-design-mobile-apps`) | Full     | Directory                       |
-| —                       | `design-mobile-apps`, `ui-taste`, `ios-design`, `uizze-ui`, `apple-design`, motion-graphics skills                                                                                      | Not read | Out of scope by name (S)        |
+| Key                     | Resource                                                                                                                                                                                | Access   | Verdict                          |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- |
+| [Vercel]                | Vercel Web Interface Guidelines and `web-design-guidelines` skill (864K installs, S)                                                                                                    | Full     | Kept                             |
+| [ui-craft]              | educlopez/ui-craft (owner's list)                                                                                                                                                       | Full     | Kept, richest source             |
+| [impeccable]            | pbakaus/impeccable (409K installs, S)                                                                                                                                                   | Full     | Part                             |
+| [break-ui]              | Emil Kowalski `break-ui` (owner's list)                                                                                                                                                 | Full     | Kept                             |
+| [emil-design-eng]       | Emil Kowalski `emil-design-eng` (450K installs, S)                                                                                                                                      | Full     | Part                             |
+| —                       | Emil Kowalski `review-animations`, `ask-sonner`                                                                                                                                         | Full     | Rejected                         |
+| [frontend-design]       | Anthropic `frontend-design` (1.1M installs, S)                                                                                                                                          | Full     | Part                             |
+| [interface-design]      | Dammyjay93 `interface-design` (owner's list)                                                                                                                                            | Full     | Part                             |
+| [ux-discovery]          | JacobLinCool `ux-discovery-interviewer` (owner's list)                                                                                                                                  | Full     | Part                             |
+| [cognitive-walkthrough] | mastepanoski `cognitive-walkthrough`                                                                                                                                                    | Full     | Part                             |
+| [ibelick]               | ibelick/ui-skills: `improve-ui`, `baseline-ui`, `fixing-accessibility`                                                                                                                  | Full     | Part                             |
+| [NuxtUI-skill]          | Nuxt UI official `nuxt-ui` skill                                                                                                                                                        | Full     | Boundary; one line overridden    |
+| [shadcn-skill]          | shadcn/ui official `shadcn` skill and `migrate-radix-to-base` skill                                                                                                                     | Full     | Boundary; toast lines overridden |
+| [ui-ux-pro-max]         | nextlevelbuilder `ui-ux-pro-max` (owner's list)                                                                                                                                         | Full     | Rejected, three lines harvested  |
+| —                       | uxuiprinciples/agent-skills, 5 skills (owner's list)                                                                                                                                    | Full     | Rejected                         |
+| —                       | sergekostenchuk/ui-ux-agent-skill-system, 3 skills (owner's list)                                                                                                                       | Full     | Rejected                         |
+| —                       | leonxlnx `design-taste-frontend`, `high-end-visual-design`                                                                                                                              | Full     | Rejected                         |
+| —                       | addyosmani `accessibility`                                                                                                                                                              | Full     | Rejected                         |
+| —                       | Vercel `writing-guidelines`, `vercel-composition-patterns`                                                                                                                              | Full     | Rejected                         |
+| —                       | skills.sh "Design & UI" topic list (16 skills); all assessed above or visual-only (`canvas-design`, impeccable `bolder`/`quieter`, `extract-design-system`, `sleek-design-mobile-apps`) | Full     | Directory                        |
+| —                       | `design-mobile-apps`, `ui-taste`, `ios-design`, `uizze-ui`, `apple-design`, motion-graphics skills                                                                                      | Not read | Out of scope by name (S)         |
 
 ### Design systems (component-library teams writing about behaviour)
 
@@ -196,11 +198,17 @@ UI/UX shelves (S).
 
 ### Standards
 
-| Key      | Resource                                             | Access | Verdict  |
-| -------- | ---------------------------------------------------- | ------ | -------- |
-| [WCAG-*] | WCAG 2.2: 2.2.1, 3.3.7, 4.1.3 Understanding docs     | Full   | Kept     |
-| [APG-*]  | WAI-ARIA APG: dialog pattern, keyboard interface     | Full   | Kept     |
-| [Reka]   | Reka UI Dialog and Toast docs (Nuxt UI's primitives) | Full   | Boundary |
+| Key          | Resource                                                          | Access                             | Verdict  |
+| ------------ | ----------------------------------------------------------------- | ---------------------------------- | -------- |
+| [WCAG-*]     | WCAG 2.2: 2.2.1, 3.3.7, 4.1.3 Understanding docs                  | Full                               | Kept     |
+| [APG-*]      | WAI-ARIA APG: dialog pattern, keyboard interface                  | Full                               | Kept     |
+| [Reka]       | Reka UI Dialog and Toast docs (Nuxt UI's primitives)              | Full                               | Boundary |
+| [shadcn-src] | shadcn/ui registry source (three bases) and docs                  | Full (the files listed in Sources) | Boundary |
+| [Radix-src]  | Radix UI Dialog and AlertDialog source (shadcn `radix` base)      | Full (two files)                   | Boundary |
+| [BaseUI-src] | Base UI Dialog, AlertDialog and Toast source (shadcn `base` base) | Full                               | Boundary |
+| [RAC-src]    | React Aria Components Button source (shadcn `aria` base)          | Full (one file)                    | Boundary |
+| [Sonner-src] | Sonner source and CSS (shadcn toast on `radix` and `aria`)        | Full                               | Boundary |
+| [tw-animate] | tw-animate-css stylesheet (shadcn overlay animations)             | Full                               | Boundary |
 
 ### Videos
 
@@ -279,6 +287,184 @@ in-place rule wins over that line. Its other lines agree with us and stand:
 Its component-selection tables (Modal, Slideover, Drawer or Popover; Select,
 SelectMenu or InputMenu; Toast, Alert or Banner) are where our skill should point, not
 repeat. (F)(I)
+
+## The boundary with shadcn/ui
+
+The status words above (**Handled**, **Part**, **Agent**) apply here with shadcn/ui in
+place of Nuxt UI.
+
+**Who owns what.** Garrett's planes split the same way as for Nuxt UI [Garrett] (F),
+with one change: the surface is the project's own copy of each component, not a
+package.
+
+- Surface (visual design): the project's copied component files, its style preset and
+  its theme variables own it.
+- Skeleton (interface, navigation and information design): shared. shadcn/ui owns the
+  components; the skill owns which ones, where, and in what order.
+- Structure, scope and strategy: the skill, as for Nuxt UI.
+
+**Leave out** anything about type, colour, spacing, radius, shadow, dark mode, icon
+sets, component styling and component API details. The official `shadcn` skill and
+`npx shadcn@latest docs <component>` own props and composition; point there
+[shadcn-skill]. (F)(I)
+
+**Bases and copied source.** The registry at `apps/v4/registry/bases/` ships three
+bases, not two: `radix` (Radix UI), `base` (Base UI) and `aria` (React Aria
+Components). The skill's `base` field lists only "`radix` or `base`", but its toast
+rule names "Radix and React Aria projects", so the third base is live [shadcn-skill]
+[shadcn-src] (F). Each fact below holds for all three bases unless a base is named.
+"Components are added as source code to the user's project via the CLI"
+[shadcn-skill], so a project's `components/ui` copy may differ from upstream: read
+the project's file before relying on any line here, and expect upstream changes only
+through `npx shadcn@latest add <component> --diff` (F)(I).
+
+**What shadcn/ui already does.** Verified at shadcn-ui/ui `968d8cb`, the head of
+`main` on 2026-11-18 [shadcn-src][shadcn-skill], with primitive behaviour read from
+the libraries `apps/v4/package.json` pins [Radix-src][BaseUI-src][RAC-src][Sonner-src]
+[tw-animate] (F):
+
+- Button: no `loading` prop on any base. The skill: "Button has no
+  `isPending`/`isLoading`. Compose with `Spinner` + `data-icon` + `disabled`." Its
+  example keeps the spinner inside the button and changes the text to "Saving...".
+  Nothing blocks a second click unless the app sets `disabled`. The `aria` base is the
+  exception: its Button passes props to React Aria's Button, whose `isPending`
+  "disables press and hover events while retaining focusability, and announces the
+  pending state to screen readers". The shadcn skill does not mention it. **Part.**
+  (F)(I)
+- Spinner: an `animate-spin` icon with `role="status"` and `aria-label="Loading"`.
+  **Part.** (F)
+- Field (`Field`, `FieldLabel`, `FieldDescription`, `FieldError`, `FieldSet`,
+  `FieldLegend`, `FieldGroup`), the same on all three bases: `FieldError` renders only
+  when given `errors` or children, as `role="alert"`, and drops duplicate messages.
+  Field wires nothing: no `id`, no `aria-describedby`, no `aria-invalid`. The app sets
+  `data-invalid` on `Field` and `aria-invalid` on the control by hand, and the form
+  guides never set `aria-describedby`. No `required`, optional or hint prop;
+  `FieldDescription` is the only helper text. The error renders wherever the app puts
+  `FieldError`; the docs put it after the control inside `Field`. **Part.** (F)
+- Form library: shadcn/ui ships no form state. The docs pair Field with React Hook
+  Form, TanStack Form or Formisch, and timing is the library's: the React Hook Form
+  guide lists `"onSubmit"` as the default mode, with `"onChange"` and `"onBlur"`; the
+  TanStack guide uses `validators: { onSubmit: formSchema }` (F). Focus on the first
+  error comes from React Hook Form's own `shouldFocusError` (default `true`) when the
+  control receives `field.ref`, which the docs' `{...field}` spread passes (S)(I). The
+  TanStack guide was not checked for focus. The older
+  `Form` component (a React Hook Form wrapper whose `FormControl` sets `aria-invalid`
+  and `aria-describedby`) survives only in the `new-york-v4` registry; the bases do
+  not ship it. **Part.** (F)
+- Dialog and Sheet: focus trap, Escape, overlay click, an X close button
+  (`showCloseButton` defaults to `true` on the content, `false` on `DialogFooter`), and
+  focus back to the trigger. Radix focuses the trigger in `onCloseAutoFocus`; Base UI's
+  `finalFocus` defaults to "trigger or previously focused element"; the `aria` wrapper
+  sets `isDismissable` on Dialog and Sheet. The skill requires a `DialogTitle` /
+  `SheetTitle`. **Handled.** (F)
+- AlertDialog: no X; `AlertDialogCancel` and `AlertDialogAction`. Overlay click does
+  not close it on any base. Bases differ on first focus: Radix focuses Cancel; Base UI
+  "focuses the first tabbable element. To preserve Radix behavior pass
+  `initialFocus={cancelRef}`" [shadcn-skill] (`migrate-radix-to-base/overlays.md`).
+  **Handled** on `radix`; **Part** on `base`. (F)
+- Drawer: `radix` wraps vaul; `base` and `aria` wrap Base UI's Drawer (`modal`
+  defaults to `true`, swipe to dismiss). No close button. **Part.** (F)
+- Popover: not modal by default (`modal` defaults to `false` on Radix and Base UI), so
+  focus is not trapped; Escape and an outside press close it. No close button.
+  **Handled / Part.** (F)
+- Toast follows the base. `radix` and `aria` use Sonner (`toast()` from `sonner`,
+  through the `Toaster` wrapper); `base` uses Base UI's toast at `components/ui/toast`
+  (`toast.add()`), and `add --all` installs both there. The Radix docs page for `toast`
+  says "The toast component has been deprecated. Use the sonner component instead."
+  (F)
+  - Sonner: an `aria-live="polite"` region; 4000 ms default, 3 visible; pauses on
+    hover, pointer down, a hidden tab, and while Alt+T has the list open. The list is
+    out of the tab order ("only available via hotkey"), so tabbing never reaches a
+    toast. `action` (the skill's Undo example), `toast.loading`, `toast.promise`.
+    **Handled / Part.** (F)
+  - Base UI toast: `aria-live="polite"`, high-priority toasts as `role="alert"`;
+    5000 ms default, limit 3; F6 focuses the viewport and pauses; pauses on hover,
+    focus and window blur; `actionProps`; `toast.promise`. **Handled / Part.** (F)
+- Reduced motion: none in the overlays. Their enter and exit come from tw-animate-css
+  classes (`animate-in`, `fade-in-0`, `zoom-in-95`, `slide-in-from-*`) in the style
+  CSS, and tw-animate-css has no `prefers-reduced-motion` rule. The `shimmer` utility
+  in `shadcn/tailwind.css` and Sonner's own CSS stop under reduced motion; the
+  accordion keyframes and Base UI toast transforms do not (F). A GitHub code search
+  finds `motion-reduce` in no overlay component or style file; in the registry only
+  the chat `Trace` component uses it (S). **Agent.**
+- Shortcuts: no helper. `Kbd` and `KbdGroup` are styled `<kbd>` elements;
+  `DropdownMenuShortcut` is display text. Sidebar binds Cmd/Ctrl+B on `window` with no
+  input check, so it fires inside text fields. Command (cmdk) handles arrow keys and
+  filtering. **Agent / Part.** (F)
+- Navigation: nothing reads the route. `SidebarMenuButton` takes `isActive` (default
+  `false`) and sets `data-active`, with no `aria-current`; `NavigationMenuLink` styles
+  `data-active` from the primitive's `active` prop; `BreadcrumbPage` renders
+  `aria-current="page"`. **Part.** (F)
+- Empty is composition, not props: `Empty`, `EmptyHeader`, `EmptyMedia` (`variant`
+  `default` or `icon`), `EmptyTitle`, `EmptyDescription`, `EmptyContent`; no loading
+  state. Skeleton is an `animate-pulse` div with no `aria-hidden` or `aria-busy`.
+  Progress is determinate only on `radix` and `base` (no value draws an empty bar);
+  the `aria` Progress fills the track when indeterminate. **Part.** (F)
+- Tabs, Accordion, Collapsible, DropdownMenu, RadioGroup, Switch, Checkbox: thin
+  wrappers over each base's primitive; trigger props differ (`asChild` on `radix`,
+  `render` on `base`, plus Accordion, Select and ToggleGroup differences in
+  `rules/base-vs-radix.md`). Select wraps each base's own Select. Combobox wraps Base
+  UI's Combobox on both `radix` and `base`, and React Aria on `aria`; the skill picks
+  "Dropdown with predefined options → `Select`", "Searchable dropdown → `Combobox`".
+  Command wraps cmdk on `radix` and `base`. **Part.** (F)
+
+**What shadcn/ui does not do** (the skill's job) (F):
+
+- No loading or success state on Button, except React Aria's `isPending` on `aria`.
+- No undo pattern beyond a toast action.
+- No ARIA wiring in Field: the app sets `aria-invalid` and `aria-describedby` itself.
+- No focus on the first error after a failed submit; that is the form library's.
+- No show-delay or minimum visible time on Spinner or Skeleton.
+- No reduced motion in Dialog, Sheet, Drawer, Popover or Accordion.
+- No route-aware active state in Sidebar or NavigationMenu.
+- No empty text anywhere: Table has no empty state, `CommandEmpty` and `ComboboxEmpty`
+  take children, and only the data-table guide's example writes "No results.".
+- Nothing decides placement, copy, timing, the save model, or which states exist.
+
+**Override to state in the skill.** The shadcn skill has no line like Nuxt UI's "Use
+`useToast()` for action feedback", but every save it shows ends in a toast, so our
+in-place rule wins over these [shadcn-skill][shadcn-src]:
+
+- `rules/composition.md`, "Toast notifications follow the project base":
+  `toast.add({ title: "Changes saved." })` and `toast.success("Changes saved.")`.
+- Its Component Selection row: "Feedback | `toast` (Base UI), `sonner` (Radix/Aria),
+  `Alert`, `Progress`, `Skeleton`, `Spinner`".
+- The TanStack Form guide's `onSubmit` handler:
+  `toast.success("Form submitted successfully")`. The React Hook Form demo's:
+  `toast("You submitted the following values:", ...)`.
+
+Its other lines agree with us and stand:
+
+- "Button has no `isPending`/`isLoading`. Compose with `Spinner` + `data-icon` +
+  `disabled`." (spinner inside, button disabled, "Saving...")
+- `toast("File deleted.", { action: { label: "Undo", onClick: () => undoDelete() } })`
+  (undo over a warning; the toast is still the place)
+- "Empty states use `Empty`. Don't build custom empty state markup."
+- "Callouts use `Alert`."
+- "Use `Skeleton` for loading placeholders."
+- "Dialog, Sheet, and Drawer always need a Title."
+- "Destructive action confirmation | `AlertDialog`"
+
+Its styling lines keep the library's default look, which our UI skill also keeps;
+quote them, don't restate them:
+
+- "**Use built-in variants before custom styles.** `variant="outline"`, `size="sm"`,
+  etc."
+- "**Use semantic colors.** `bg-primary`, `text-muted-foreground` — never raw values
+  like `bg-blue-500`."
+- "**`className` for layout, not styling.** Never override component colors or
+  typography."
+- "**No manual `dark:` color overrides.** Use semantic tokens (`bg-background`,
+  `text-muted-foreground`)."
+- "For positive, negative, or status indicators, use Badge variants, semantic tokens
+  like `text-destructive`, or define custom CSS variables — don't reach for raw
+  Tailwind colors."
+- "To customize a component's appearance, prefer these approaches in order: 1.
+  **Built-in variants** … 2. **Semantic color tokens** … 3. **CSS variables**"
+
+Its component-selection table, its overlay table ("Choosing between overlay
+components") and its form-control list in `rules/forms.md` are where our skill should
+point, not repeat. (F)(I)
 
 ## Core principles
 
@@ -1561,24 +1747,31 @@ under [Rules by topic](#rules-by-topic).
   API guide for the React Sonner library.
 - **Vercel `writing-guidelines`.** Documentation prose, not interface copy.
 
-## The skill built from this
+## The skills built from this
 
-The skill lives at [`skills/in-progress/ui-ux/`](../skills/in-progress/ui-ux/SKILL.md):
+Two skills, split so each can audit alone:
 
-- `SKILL.md` holds the boundary with Nuxt UI, the build steps (brief, states, build,
-  check), the core principles, and a table of references with "load when" conditions.
-- `references/` holds one file per topic under [Rules by topic](#rules-by-topic). The
-  "Process and review" topic is split: the build steps sit in `SKILL.md`, and reviewing
-  an existing screen is `references/review.md`.
+- [`skills/in-progress/ux/`](../skills/in-progress/ux/SKILL.md) holds structure and
+  behaviour, and names no component library: the build steps (brief, states, build,
+  check), the core principles, the data menu, and one reference per topic under
+  [Rules by topic](#rules-by-topic) except motion. Reviewing an existing screen is
+  `references/review.md`.
+- [`skills/in-progress/ui/`](../skills/in-progress/ui/SKILL.md) holds what the screen
+  looks like with the project's library: visual hierarchy, Grey first, motion, how data
+  renders, the QA run and its capture script. Each boundary above becomes one file in
+  `component-libraries/`, loaded by a routing row, which maps `/ux`'s generic names to
+  the library's components and lists what it does and lacks.
 
-How the two stay in step:
+How the documents stay in step:
 
-- This document holds the evidence and the reasons; the skill carries only the
+- This document holds the evidence and the reasons; the skills carry only the
   resulting rules, with no citations.
 - A rule changes here first, then in the skill.
+- A new component library gets its boundary section here first, then its file and row
+  in `/ui`.
 - When a topic here grows enough for its own file (data tables, AI chat), add a
   reference and a row in the skill's table.
-- Edit the skill with `/writing-for-agents`.
+- Edit the skills with `/writing-for-agents`.
 
 ## Not covered yet
 
@@ -1653,6 +1846,35 @@ Future scope. Move an item up into [Rules by topic](#rules-by-topic) once resear
   `/command-palette` (all under https://ui.nuxt.com/docs/components/), and
   https://ui.nuxt.com/docs/composables/use-toast,
   https://ui.nuxt.com/docs/composables/define-shortcuts
+- [shadcn-skill] shadcn-ui/ui @968d8cb (head of `main`, read 2026-11-18)
+  `skills/shadcn/SKILL.md`, `rules/{composition,forms,styling,base-vs-radix,chat,icons}.md`,
+  `customization.md`, `design-system.md`, and `skills/migrate-radix-to-base/{SKILL,overlays,form-controls,universal-patterns}.md`.
+  https://github.com/shadcn-ui/ui/tree/main/skills/shadcn
+- [shadcn-src] shadcn-ui/ui @968d8cb (read 2026-11-18): `apps/v4/registry/bases/{radix,base,aria}/ui/`
+  `{button,spinner,field,dialog,alert-dialog,sheet,drawer,popover,sonner,kbd,sidebar,navigation-menu,breadcrumb,empty,skeleton,progress,tabs,accordion,collapsible,dropdown-menu,command,select,combobox,radio-group,switch,checkbox,table,native-select,label,input}.tsx`
+  (no `navigation-menu` on `aria`), `bases/base/ui/toast.tsx`,
+  `new-york-v4/ui/{form,sonner}.tsx`, `new-york-v4/examples/form-rhf-demo.tsx`,
+  `registry/styles/style-nova.css`, `packages/shadcn/src/tailwind.css`,
+  `apps/v4/package.json`, and docs `content/docs/forms/{index,react-hook-form,tanstack-form}.mdx`,
+  `content/docs/components/radix/{button,field,empty,data-table,sonner,toast,kbd,spinner,sidebar,drawer,dialog,combobox}.mdx`,
+  `content/docs/components/base/{button,toast,data-table,drawer,dialog}.mdx`.
+  https://github.com/shadcn-ui/ui, https://ui.shadcn.com/docs
+- [Radix-src] radix-ui/primitives @eb3a2b7 (head of `main`, read 2026-11-18; shadcn pins
+  `radix-ui` ^1.4.3) `packages/react/{dialog,alert-dialog}/src/*.tsx`.
+  https://github.com/radix-ui/primitives
+- [BaseUI-src] mui/base-ui tag `v1.6.0` (the version shadcn pins, read 2026-11-18)
+  `packages/react/src/toast/{provider,root,viewport}/*.tsx`,
+  `dialog/{root,popup}/*`, `alert-dialog/root/AlertDialogRoot.tsx`.
+  https://github.com/mui/base-ui
+- [RAC-src] adobe/react-spectrum @2ac28d3 (head of `main`, read 2026-11-18; shadcn pins
+  `react-aria-components` 1.20.0) `packages/react-aria-components/src/Button.tsx`.
+  https://github.com/adobe/react-spectrum
+- [Sonner-src] emilkowalski/sonner @8e4662b (v2.0.8, read 2026-11-18; shadcn pins
+  ^2.0.0) `src/index.tsx`, `src/state.ts`, `src/styles.css`.
+  https://github.com/emilkowalski/sonner
+- [tw-animate] Wombosvideo/tw-animate-css @1fc30d2 (head of `main`, read 2026-11-18;
+  shadcn pins ^1.4.0) `src/tw-animate.css`, `README.md`.
+  https://github.com/Wombosvideo/tw-animate-css
 - skills.sh leaderboard and "Design & UI" topic. https://skills.sh/,
   https://skills.sh/topic/design
 

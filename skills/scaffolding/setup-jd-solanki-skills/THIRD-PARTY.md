@@ -13,6 +13,11 @@
   - grill-with-docs
   - implement
   - retro
+  - prototype — `/ui-prototype` extends it
+- [Nuxt UI](https://ui.nuxt.com/docs/getting-started/ai/skills)
+  - nuxt-ui — `/ui` invokes it in Nuxt UI projects
+- [shadcn/ui](https://github.com/shadcn-ui/ui/tree/main/skills)
+  - shadcn — `/ui` invokes it in shadcn/ui projects
 - [nostics](https://github.com/vercel-labs/nostics)
 - [better-auth](https://better-auth.com/docs/ai-resources/skills)
   - [better-auth MCP](https://better-auth.com/docs/ai-resources/mcp)

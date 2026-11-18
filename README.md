@@ -70,6 +70,5 @@ Skills taken from elsewhere and changed. Each credits its source in its frontmat
 - [`improve-codebase-architecture`](./skills/engineering/improve-codebase-architecture/)
 - [`implement-spec`](./skills/in-progress/implement-spec/)
 - [`tdd`](./skills/engineering/tdd/)
-- [`ui-prototype`](./skills/in-progress/ui-prototype/)
 
 Used unchanged, so not forked: see [`THIRD-PARTY.md`](./skills/scaffolding/setup-jd-solanki-skills/THIRD-PARTY.md).

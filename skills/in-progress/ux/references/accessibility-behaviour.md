@@ -1,15 +1,16 @@
 # Accessibility behaviour
 
-Nuxt UI's components (built on Reka UI) carry their own ARIA, keyboard support and
-focus trapping. Use them as they are, and own the behaviour around them.
+A component library's components carry their own ARIA, keyboard support and focus
+trapping; `/ui`'s file for the library says which. Use them as they are, and own the
+behaviour around them.
 
 ## Focus
 
 - Every flow works by keyboard, with visible focus that nothing covers. For a custom
   interactive element, implement its full keyboard pattern; use native semantics where
   they exist, and add ARIA only where they do not.
-- Modal and slideover: focus moves inside on open and back to the trigger on close
-  (built in). Set the initial focus yourself: the first input, or the least destructive
+- Modal and side panel: focus moves inside on open and back to the trigger on close.
+  Set the initial focus yourself: the first input, or the least destructive
   button for an irreversible action.
 - When the focused element disappears (a deleted row, a closed panel), move focus to
   the next row, the list, or the trigger. Otherwise focus falls to the page body.
@@ -26,8 +27,7 @@ focus trapping. Use them as they are, and own the behaviour around them.
 - Announce filter and search results as counts: "5 items match", "No items match".
 - Set `aria-busy="true"` on a live region while it fills, and remove it when done.
 - One announcement per cluster: a page of skeletons should not produce a burst.
-- Form field errors use focus management and `aria-describedby` (wired by
-  `UFormField`), not a live region.
+- Form field errors use focus management and `aria-describedby`, not a live region.
 - Toasts announce themselves. Keep anything critical somewhere that stays, because a
   toast can vanish before it is read.
 - Let users turn off non-critical notifications.
@@ -51,5 +51,4 @@ focus trapping. Use them as they are, and own the behaviour around them.
 
 - Icon-only buttons get an `aria-label`; a visible label is better still.
 - Every hover-only action also has a keyboard and a tap path.
-- Hit targets are at least 24 px. Nuxt UI's default sizes meet this;
-  keep custom targets as large.
+- Hit targets are at least 24 px, custom ones included.
