@@ -182,7 +182,7 @@ one left out is a class nobody read. Leave one out only when the range holds not
 | Dimension | Kind | Covers |
 | --- | --- | --- |
 | Data and state safety | lens | what can move, corrupt, or mix persistent state and secrets |
-| Logic and edge cases | lens | branches, loops, boundaries, failure modes, races |
+| Logic and edge cases | lens | branches, loops, boundaries, failure modes, races, and each unhappy path in `/write-qa-scenarios`'s `unhappy-paths.md` the range can break |
 | Interface and contract | lens | callers, signatures, config surfaces, back-compat |
 | Build and CI | lens | pipelines, matrices, shell in job steps, injection through interpolation |
 | Rendered surface | lens | only when the probe's step 4 found a hit |

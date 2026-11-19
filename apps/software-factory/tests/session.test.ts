@@ -118,7 +118,10 @@ test('claudeArgs tells each session who to mention and leaves the hand-off to th
     JSON.parse(flag(args, '--settings') ?? '').permissions.allow
   assert.deepEqual(allowed(review()), ['Bash(gh pr edit:*)'])
   assert.deepEqual(allowed(upgrade()), [])
-  assert.deepEqual(allowed(verify()), ['Bash(gh pr edit:*)'])
+  assert.deepEqual(allowed(verify()), [
+    'Bash(gh pr edit:*)',
+    'Bash(gh api -X DELETE repos/*/issues/comments/*)',
+  ])
 })
 
 test('claudeArgs claims a work item with the working label of its trigger', () => {

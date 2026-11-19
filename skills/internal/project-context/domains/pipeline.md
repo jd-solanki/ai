@@ -17,11 +17,6 @@ AFK issue.
 The agents that `agent:implement`, `agent:review`, `agent:fix`, `agent:upgrade` and
 `agent:verify` request.
 
-**QA scenario**:
-One checkbox under a pull request body's `## QA steps`: a behaviour to try by hand, with
-numbered steps, each naming the result to see.
-_Avoid_: test case, test plan, verification step
-
 **Dependency update**:
 A pull request that bumps dependency versions and carries their release notes in its body,
 as Renovate opens one.
@@ -49,8 +44,9 @@ _Avoid_: result, review status
      defines dry. The Reviewer then rewrites the pull request body with `/create-pr`, keeping
      every `Closes` line. Static code hands it to the Verifier when the body holds a QA
      scenario, and marks it ready for review when not.
-  6. The Verifier runs `/verify-pr`: it tries every QA scenario, ticks the ones that pass unless
-     the run fails, and posts each failure as a review thread. A pass marks the pull request
+  6. The Verifier runs `/verify-pr`: it tries every QA scenario through `/run-qa-scenarios`,
+     ticks the ones that pass unless the run fails, posts each failure as a review thread, and
+     carries each scenario's proof media in the QA comment. A pass marks the pull request
      ready for review. A fail goes to the Fixer, then the Reviewer, then the Verifier again.
   7. A human tries any QA scenario left unticked, merges, then does the Owner steps.
 - A dependency update enters the pipeline at its pull request: a teammate applies
@@ -131,6 +127,10 @@ _Avoid_: result, review status
   box unticked, so the Reviewer's rewrite clears them and the QA run that follows sets them.
 - `/verify-pr` caps QA runs as `/review-pr` caps reviews: a last run that still fails ends QA,
   and a human decides.
+- A pull request holds one QA comment. Each QA run deletes the last one and posts its own, with
+  that run's proof media attached.
+- A fault patch lives only in the QA checkout: never committed, never pushed, and shown under its
+  scenario in the report.
 
 ## Reasons
 
@@ -218,6 +218,8 @@ _Avoid_: result, review status
   guess at the line responsible.
 - The QA report is its own comment, not a section of the review summary: each skill rewrites its
   comment whole, and either runs without the other.
+- Each QA scenario carries proof media so a human or a teammate can check a tick without
+  starting a server, and the pull request keeps a record of what was tried.
 - Blocked scenarios do not hold ready back: ready asks for a human anyway, and an unticked box is
   the list of what they try before merging.
 
@@ -238,8 +240,13 @@ _Avoid_: result, review status
   comment apart from the review it was posted with, so /review-pr's "threads of the last review"
   would miss the rest. Every QA thread sits on a changed line. `skills/in-progress/verify-pr/SKILL.md`
 
+- **`gh` attaches files only to a comment it creates.** An in-place edit through `gh api` cannot
+  upload, and `--edit-last` edits the newest comment of the login, which can be the factory
+  comment. So a QA run deletes its last QA comment and posts a new one.
+  `skills/in-progress/verify-pr/SKILL.md`
+
 ## Where it lives
 
 `apps/software-factory/src/session.ts` (`TRIGGERS`: the skill each trigger label starts),
 `apps/software-factory/src/hand-off.ts` (`NEXT_STEPS`: where each run hands its work item), `skills/` (`create-spec`, `implement-spec`, `review-pr`,
-`create-pr`, `verify-pr`), `.agents/skills/` (`grill-with-docs`, `implement`), `apps/software-factory/README.md` (Add a project: the labels a served repo needs).
+`create-pr`, `verify-pr`, `write-qa-scenarios`, `run-qa-scenarios`, `capture-media`), `.agents/skills/` (`grill-with-docs`, `implement`), `apps/software-factory/README.md` (Add a project: the labels a served repo needs).

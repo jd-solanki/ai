@@ -56,8 +56,9 @@ const TRIGGERS = [
     emoji: '🧪',
     skill: 'verify-pr',
     effort: 'medium',
-    // The skill ticks the scenarios that passed in the pull request body.
-    allow: ['Bash(gh pr edit:*)'],
+    // The skill ticks the scenarios that passed in the pull request body, and replaces its QA
+    // comment: gh attaches media only to a comment it creates.
+    allow: ['Bash(gh pr edit:*)', 'Bash(gh api -X DELETE repos/*/issues/comments/*)'],
   },
 ]
 

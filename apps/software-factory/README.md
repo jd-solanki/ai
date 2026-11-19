@@ -27,6 +27,7 @@ Applying the label again reuses that worktree.
 - curl 7.71 or later where sessions run: the `hc` core's `PATH` for the Herdr app, your shell's for herdr and Orca. The tab's shell retries its SessionEnd report with `--retry-all-errors`.
 - `gh`, logged in. Repo webhooks work with the default `repo` scope.
 - `playwright-cli`, with its browsers: `npm i -g @playwright/cli@latest`, then `playwright-cli install-browser`. The Verifier drives the browser through it.
+- `ffmpeg` with `libx264` where sessions run. `/capture-media` compresses QA videos with it; without it, the Verifier blocks every browser scenario.
 - Tailscale, logged in. The first `tailscale funnel` run prints a link to allow Funnel on your tailnet.
 
 ## Conventions for every project

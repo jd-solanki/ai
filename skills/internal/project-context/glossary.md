@@ -45,6 +45,27 @@ The instruction text this repository writes into other people's `CLAUDE.md` or
 `AGENTS.md`. It has exactly one home, named in `domains/authoring.md`.
 _Avoid_: the template, the preamble
 
+## QA
+
+**Fault patch**:
+A throwaway code change a QA run makes to reach an unhappy path the app gives no other way to
+reach. It is never committed.
+_Avoid_: hack, QA fix
+
+**QA scenario**:
+A behaviour to try, run as one role when the app has roles, with numbered steps that each name the
+result to see. In a pull request body it is one checkbox under `## QA steps`.
+_Avoid_: user story, test case, test plan, verification step
+
+**Role**:
+A permission set the app under test knows, such as admin or member, that a QA scenario runs as.
+_Avoid_: persona, user type, QA role
+
+**Unhappy path**:
+A run of a behaviour where something goes other than planned: bad input, a failed dependency,
+a race.
+_Avoid_: edge case (only its boundary kind), sad path, non-happy path
+
 ## Software factory
 
 The software factory, `apps/software-factory`, starts an agent on a GitHub work item when a

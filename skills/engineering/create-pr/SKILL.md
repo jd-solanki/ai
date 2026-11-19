@@ -38,28 +38,17 @@ without giving the reviewer something new. The body is these sections, in this o
 2. `## How this PR solves it` — the idea holding the lines together, and the
    alternative you rejected. The reviewer reads the diff for the lines; they read
    this for the shape, so show it: see **Show the shape**.
-3. `## Screenshots` — only when the diff changes what a user sees; a pull request
-   with no UI change has no such section. See **Screenshots**.
+3. `## Screenshots and videos` — only when the diff changes what a user sees; a pull
+   request with no UI change has no such section. See **Screenshots and videos**.
 4. `## What happens when this merges` — the effect downstream. Behaviour that
    changes for users, a migration that has to run, a follow-up this unblocks. Name
    the **door**: one-way when the merge is hard to walk back (a destructive
    migration, a published contract, deleted data), two-way when a revert undoes it.
    Then the **blast radius**: what breaks if the change is wrong (consumers, layout,
    mobile, a scheduled job).
-5. `## QA steps` — how a person tries the change by hand before it merges, as a list
-   of scenarios. Each scenario is an unticked checkbox naming one behaviour, with its
-   steps numbered beneath it from a checkout of the branch: the command to run or the
-   thing to click, then the result they should see. Scenarios for the changed
-   behaviour come first, then its blast radius. CI already reports the tests, so every
-   step is something a person does by hand. A change with no visible behaviour, such
-   as a refactor, gets the scenario that shows nothing moved. Whoever tries a scenario
-   and sees it pass ticks its box.
-
-   ```markdown
-   - [ ] **Saving settings shows a toast**
-     1. `pnpm dev`, open `/settings` → the form loads with your current values.
-     2. Change the name, click Save → a "Saved" toast appears.
-   ```
+5. `## QA steps` — how a person tries the change by hand before it merges: the QA
+   scenarios `/write-qa-scenarios` writes for this change, happy and unhappy paths,
+   each an unticked checkbox. Whoever tries a scenario and sees it pass ticks its box.
 6. `## Notes` — what a careful reader still cannot infer from the diff after
    reading it. Invariants that hold across the change, a decision that looks
    arbitrary but was deliberate, a gotcha that will trip the next person, a
@@ -97,10 +86,14 @@ sentence it supports. Usually one, sometimes two:
 Keep only the calls, files and boundaries the reviewer needs to see the idea. A
 visual that copies the code diff fails the diff-alone test like any bullet.
 
-## Screenshots
+## Screenshots and videos
 
-Pixels are the one thing a UI diff cannot show. Show every place the change lands as
-a before/after pair:
+Pixels are the one thing a UI diff cannot show. Capture them with `/capture-media`, purpose
+**showcase**, from the running app: it picks the media this change needs, highlights, before /
+after screenshots, a video for a flow, and hides personal data. Capture them on every run of this
+skill, so the media always shows the code being reviewed.
+
+Lay them out with any highlight first, then one row per surface and state:
 
 ```markdown
 | Location | Before | After |
@@ -109,17 +102,12 @@ a before/after pair:
 | Explore › Logs, loading | ![Explore › Logs, loading before](./shots/logs-loading-before.png) | ![Explore › Logs, loading after](./shots/logs-loading-after.png) |
 ```
 
-- **Location** is a `›` breadcrumb to the surface, then the state after a comma. One
-  row per surface and state: trace the changed components to every page, drawer or
-  modal that renders them, and every state the change touches (loading, empty,
-  error, dark theme, a mobile or tablet viewport where the layout shifts).
-- Capture Before on the base branch and After on this branch, from the running app,
-  framed identically: same viewport, same data, cropped to the region around the
-  change. A surface that is new gets `—` for Before.
-- Blur personal data (emails, names, IDs) and check every image for tokens and
-  cookies before it leaves your machine.
-- Save the images to `shots/` in a temp directory, beside the body file. Step 5
-  uploads them.
+- **Location** is a `›` breadcrumb to the surface, then the state after a comma. Trace the
+  changed components to every page, drawer or modal that renders them, and every state the
+  change touches.
+- A surface that is new gets `—` for Before.
+- A video goes on its own line under its row or highlight, since a table cell does not play it.
+- Save the files to `shots/` in a temp directory, beside the body file. Step 5 uploads them.
 
 ## Read the diff, don't imagine it
 
@@ -168,8 +156,8 @@ The diff, the log, and the ticket it closes.
 
 **Done when:** from what you read, you can state the problem, the approach, the
 downstream effect with its door and blast radius, the QA scenarios a reviewer will try,
-every Note you plan to include, and, for a UI change, every row of the screenshots
-table.
+every Note you plan to include, and, for a UI change, every highlight and every row
+of the screenshots and videos.
 
 ### 3. Draft the body
 
@@ -194,9 +182,10 @@ Push the branch and open the pull request **as a draft**:
 gh pr create --draft --base <base> --title "<title>" --body "<body>"
 ```
 
-With screenshots, pass the body as `--body-file <dir>/body.md` and add
-`--attach ./shots/<image>.png` per image, run from `<dir>`: `gh` uploads each one
-and rewrites its reference in the body to the hosted asset.
+With screenshots or videos, pass the body as `--body-file <dir>/body.md` and add
+`--attach ./shots/<file>` per file, run from `<dir>`: `gh` uploads each one and
+rewrites its reference in the body to the hosted asset. Editing an existing body works
+the same way with `gh pr edit <n> --body-file <dir>/body.md --attach ./shots/<file>`.
 
 Return the link, and say plainly that it is a draft waiting for them to mark it
 ready for review.
